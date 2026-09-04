@@ -80,9 +80,9 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `learn/06-lab2-beetlebot-movement.md` | Lab 2 checklist: connect to the robot, arm, drive, teleop |
 | `learn/07-lab3-obstacle-avoidance.md` | Lab 3 checklist: deploy/run the obstacle-avoidance node, v1-vs-v2 script comparison |
 | `docs/` | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
-| `BeetleBot/` | Upstream BeetleBot source clone — gitignored, reference only |
-| `jetbot/` | NVIDIA-AI-IOT JetBot clone — gitignored, comparison platform only |
-| `acrux/` | VEEROBOT Acrux clone — gitignored, comparison platform only |
+| `BeetleBot/` | Upstream BeetleBot source — **git submodule** (pinned pointer only, see `.gitmodules`) |
+| `jetbot/` | NVIDIA-AI-IOT JetBot — **git submodule**, comparison platform only |
+| `acrux/` | VEEROBOT Acrux — **git submodule**, comparison platform only |
 | `TODO.md`, `.CLAUDE/CLAUDE-LOG.md` | Companion tracker + session log (see `CLAUDE-COMMON.md`) |
 
 ### The robot's ROS 2 graph (for understanding, from `BeetleBot/` source + handouts)
@@ -121,7 +121,9 @@ If practice code is added later (e.g. a personal `rclpy` node), it goes in a new
 - `docs/` — instructor handouts (`.txt` + `.docx`). **Committed, read-only source. Never edit.**
 - `maps/`, rosbags — if produced during the lab, save on the **robot**, then `scp` to the PC.
   Do not commit `.pgm`/`.yaml` maps or `rosbag2_*` dirs here (they are gitignored).
-- `BeetleBot/` — gitignored clone. Never commit its contents into this repo.
+- `BeetleBot/`, `jetbot/`, `acrux/` — **git submodules** (`.gitmodules`). This repo tracks
+  only a pinned commit pointer for each, never their file contents — `git submodule update
+  --remote` + committing the new pointer is how you refresh them, not editing files inside.
 - No credentials belong in this repo. Wi-Fi / SSH passwords live only in the handouts as
   given; do not copy them into new tracked files.
 
@@ -202,7 +204,7 @@ machine). Study that one; the plain one is the simpler first version.
 
 Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not started  |  ✅ Done
 
-- ✅ Clone BeetleBot upstream into `BeetleBot/` (gitignored)
+- ✅ Track BeetleBot, JetBot, Acrux upstream sources as git submodules (`BeetleBot/`, `jetbot/`, `acrux/`)
 - ✅ Rewrite this file from library-template to real project brief
 - ✅ Create `learn/` study guides (linux, ROS 2 concepts, runbook, doc index)
 - ✅ Fill `README.md`, `TODO.md`, `.CLAUDE/CLAUDE-LOG.md`

@@ -9,6 +9,7 @@
 - [x] Set up repo as BeetleBot lab-prep workspace — cloned upstream `BeetleBot/` (gitignored), rewrote `.CLAUDE/CLAUDE.md` from template to real project brief, filled `README.md` / `TODO.md` / `.CLAUDE/CLAUDE-LOG.md` (commit: _pending_)
 - [x] Wrote study guides in `learn/` (linux commands, ROS 2 concepts, BeetleBot runbook, official-doc index) (commit: _pending_)
 - [x] Cloned `jetbot` (NVIDIA-AI-IOT) and `acrux` (VEEROBOT) as gitignored reference-only source, alongside `BeetleBot/`; linked all three in `README.md` (commit: _pending_)
+- [x] Converted `BeetleBot/`, `jetbot/`, `acrux/` from gitignored plain clones to **git submodules** (`.gitmodules`) — pinned pointers tracked in the repo, contents still live upstream (commit: _pending_)
 - [x] Read both course syllabus PDFs and all `docs/` handouts; wrote `learn/00-course-and-lab-map.md` (syllabus summary + doc-to-lab map) and three lab-day checklists — `05-lab1-turtlesim-and-workspace.md`, `06-lab2-beetlebot-movement.md`, `07-lab3-obstacle-avoidance.md` (the last includes a v1-vs-v2 obstacle-avoidance script comparison not covered elsewhere) (commit: _pending_)
 
 ## Not Started

@@ -1,0 +1,9 @@
+[submodule "BeetleBot"]
+	path = BeetleBot
+	url = https://github.com/VEEROBOT/BeetleBot.git
+[submodule "jetbot"]
+	path = jetbot
+	url = https://github.com/NVIDIA-AI-IOT/jetbot.git
+[submodule "acrux"]
+	path = acrux
+	url = https://github.com/VEEROBOT/acrux.git

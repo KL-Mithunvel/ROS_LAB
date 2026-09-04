@@ -13,9 +13,9 @@ record data → SLAM → obstacle-avoidance node.
 |------|-----------|
 | `learn/` | Study guides written for this lab — start here |
 | `docs/` | The raw handouts I was given (BeetleBot manual + obstacle-avoidance scripts) |
-| `BeetleBot/` | Upstream source clone from [github.com/VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot) — **gitignored**, reference only |
-| `jetbot/` | Reference clone of [NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot) — **gitignored**, comparison platform only, not used in this lab |
-| `acrux/` | Reference clone of [VEEROBOT/acrux](https://github.com/VEEROBOT/acrux) — **gitignored**, another VEEROBOT robot platform, comparison only |
+| `BeetleBot/` | **Git submodule** pinned to [github.com/VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot) — the lab robot's upstream source |
+| `jetbot/` | **Git submodule** pinned to [NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot) — comparison platform only, not used in this lab |
+| `acrux/` | **Git submodule** pinned to [VEEROBOT/acrux](https://github.com/VEEROBOT/acrux) — another VEEROBOT robot platform, comparison only |
 | `.CLAUDE/` | Project brief + working rules for AI-assisted sessions |
 | `TODO.md` | Task tracker |
 
@@ -35,10 +35,11 @@ Lab-day checklists (practical, step-by-step, "why" for each command, cross-linki
 6. `learn/06-lab2-beetlebot-movement.md` — connect, arm, drive, teleop the real robot
 7. `learn/07-lab3-obstacle-avoidance.md` — deploy and run the obstacle-avoidance node
 
-## Get / refresh the reference source clones
+## Get / refresh the reference source (git submodules)
 
-All three are plain `git clone`s kept locally for reference — **gitignored, never committed.**
-Only `BeetleBot` is the actual lab robot; `jetbot` and `acrux` are comparison platforms.
+`BeetleBot/`, `jetbot/`, and `acrux/` are **git submodules** — this repo tracks a pinned
+commit pointer for each, not their file contents. Cloning this repo alone leaves those
+three folders empty; you need one extra step.
 
 | Repo | URL | Role |
 |------|-----|------|
@@ -47,12 +48,10 @@ Only `BeetleBot` is the actual lab robot; `jetbot` and `acrux` are comparison pl
 | Acrux | https://github.com/VEEROBOT/acrux | Another VEEROBOT robot platform — reference/comparison only |
 
 ```bash
-git clone https://github.com/VEEROBOT/BeetleBot.git BeetleBot       # first time
-cd BeetleBot && git pull && cd ..                                    # update later
+# first checkout of this repo (or after a fresh clone)
+git submodule update --init --recursive
 
-git clone https://github.com/NVIDIA-AI-IOT/jetbot.git jetbot
-cd jetbot && git pull && cd ..
-
-git clone https://github.com/VEEROBOT/acrux.git acrux
-cd acrux && git pull && cd ..
+# pull each submodule's latest upstream commit and re-pin it
+git submodule update --remote
+git add BeetleBot jetbot acrux    # stage the new pin, then commit it
 ```

@@ -74,3 +74,31 @@
 - Left `02-ros2-concepts.md` §5 as the canonical line-by-line code walkthrough (not
   duplicated into `07`) and `03-beetlebot-runbook.md` as the canonical single-session
   procedure (not duplicated into `05`/`06`) — the new files link to both instead.
+
+## 2026-09-04 — BeetleBot/JetBot/Acrux converted to git submodules
+
+- User asked about pushing the full BeetleBot/JetBot/Acrux source trees into this repo.
+  Advised against vendoring (combined ~300 MB of other people's code for a repo whose
+  actual deliverable is the `learn/` guides; license mixing; each is its own git repo so
+  a plain copy would either lose their history or break as a dangling gitlink; staleness
+  vs. the existing `git pull`-refreshed clones). Recommended keeping the current gitignored
+  setup, offered git submodules as a middle ground. **User chose submodules.**
+- Removed the three plain clones and re-added with `git submodule add` for each:
+  `https://github.com/VEEROBOT/BeetleBot.git`, `https://github.com/NVIDIA-AI-IOT/jetbot.git`,
+  `https://github.com/VEEROBOT/acrux.git` — all at their existing paths (`BeetleBot/`,
+  `jetbot/`, `acrux/`). Created `.gitmodules`; each path is now a tracked gitlink (a pinned
+  commit SHA), not gitignored, and their file contents are **not** duplicated into this
+  repo's history.
+- **Files changed:**
+  - `.gitignore` — removed the three ignore blocks (a gitignored path can't cleanly become
+    a submodule), replaced with a note pointing at `.gitmodules`.
+  - `README.md` — "Get / refresh the reference source" section now documents
+    `git submodule update --init --recursive` (first checkout) and
+    `git submodule update --remote` + commit (to bump the pin), replacing the old plain
+    `git clone` instructions.
+  - `.CLAUDE/CLAUDE.md` — Architecture table and Data Files section updated from
+    "gitignored clone, never commit" to "git submodule — pinned pointer tracked, contents
+    stay upstream"; TODO List entry updated.
+  - `TODO.md` — logged under Done.
+- Staged everything (`.gitmodules`, the three gitlinks, `.gitignore`, `README.md`,
+  `.CLAUDE/CLAUDE.md`, `TODO.md`) but did **not** commit — user commits themselves.
