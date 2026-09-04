@@ -1,0 +1,38 @@
+# --- BeetleBot upstream source (kept as a local reference clone, not tracked here) ---
+# Clone/update it yourself with:
+#   git clone https://github.com/VEEROBOT/BeetleBot.git BeetleBot
+#   (cd BeetleBot && git pull)
+BeetleBot/
+
+# --- JetBot (NVIDIA-AI-IOT) — reference clone for comparison with BeetleBot ---
+#   git clone https://github.com/NVIDIA-AI-IOT/jetbot.git jetbot
+#   (cd jetbot && git pull)
+jetbot/
+
+# --- Acrux (VEEROBOT) — reference clone, another VEEROBOT robot platform ---
+#   git clone https://github.com/VEEROBOT/acrux.git acrux
+#   (cd acrux && git pull)
+acrux/
+
+# --- ROS 2 / colcon build artifacts (if you build a workspace inside this repo) ---
+build/
+install/
+log/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# --- Editor / OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- ROS runtime ---
+*.bag
+rosbag2_*/

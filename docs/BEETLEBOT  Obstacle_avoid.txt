@@ -1,0 +1,135 @@
+================================================================================
+BEETLEBOT LYRA: COMPLETE MULTI-TERMINAL AUTOMATED NAVIGATION GUIDE
+================================================================================
+
+TERMINAL 1: BRING UP THE ROBOT HARDWARE AND LIDAR
+--------------------------------------------------------------------------------
+1. Open a new terminal on your PC and SSH into the robot:
+   ssh veerobot@beetlebot-124.local
+
+2. Launch the main robot driver and laser system:
+   source /opt/ros/jazzy/setup.bash (or your specific ROS 2 version)
+   source ~/lyra_ws/install/setup.bash
+   ros2 launch lyra_bringup robot.launch.py
+
+* Keep this terminal open! Let it run in the background to handle the hardware.
+
+
+TERMINAL 2: SETUP, COMPILE, AND LAUNCH AUTONOMOUS DRIVING
+--------------------------------------------------------------------------------
+1. Open a SECOND terminal window on your PC and SSH into the robot again:
+   ssh veerobot@beetlebot-124.local
+
+2. Navigate to the Python scripts directory:
+   cd ~/lyra_ws/src/lyra_control/lyra_control/
+
+3. Open and clear the existing obstacle avoidance script:
+   nano obstacle_avoidance.py
+   * Action: Press and hold [Ctrl + K] until the file is completely empty.
+
+4. Paste the complete modified script below into nano:
+
+#!/usr/bin/env python3
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
+import time
+import sys
+import signal
+
+class ObstacleAvoidanceNode(Node):
+    def __init__(self):
+        super().__init__('obstacle_avoidance_node')
+        self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_nav', 10)
+        
+        self.safe_distance = 0.5  # Meters
+        self.move_speed = 0.2     # m/s
+        self.turn_speed = 0.4     # rad/s
+        
+        self.get_logger().info('Obstacle Avoidance Node started. Monitoring /scan...')
+        signal.signal(signal.SIGINT, self.signal_handler)
+
+    def scan_callback(self, msg):
+        twist = Twist()
+        if not msg.ranges:
+            return
+        num_readings = len(msg.ranges)
+        front_window = int(num_readings / 6)
+        front_ranges = msg.ranges[-front_window:] + msg.ranges[:front_window]
+        valid_front_ranges = [r for r in front_ranges if msg.range_min < r < msg.range_max]
+        
+        if not valid_front_ranges:
+            twist.linear.x = 0.0
+            twist.angular.z = 0.0
+            self.cmd_pub.publish(twist)
+            return
+
+        min_front_distance = min(valid_front_ranges)
+        if min_front_distance < self.safe_distance:
+            self.get_logger().warn(f'Obstacle detected at {min_front_distance:.2f}m! Turning away...')
+            twist.linear.x = 0.0
+            twist.angular.z = self.turn_speed
+        else:
+            twist.linear.x = self.move_speed
+            twist.angular.z = 0.0
+        self.cmd_pub.publish(twist)
+
+    def signal_handler(self, sig, frame):
+        print("\n[CRITICAL] Ctrl+C intercepted! Halting wheels before exiting...")
+        stop_msg = Twist()
+        for _ in range(20):
+            self.cmd_pub.publish(stop_msg)
+            time.sleep(0.02)
+        print("[INFO] Robot safely stopped. Closing node.")
+        self.destroy_node()
+        rclpy.try_shutdown()
+        sys.exit(0)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = ObstacleAvoidanceNode()
+    try:
+        rclpy.spin(node)
+    except Exception as e:
+        print(f"Node encountered an error: {e}")
+    finally:
+        rclpy.try_shutdown()
+
+if __name__ == '__main__':
+    main()
+
+5. Save and Close the Python Script:
+   * Press [Ctrl + O] then [Enter] to save.
+   * Press [Ctrl + X] to exit.
+   * Set execution flag: chmod +x obstacle_avoidance.py
+
+6. Modify setup.py to Register the Binary Entry Point:
+   cd ~/lyra_ws/src/lyra_control/
+   nano setup.py
+
+   * Scroll down to the 'console_scripts' section and add the obstacle_avoid line:
+   entry_points={
+       'console_scripts': [
+           'cmd_vel_mux = lyra_control.cmd_vel_mux:main',
+           'joy_teleop_wrapper = lyra_control.joy_teleop_wrapper:main',
+           'obstacle_avoid = lyra_control.obstacle_avoidance:main',
+       ],
+   },
+
+   * Press [Ctrl + O] then [Enter] to save.
+   * Press [Ctrl + X] to exit.
+
+7. Build and Source the Target Package:
+   cd ~/lyra_ws
+   colcon build --packages-select lyra_control
+   source install/setup.bash
+
+8. Execute the Avoidance Protocol:
+   ros2 run lyra_control obstacle_avoid
+
+* Safety Halt: Press [Ctrl + C] in this terminal. The program locks the wheels
+  to a dead stop instantly, avoiding any runaway spinning!
+================================================================================
+
