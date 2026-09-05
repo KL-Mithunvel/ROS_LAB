@@ -79,6 +79,8 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `learn/05-lab1-turtlesim-and-workspace.md` | Lab 1 checklist: workspace setup, turtlesim publish/subscribe |
 | `learn/06-lab2-beetlebot-movement.md` | Lab 2 checklist: connect to the robot, arm, drive, teleop |
 | `learn/07-lab3-obstacle-avoidance.md` | Lab 3 checklist: deploy/run the obstacle-avoidance node, v1-vs-v2 script comparison |
+| `learn/08-three-bots-architecture.md` | Full package/file walkthrough of BeetleBot, JetBot, Acrux; how localization, SLAM, obstacle avoidance and Nav2 navigation work and plug together |
+| `learn/09-ros2-across-robot-types.md` | How ROS 2 is used for robots other than wheeled AMRs — robotic arms (MoveIt 2, `ros2_control`), legged robots, drones, multi-robot systems |
 | `docs/` | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
 | `BeetleBot/` | Upstream BeetleBot source — **git submodule** (pinned pointer only, see `.gitmodules`) |
 | `jetbot/` | NVIDIA-AI-IOT JetBot — **git submodule**, comparison platform only |

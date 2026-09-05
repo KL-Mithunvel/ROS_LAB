@@ -102,3 +102,47 @@
   - `TODO.md` — logged under Done.
 - Staged everything (`.gitmodules`, the three gitlinks, `.gitignore`, `README.md`,
   `.CLAUDE/CLAUDE.md`, `TODO.md`) but did **not** commit — user commits themselves.
+
+## 2026-09-05 — Deep architecture doc for all three bots + ROS-across-robot-types doc
+
+- User asked for a full walkthrough of all three bots (BeetleBot/JetBot/Acrux) — architecture,
+  every package/file and what it does, setup/run commands, and specifically how
+  localization, SLAM, obstacle avoidance, and navigation work and plug together — plus,
+  separately, a general doc on how ROS 2 is used across different robot types (arm, AMR,
+  etc.) for learning beyond this lab's own robot.
+- Read the actual checked-out submodule source (not just each README) to get this right:
+  `BeetleBot/lyra_ws/src/*` (all packages — `lyra_bridge/node.py`, `lyra_control/cmd_vel_mux.py`,
+  `lyra_localization`, `lyra_slam/config/slam_toolbox.yaml`, `lyra_nav2/config/{amcl,nav2_params}.yaml`),
+  `acrux/acrux_*` (all packages, plus its three SLAM configs — SLAM Toolbox, Cartographer
+  `lidar.lua`, gmapping), and `jetbot/jetbot/*` (confirmed JetBot is plain Python, not ROS —
+  `robot.py`, `motor.py`, camera/AI modules, notebook-driven).
+- **Finding worth flagging:** Acrux's shipped `acrux_slam/config/ekf.yaml` has `imu0_config`
+  all `false` — IMU is wired up but not actually fused, only wheel odometry is. Documented
+  as a live "spot the config bug" note in `08` rather than silently treating it as fused.
+- **Files created:**
+  - `learn/08-three-bots-architecture.md` — hardware/software comparison table; full
+    package-by-package breakdown for each of the three robots with real file names, node
+    names, topics, and services; setup/run commands per robot; then the core technical
+    section: how the EKF (wheel+IMU fusion) and AMCL (map-based correction) together do
+    localization, how SLAM Toolbox vs Cartographer vs gmapping build the map, how the two
+    *different* obstacle-avoidance mechanisms in this repo (the reactive handout node vs
+    Nav2's costmap layers) are not the same thing and don't run together, how Nav2's
+    behavior-tree/planner/controller/behavior-server pipeline does goal-directed navigation,
+    and one end-to-end ASCII diagram tying sensors → EKF → {SLAM or AMCL} → costmaps →
+    planner/controller → cmd_vel_mux → lyra_bridge → STM32 → wheels together.
+  - `learn/09-ros2-across-robot-types.md` — AMR pattern recap, then a full robotic-arm
+    section (URDF kinematic chains, `ros2_control`, `joint_trajectory_controller`, MoveIt 2
+    planning scenes, why "obstacle avoidance" means self/environment collision-checked
+    planning for an arm rather than a continuous reactive loop), plus a shorter tour of
+    legged robots, drones/MAVs, and multi-robot namespacing, closing with which of this
+    repo's tools (rclpy/colcon/TF vs Nav2 vs `robot_localization` vs `ros2_control`) carry
+    over to which robot class.
+- **Files changed:**
+  - `README.md` — added `08`/`09` to the study order as a new "deeper reference" tier.
+  - `.CLAUDE/CLAUDE.md` — Architecture table gained rows for `08`/`09`.
+  - `learn/00-course-and-lab-map.md` — study-path list extended with `08`/`09` as
+    post-lab, viva-depth material.
+  - `TODO.md` — logged both new files under Done.
+- Did not touch `docs/` or any lab-day checklist (`05`–`07`) — this content is additive
+  reference depth, not a replacement for the existing lab-focused guides.
+- Nothing committed — user commits when ready.

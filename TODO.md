@@ -11,6 +11,8 @@
 - [x] Cloned `jetbot` (NVIDIA-AI-IOT) and `acrux` (VEEROBOT) as gitignored reference-only source, alongside `BeetleBot/`; linked all three in `README.md` (commit: _pending_)
 - [x] Converted `BeetleBot/`, `jetbot/`, `acrux/` from gitignored plain clones to **git submodules** (`.gitmodules`) — pinned pointers tracked in the repo, contents still live upstream (commit: _pending_)
 - [x] Read both course syllabus PDFs and all `docs/` handouts; wrote `learn/00-course-and-lab-map.md` (syllabus summary + doc-to-lab map) and three lab-day checklists — `05-lab1-turtlesim-and-workspace.md`, `06-lab2-beetlebot-movement.md`, `07-lab3-obstacle-avoidance.md` (the last includes a v1-vs-v2 obstacle-avoidance script comparison not covered elsewhere) (commit: _pending_)
+- [x] Read the actual checked-out source of all three submodules (`BeetleBot/lyra_ws/src/*`, `acrux/acrux_*`, `jetbot/jetbot/*`) and wrote `learn/08-three-bots-architecture.md` — package/file-by-file walkthrough of all three robots plus a detailed localization/SLAM/obstacle-avoidance/Nav2 pipeline explanation with an end-to-end diagram (commit: _pending_)
+- [x] Wrote `learn/09-ros2-across-robot-types.md` — how ROS 2 concepts extend to robotic arms (MoveIt 2, `ros2_control`, joint trajectories), legged robots, drones, and multi-robot systems, contrasted against the AMR pattern used by this lab's robots (commit: _pending_)
 
 ## Not Started
 

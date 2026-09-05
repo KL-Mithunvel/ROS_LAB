@@ -35,6 +35,14 @@ Lab-day checklists (practical, step-by-step, "why" for each command, cross-linki
 6. `learn/06-lab2-beetlebot-movement.md` — connect, arm, drive, teleop the real robot
 7. `learn/07-lab3-obstacle-avoidance.md` — deploy and run the obstacle-avoidance node
 
+Deeper reference (all three robots, and ROS 2 beyond wheeled bases):
+
+8. `learn/08-three-bots-architecture.md` — full package-by-package walkthrough of BeetleBot,
+   JetBot, and Acrux, plus how localization, SLAM, obstacle avoidance, and Nav2 navigation
+   actually work and plug together end to end
+9. `learn/09-ros2-across-robot-types.md` — how ROS 2 is used for robots other than wheeled
+   AMRs (robotic arms/MoveIt 2, legged robots, drones, multi-robot systems)
+
 ## Get / refresh the reference source (git submodules)
 
 `BeetleBot/`, `jetbot/`, and `acrux/` are **git submodules** — this repo tracks a pinned

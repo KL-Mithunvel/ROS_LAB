@@ -55,6 +55,11 @@ control architectures), not just "which command did what".
 1. **`05-lab1-turtlesim-and-workspace.md`** — your own workspace, turtlesim publish/subscribe.
 2. **`06-lab2-beetlebot-movement.md`** — connect to the real robot, arm, drive, teleop.
 3. **`07-lab3-obstacle-avoidance.md`** — deploy and run the autonomous obstacle-avoidance node.
+4. **`08-three-bots-architecture.md`** — once the labs make sense, go deeper: every package
+   in all three robot submodules, and exactly how localization, SLAM, obstacle avoidance,
+   and Nav2 navigation work and plug together end to end (viva-depth material).
+5. **`09-ros2-across-robot-types.md`** — how the same ROS 2 concepts apply beyond wheeled
+   robots (arms, legs, drones) — useful context, not lab-required.
 
 Each of those three is a **checklist you can run start-to-finish**, and links out to the
 deeper references when you want the "why" in full:
