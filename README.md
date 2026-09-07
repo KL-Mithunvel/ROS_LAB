@@ -3,15 +3,21 @@
 Personal study repo for the **ROS 2 lab** built around the **VEEROBOT BeetleBot / Lyra**
 robot (ROS 2 Jazzy, Raspberry Pi 5, RPLiDAR C1, STM32F405 motor controller).
 
-Goal: walk into the lab able to (1) use a Linux terminal fluently, (2) understand how
-ROS 2 works, and (3) run the full BeetleBot workflow — connect → bring up → drive →
-record data → SLAM → obstacle-avoidance node.
+Two goals:
+
+- **Near term** — walk into the graded lab able to use a Linux terminal fluently,
+  understand how ROS 2 works, and run the full BeetleBot workflow (connect → bring up →
+  drive → record → SLAM → obstacle-avoidance node).
+- **Long term** — be able to build a ROS 2 autonomy stack for *any* robot from scratch:
+  description → simulation → control → localization → SLAM → path planning → navigation.
+
+The guides are split into two tracks accordingly — see `learn/README.md`.
 
 ## Layout
 
 | Path | What it is |
 |------|-----------|
-| `learn/` | Study guides written for this lab — start here |
+| `learn/` | Study guides — start at `learn/README.md`. Split into `foundations/` (shared), `lab/` (Track A — the graded lab), `build/` (Track B — building ROS 2 systems) |
 | `docs/` | The raw handouts I was given (BeetleBot manual + obstacle-avoidance scripts) |
 | `BeetleBot/` | **Git submodule** pinned to [github.com/VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot) — the lab robot's upstream source |
 | `jetbot/` | **Git submodule** pinned to [NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot) — comparison platform only, not used in this lab |
@@ -21,27 +27,22 @@ record data → SLAM → obstacle-avoidance node.
 
 ## Study order
 
-Start with `learn/00-course-and-lab-map.md` — it maps every file below to the lab day it
-belongs to. Reference guides (deep "how it works"):
+Full map with one-line descriptions of every file: **`learn/README.md`**. In short:
 
-1. `learn/01-linux-commands.md` — every terminal command the lab uses, explained
-2. `learn/02-ros2-concepts.md` — nodes, topics, services, `colcon`, workspaces, `rclpy`
-3. `learn/03-beetlebot-runbook.md` — the corrected, consolidated lab-day procedure
-4. `learn/04-ros2-official-docs.md` — curated links into the official ROS 2 Jazzy docs
+**Foundations (both tracks):**
 
-Lab-day checklists (practical, step-by-step, "why" for each command, cross-linking 1–4):
+1. `learn/foundations/01-linux-and-shell.md` — Linux/shell fluency for ROS work
+2. `learn/foundations/02-ros2-concepts.md` — the ROS 2 model, `colcon`, `rclpy`, launch, QoS
+3. `learn/foundations/03-official-docs-index.md` — curated links into the official docs
+4. `learn/foundations/04-ros1-vs-ros2.md` — ROS 1 vs ROS 2 (the syllabus is ROS 1-era)
 
-5. `learn/05-lab1-turtlesim-and-workspace.md` — workspace setup, turtlesim publish/subscribe
-6. `learn/06-lab2-beetlebot-movement.md` — connect, arm, drive, teleop the real robot
-7. `learn/07-lab3-obstacle-avoidance.md` — deploy and run the obstacle-avoidance node
+**Track A — the graded lab (`learn/lab/`):** `00-course-and-lab-map.md` →
+`01-lab-day-runbook.md` → `02`/`03`/`04` lab-day checklists.
 
-Deeper reference (all three robots, and ROS 2 beyond wheeled bases):
-
-8. `learn/08-three-bots-architecture.md` — full package-by-package walkthrough of BeetleBot,
-   JetBot, and Acrux, plus how localization, SLAM, obstacle avoidance, and Nav2 navigation
-   actually work and plug together end to end
-9. `learn/09-ros2-across-robot-types.md` — how ROS 2 is used for robots other than wheeled
-   AMRs (robotic arms/MoveIt 2, legged robots, drones, multi-robot systems)
+**Track B — building ROS 2 autonomy systems (`learn/build/`):**
+`01-three-bots-architecture.md` and `02-ros2-across-robot-types.md` (worked examples), then
+`03-build-a-ros2-autonomy-stack.md` (the spine) → `04` description/TF → `05` simulation →
+`06` control / `ros2_control` → `07` localization & SLAM → `08` navigation & path planning.
 
 ## Get / refresh the reference source (git submodules)
 

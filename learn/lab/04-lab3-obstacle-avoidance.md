@@ -1,10 +1,10 @@
-# 07 — Lab 3: the obstacle-avoidance node
+# 04 — Lab 3: the obstacle-avoidance node
 
 **Goal of this lab:** deploy a Python `rclpy` node onto the robot's own workspace, register
 it as a runnable command, build it, and run it so the robot drives and steers itself around
 obstacles using the LiDAR. Source: both `docs/BEETLEBOT  Obstacle_avoid.txt` (v1) and
 `docs/BEETLEBOT Updated _Obstacle_avoid.txt` (v2 / "Updated"). The full line-by-line read of
-the v2 code (windowing math, state machine) already lives in `02-ros2-concepts.md` §5 — this
+the v2 code (windowing math, state machine) already lives in `../foundations/02-ros2-concepts.md` §5 — this
 file is the deployment checklist plus a side-by-side of what changed between v1 and v2 and
 why, since nothing else in this repo compares the two versions.
 
@@ -30,11 +30,11 @@ ssh veerobot@192.168.0.<robotNumber>
 cd ~/lyra_ws/src/lyra_control/lyra_control/
 nano obstacle_avoidance.py
 ```
-Clear any existing content (`Ctrl+K` repeatedly — see `01-linux-commands.md` §3), then paste
+Clear any existing content (`Ctrl+K` repeatedly — see `../foundations/01-linux-and-shell.md` §3), then paste
 in the script (v1 or v2, see comparison below), save (`Ctrl+O`, `Enter`), exit (`Ctrl+X`).
 
 ```bash
-chmod +x obstacle_avoidance.py     # make it executable — 01-linux-commands.md §4
+chmod +x obstacle_avoidance.py     # make it executable — ../foundations/01-linux-and-shell.md §4
 ```
 
 ## Step 3 — Register it as a runnable command
@@ -56,7 +56,7 @@ entry_points={
 **Why this step exists:** `ros2 run <pkg> <name>` only knows about names listed here — it
 maps the command name (`obstacle_avoid`) to a Python `module:function` (`main()` in
 `obstacle_avoidance.py`). Without this entry, the file exists but `ros2 run` can't find it.
-(`02-ros2-concepts.md` §3, "`package.xml` and `setup.py`".)
+(`../foundations/02-ros2-concepts.md` §3, "`package.xml` and `setup.py`".)
 
 ## Step 4 — Build and source
 
@@ -107,7 +107,7 @@ debt table): v1's fixed-direction turn is a real limitation — if it's blocked 
 turning side too, it can get stuck oscillating instead of escaping. v2's "check both sides,
 turn toward the clearer one" plus "back off first if it's *very* close" is a small but
 genuine improvement in robustness, and it's the version the full code walkthrough in
-`02-ros2-concepts.md` §5 (windowing math, the reversing state machine, the `SIGINT` handler)
+`../foundations/02-ros2-concepts.md` §5 (windowing math, the reversing state machine, the `SIGINT` handler)
 is written against.
 
 ---
@@ -123,4 +123,10 @@ is written against.
       → `colcon build` → `source` → `ros2 run`
 
 Full code walkthrough (windowing math, the reversing state machine, line by line): see
-`02-ros2-concepts.md` §5. Emergency stops beyond `Ctrl+C`: `03-beetlebot-runbook.md`.
+`../foundations/02-ros2-concepts.md` §5. Emergency stops beyond `Ctrl+C`: `01-lab-day-runbook.md`.
+
+---
+
+Next: the lab track ends here. To go from "I can run the lab" to "I can build a ROS 2
+autonomy stack for any robot" (localization, SLAM, path planning, navigation, control),
+start **Track B**: `../build/01-three-bots-architecture.md`. Full map: `../README.md`.

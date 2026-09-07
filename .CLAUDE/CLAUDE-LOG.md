@@ -146,3 +146,58 @@
 - Did not touch `docs/` or any lab-day checklist (`05`–`07`) — this content is additive
   reference depth, not a replacement for the existing lab-focused guides.
 - Nothing committed — user commits when ready.
+
+## 2026-09-07 — `learn/` restructure into two tracks + Track B build-out (all 11 phases)
+
+- **User's ask:** (1) add a ROS 1 vs ROS 2 guide; (2) rework the Linux guide to cover ROS
+  generally, not just BeetleBot; (3) new overarching goal — be able to build a ROS 2
+  autonomy stack for *any* robot (localization, navigation, path planning, control), so
+  rework whatever modules that needs; (4) move all lab content into its own folder so future
+  lab experiments can be added while keeping document flow.
+- **Decision (agreed with user via AskUserQuestion):** full Track-B build-out (not the lean
+  single-file option), and extend `foundations/02` with builder depth rather than freezing it.
+  Plan recorded as 11 phases in `TODO.md`.
+- **Structure chosen:** `learn/foundations/` (shared: linux, ros2-concepts, docs-index,
+  ros1-vs-ros2), `learn/lab/` (Track A — the graded lab, per-folder numbered 00–04),
+  `learn/build/` (Track B — 01–08). Per-folder numbering from 01 so new files append cleanly.
+- **Phase 1 done this session:**
+  - `git mv` all 10 existing guides into the new folders with history preserved, renumbered
+    per folder (`03-beetlebot-runbook`→`lab/01-lab-day-runbook`, `05/06/07`→`lab/02/03/04`,
+    `04-ros2-official-docs`→`foundations/03-official-docs-index`, `01`→`foundations/01-linux-and-shell`,
+    `08/09`→`build/01/02`). Script: `scratchpad/reorg.py`.
+  - Rewrote every inter-guide cross-link to the new relative paths; fixed the `Next:` chain
+    and every `# NN —` H1; reworked `lab/00-course-and-lab-map.md` §3 to a lab-only study
+    path pointing at `learn/README.md` for the big picture; added a note to its §1 that the
+    syllabus vocabulary (`move_base`, `actionlib`) is ROS 1-era.
+  - **New:** `learn/README.md` — the two-track map + reading route.
+  - **Changed:** root `README.md` (goal now two horizons; study order rewritten around the
+    tracks), `.CLAUDE/CLAUDE.md` (Project Overview two horizons; Architecture table replaced
+    with the tracked structure; new Development Rule 2a "keep the two tracks separate";
+    path refs updated; Project TODO List updated), `TODO.md` (11-phase plan).
+  - Saved the user's own early Linux notes to `scratchpad/user-old-linux-notes.md` to fold
+    into `foundations/01` in Phase 2.
+- **Phases 2–11 done this session too:**
+  - **`foundations/01-linux-and-shell.md`** reworked (Phase 2) — now general ROS Linux:
+    added SSH keys/`~/.ssh/config`, `rsync`, `tmux`, `systemd`/`journalctl`, `udev` rules,
+    `rosdep`/`vcs`, `git` for workspaces, DDS discovery/multicast/firewall, users/groups,
+    system inspection, shell ergonomics; folded in the user's early Linux notes; kept the
+    BeetleBot examples and a "lab quick reference" box (§17).
+  - **`foundations/02-ros2-concepts.md`** extended (Phase 3, additive only) — new §7–§15:
+    QoS, parameters/YAML, lifecycle nodes, executors/callback groups, actions, TF2,
+    creating packages + custom interfaces, launch files in depth, composition. §1–§6 (the
+    lab-exam core, and the section numbers other files cite) untouched.
+  - **New Track-B files:** `foundations/04-ros1-vs-ros2.md`,
+    `build/03-build-a-ros2-autonomy-stack.md` (the spine — the 7-layer model + build order +
+    package layout), `build/04-robot-description-and-tf.md`, `build/05-simulation-gazebo.md`,
+    `build/06-control-and-ros2-control.md`, `build/07-localization-and-slam.md`,
+    `build/08-navigation-and-path-planning.md`.
+  - **Phase 11:** `build/01`/`02` footers now carry a §-mechanism → deep-dive-file map;
+    reconciled the number-shorthand after the renumber (`08`→`01` for three-bots, bare `02`
+    → `foundations/02` vs `02-ros2-across-robot-types.md` by meaning); a link-checker script
+    confirms every inter-guide `.md` reference resolves.
+- **Content basis:** the new `build/` files are written against the official ROS 2 Jazzy /
+  Nav2 / `ros2_control` / Gazebo Harmonic docs and the vendored submodule source, but have
+  **not been run end to end** — flagged in `TODO.md` under In Progress for live verification.
+- **Not touched:** `docs/` (read-only), the lab checklist *content* (only moved + renumbered
+  + Next-links), the submodules, `CLAUDE-COMMON.md`.
+- Nothing committed — user commits when ready.

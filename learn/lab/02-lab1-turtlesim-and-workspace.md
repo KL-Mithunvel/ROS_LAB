@@ -1,9 +1,9 @@
-# 05 — Lab 1: workspace setup + turtlesim publish/subscribe
+# 02 — Lab 1: workspace setup + turtlesim publish/subscribe
 
 **Goal of this lab:** prove your ROS 2 install works, and learn the publish/subscribe
 pattern on a harmless simulated turtle *before* touching the real robot. Source:
 `docs/Beetlebot Manual.docx`, Phases 1–2. This is a checklist — for what each command
-actually does, see the linked sections in `01-linux-commands.md` / `02-ros2-concepts.md`.
+actually does, see the linked sections in `../foundations/01-linux-and-shell.md` / `../foundations/02-ros2-concepts.md`.
 
 Runs **on the PC** (or any Linux box / `docker run -it ros:jazzy`) — no robot needed yet.
 
@@ -23,7 +23,7 @@ source ~/.bashrc
 **Why a separate workspace from the robot's `~/lyra_ws`?** `~/lyra_ws` is the robot's own
 built stack — you never build into it. Your workspace is a second *overlay* on top of the
 same `/opt/ros/jazzy` *underlay*; ROS lets you stack multiple overlays like this (see
-`02-ros2-concepts.md` §3, "Underlay vs overlay"). Building it now, even empty, catches a
+`../foundations/02-ros2-concepts.md` §3, "Underlay vs overlay"). Building it now, even empty, catches a
 broken `colcon`/environment before you're mid-lab.
 
 ## Step 2 — Install and run turtlesim
@@ -73,7 +73,7 @@ ros2 topic echo /turtle1/cmd_vel                  # print each Twist message as 
 ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist \
   "{linear: {x: 2.0}, angular: {z: 1.8}}"          # drive it from the CLI, no teleop needed
 ```
-Full CLI reference (`topic info`, `hz`, `bw`, `node info`, …) is in `02-ros2-concepts.md` §2.
+Full CLI reference (`topic info`, `hz`, `bw`, `node info`, …) is in `../foundations/02-ros2-concepts.md` §2.
 
 ## Step 5 — Record what you saw
 
@@ -82,7 +82,7 @@ ros2 bag record /turtle1/cmd_vel                  # Ctrl+C to stop recording
 ros2 bag record -o my_cmd_vel_bag /turtle1/cmd_vel # -o names the output folder
 ros2 topic echo /turtle1/cmd_vel > scan_output.txt # plain-text capture instead of a bag
 ```
-`ros2 bag` mechanics (what a bag actually is, `play`/`info`) are in `02-ros2-concepts.md` §2.
+`ros2 bag` mechanics (what a bag actually is, `play`/`info`) are in `../foundations/02-ros2-concepts.md` §2.
 
 ---
 
@@ -95,4 +95,4 @@ ros2 topic echo /turtle1/cmd_vel > scan_output.txt # plain-text capture instead 
 - [ ] `ros2 topic list` / `echo` / `pub --once` on `/turtle1/cmd_vel`
 - [ ] Record a bag and know what `-o` does
 
-Next: `06-lab2-beetlebot-movement.md`.
+Next: `03-lab2-beetlebot-movement.md`.

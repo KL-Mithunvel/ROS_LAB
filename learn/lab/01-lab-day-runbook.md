@@ -1,4 +1,4 @@
-# 03 — BeetleBot lab-day runbook (consolidated)
+# 01 — BeetleBot lab-day runbook (consolidated)
 
 One procedure, reconciled from the four handouts in `docs/`. Where they disagree, this file
 picks the safest interpretation and flags it. **Confirm the starred (⚠️) values with the
@@ -242,4 +242,5 @@ Upstream shortcut form (only if `lyra_commands.sh` is sourced): `lyra-launch-rob
 6. **Armed** before expecting motion? Will **disarm** when done?
 7. Know where the stop is (`Ctrl+C`, `k`, disarm, power switch)?
 
-Next: `04-ros2-official-docs.md`.
+Next: `02-lab1-turtlesim-and-workspace.md` (or, for the "why" behind each command,
+`../foundations/01-linux-and-shell.md` and `../foundations/02-ros2-concepts.md`).

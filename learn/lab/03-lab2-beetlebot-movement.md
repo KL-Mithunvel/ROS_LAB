@@ -1,9 +1,9 @@
-# 06 — Lab 2: connecting to BeetleBot and movement commands
+# 03 — Lab 2: connecting to BeetleBot and movement commands
 
 **Goal of this lab:** connect to the real robot, arm it, and drive it — one-shot pulses,
 timed recipes, and live keyboard teleop. Source: `docs/VEEROBOT BEETLE BOT LYRA.txt` +
 `docs/Beetlebot Manual.docx` Phases 3–4. Full reconciled procedure (all handout conflicts
-resolved) is `03-beetlebot-runbook.md` Phases 1–5 — this file is the "why" companion to it,
+resolved) is `01-lab-day-runbook.md` Phases 1–5 — this file is the "why" companion to it,
 walked in lab order.
 
 **PC vs robot matters here** — every step below says which machine it runs on.
@@ -17,7 +17,7 @@ ping 192.168.0.<robotNumber>            # confirm reachable; Ctrl+C once you see
 ```
 PC and robot must be on the same Wi-Fi (`BEETLEBOT_5G`) and subnet. A ping timeout means
 wrong network, robot not booted, or wrong IP — fix this before anything else (see
-`03-beetlebot-runbook.md` "Common failures").
+`01-lab-day-runbook.md` "Common failures").
 
 ## Step 2 — Terminal 1: SSH in and bring up hardware (on the robot, via SSH)
 
@@ -31,7 +31,7 @@ ros2 launch lyra_bringup robot.launch.py
 **Leave this terminal running for the whole session.** It owns the LiDAR driver and the
 UART bridge to the STM32 motor controller — closing it kills both. `ROS_DOMAIN_ID` is what
 lets your PC's nodes and the robot's nodes discover each other over DDS; it must be the
-**same number in every terminal, on both machines** (`02-ros2-concepts.md` §1).
+**same number in every terminal, on both machines** (`../foundations/02-ros2-concepts.md` §1).
 
 ## Step 3 — Terminal 2: arm the robot (on the robot, second SSH session)
 
@@ -132,7 +132,7 @@ ros2 service call /lyra/disarm std_srvs/srv/Trigger
 Do this every time you're finished driving, even if the robot already looks stopped — it's
 the difference between "wheels are at zero velocity" and "wheels physically cannot receive
 a velocity command". Full emergency-stop ladder (what to do if this *isn't* enough) is in
-`03-beetlebot-runbook.md`, "Emergency stops — know all of these cold".
+`01-lab-day-runbook.md`, "Emergency stops — know all of these cold".
 
 ---
 
@@ -147,4 +147,4 @@ a velocity command". Full emergency-stop ladder (what to do if this *isn't* enou
 - [ ] Run keyboard teleop with the `cmd_vel:=cmd_vel_nav` remap
 - [ ] Name at least two independent ways to force an immediate stop
 
-Next: `07-lab3-obstacle-avoidance.md`.
+Next: `04-lab3-obstacle-avoidance.md`.

@@ -11,10 +11,15 @@
 This repo is **kl mithunvel's personal study workspace** for an academic **ROS 2 lab** built
 around the **VEEROBOT BeetleBot** robot (internal platform name **"Lyra"**).
 
-- **Purpose:** learn (1) Linux terminal usage, (2) how ROS 2 works, (3) the full BeetleBot
-  operating workflow, before and during the lab / viva / practical exam.
+- **Purpose:** two horizons —
+  1. **Near term:** learn Linux terminal usage, how ROS 2 works, and the full BeetleBot
+     operating workflow, before and during the lab / viva / practical exam.
+  2. **Long term:** be able to build a ROS 2 autonomy stack for *any* robot from scratch —
+     description → simulation → control → localization → SLAM → path planning → navigation.
 - **This is a learning repo, not a software product.** The deliverables are study guides in
   `learn/`, not application code. There is no build, no test suite, no runtime here.
+- **`learn/` is split into two tracks** (see `learn/README.md`): `foundations/` (shared),
+  `lab/` (Track A — the graded lab), `build/` (Track B — building ROS 2 systems).
 - **The robot itself** runs ROS 2 Jazzy on a Raspberry Pi 5 (Ubuntu 24.04). We do not have
   the robot in this repo — we prepare against its documentation and its public source.
 - **Author:** kl mithunvel (`klm@smtw.in`). **License:** see `LICENSE`.
@@ -33,7 +38,7 @@ LSM6DSR IMU, wheel encoders (3600 ticks/rev), Pi Camera V1.3.
 
 **There is nothing to run in this repo.** "Running the system" means operating the robot
 from a Linux PC over SSH during the lab. The authoritative, reconciled procedure is
-**`learn/03-beetlebot-runbook.md`** — follow that, not the individual handouts.
+**`learn/lab/01-lab-day-runbook.md`** — follow that, not the individual handouts.
 
 Skeleton of a lab session (full detail + caveats in the runbook):
 
@@ -61,7 +66,7 @@ ros2 topic echo /scan
 ```
 
 For local ROS 2 practice without the robot, use turtlesim on any Linux machine (or the
-`ros:jazzy` Docker image) — see `learn/02-ros2-concepts.md`.
+`ros:jazzy` Docker image) — see `learn/foundations/02-ros2-concepts.md`.
 
 ---
 
@@ -71,16 +76,27 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 
 | Path | Role |
 |------|------|
-| `learn/00-course-and-lab-map.md` | What the two syllabus PDFs actually require; maps every `docs/` file to its lab day and `learn/` file |
-| `learn/01-linux-commands.md` | Terminal commands used across the lab, each explained with the exact form the lab uses |
-| `learn/02-ros2-concepts.md` | ROS 2 computation model (nodes/topics/services/params), `colcon` + workspace/overlay model, `rclpy` node anatomy, line-by-line read of the handout obstacle-avoidance node |
-| `learn/03-beetlebot-runbook.md` | Single corrected lab-day procedure reconciling the four robot handouts |
-| `learn/04-ros2-official-docs.md` | Curated index into `docs.ros.org/en/jazzy` with why each page matters here |
-| `learn/05-lab1-turtlesim-and-workspace.md` | Lab 1 checklist: workspace setup, turtlesim publish/subscribe |
-| `learn/06-lab2-beetlebot-movement.md` | Lab 2 checklist: connect to the robot, arm, drive, teleop |
-| `learn/07-lab3-obstacle-avoidance.md` | Lab 3 checklist: deploy/run the obstacle-avoidance node, v1-vs-v2 script comparison |
-| `learn/08-three-bots-architecture.md` | Full package/file walkthrough of BeetleBot, JetBot, Acrux; how localization, SLAM, obstacle avoidance and Nav2 navigation work and plug together |
-| `learn/09-ros2-across-robot-types.md` | How ROS 2 is used for robots other than wheeled AMRs — robotic arms (MoveIt 2, `ros2_control`), legged robots, drones, multi-robot systems |
+| `learn/README.md` | Index of both tracks + reading route |
+| **`learn/foundations/`** | **Shared prerequisites for both tracks** |
+| `foundations/01-linux-and-shell.md` | Linux/shell fluency for ROS work — files, perms, SSH/keys, `rsync`, `tmux`, `systemd`/`journalctl`, `udev`, networking & DDS discovery, `apt`/`rosdep`, `git` for workspaces |
+| `foundations/02-ros2-concepts.md` | ROS 2 model (nodes/topics/services/actions/params), QoS, lifecycle, executors, TF2, `colcon`/workspaces/overlays, `rclpy` node anatomy, creating packages + custom interfaces, launch files |
+| `foundations/03-official-docs-index.md` | Curated index into `docs.ros.org/en/jazzy` + Nav2/SLAM/`ros2_control` docs |
+| `foundations/04-ros1-vs-ros2.md` | ROS 1 vs ROS 2 — `roscore` vs DDS, command/concept table, build systems, `ros1_bridge`, viva Q&A |
+| **`learn/lab/`** | **Track A — the graded BeetleBot lab** |
+| `lab/00-course-and-lab-map.md` | What the two syllabus PDFs require; maps every `docs/` file to its lab day |
+| `lab/01-lab-day-runbook.md` | Single corrected lab-day procedure reconciling the four robot handouts |
+| `lab/02-lab1-turtlesim-and-workspace.md` | Lab 1 checklist: workspace setup, turtlesim publish/subscribe |
+| `lab/03-lab2-beetlebot-movement.md` | Lab 2 checklist: connect to the robot, arm, drive, teleop |
+| `lab/04-lab3-obstacle-avoidance.md` | Lab 3 checklist: deploy/run the obstacle-avoidance node, v1-vs-v2 comparison |
+| **`learn/build/`** | **Track B — building a ROS 2 autonomy stack for any robot** |
+| `build/01-three-bots-architecture.md` | Full package walkthrough of BeetleBot/Acrux/JetBot; how localization, SLAM, obstacle avoidance and Nav2 plug together end to end |
+| `build/02-ros2-across-robot-types.md` | ROS 2 on arms (MoveIt 2, `ros2_control`), legged robots, drones, multi-robot systems |
+| `build/03-build-a-ros2-autonomy-stack.md` | The spine — scaffolding packages and assembling all the pieces into a new robot project |
+| `build/04-robot-description-and-tf.md` | URDF/Xacro, links/joints, `robot_state_publisher`, the `map→odom→base_link→sensor` TF2 chain |
+| `build/05-simulation-gazebo.md` | Gazebo + `ros_gz`, sim time, spawning, sensor plugins — develop here before hardware |
+| `build/06-control-and-ros2-control.md` | `ros2_control` architecture, diff-drive/ackermann controllers, hardware interfaces, PID, MCU boundary / micro-ROS |
+| `build/07-localization-and-slam.md` | Odometry, IMU, `robot_localization` EKF, AMCL, `slam_toolbox`/Cartographer — tuning, TF frames, failure modes |
+| `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners, controllers, behavior trees, recovery, tuning `nav2_params.yaml` |
 | `docs/` | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
 | `BeetleBot/` | Upstream BeetleBot source — **git submodule** (pinned pointer only, see `.gitmodules`) |
 | `jetbot/` | NVIDIA-AI-IOT JetBot — **git submodule**, comparison platform only |
@@ -152,7 +168,7 @@ If practice code is added later (e.g. a personal `rclpy` node), it goes in a new
 ## Deployment Notes
 
 No deployment from this repo. "Deployment" = operating the physical robot, which is
-covered by `learn/03-beetlebot-runbook.md`. Pre-lab checklist:
+covered by `learn/lab/01-lab-day-runbook.md`. Pre-lab checklist:
 
 - [ ] Can SSH to the robot and get a prompt
 - [ ] `ros2 topic list` on the PC shows the robot's topics (proves DDS + `ROS_DOMAIN_ID` OK)
@@ -186,9 +202,16 @@ machine). Study that one; the plain one is the simpler first version.
 
 1. **This is a study repo — accuracy of the guides is the whole point.** Every command in
    `learn/` must be one that actually works on ROS 2 Jazzy / Ubuntu. When unsure, check the
-   official docs (`learn/04-...`) or the `BeetleBot/` source, and cite where it came from.
+   official docs (`learn/foundations/03-official-docs-index.md`) or the vendored submodule
+   source, and cite where it came from.
 2. **`docs/` is read-only.** It is the instructor's source material. Corrections and
-   reconciliations go in `learn/03-beetlebot-runbook.md`, never by editing a handout.
+   reconciliations go in `learn/lab/01-lab-day-runbook.md`, never by editing a handout.
+2a. **Keep the two tracks separate.** `learn/foundations/` = shared prerequisites;
+   `learn/lab/` = the graded BeetleBot lab (stays exam-focused, BeetleBot-specific);
+   `learn/build/` = general "build a ROS 2 stack for any robot" material. Lab-specific
+   quirks (the `docs/` technical debt, `/cmd_vel_nav`, `lyra_*`) do not leak into `build/`;
+   general theory does not bloat the `lab/` checklists — cross-link instead. One concern per
+   file (per `CLAUDE-COMMON.md`). New lab experiments slot in as `lab/05-…` onward.
 3. **`CLAUDE-COMMON.md` is a shared file — never edit it.** (Per the `update-docs` skill.)
    If it needs changes, tell the user.
 4. **Prefer the raw `ros2 ...` command form over the `lyra-*` aliases** in the guides, with
@@ -210,7 +233,11 @@ Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not start
 - ✅ Rewrite this file from library-template to real project brief
 - ✅ Create `learn/` study guides (linux, ROS 2 concepts, runbook, doc index)
 - ✅ Fill `README.md`, `TODO.md`, `.CLAUDE/CLAUDE-LOG.md`
-- 🟡 Verify every guide against a live ROS 2 Jazzy environment (not yet done — no Linux box in this session)
+- ✅ Restructure `learn/` into `foundations/` + `lab/` (Track A) + `build/` (Track B); add `learn/README.md`
+- ✅ Track B build-out — reworked `foundations/01`, extended `foundations/02` (§7–§15),
+  wrote `foundations/04-ros1-vs-ros2` and `build/03`–`build/08`
+- 🟡 Verify the guides (esp. the new `build/` files) against a live ROS 2 Jazzy + Gazebo
+  Harmonic environment — written against docs/source, not yet run end to end
 - 🟢 Add a `practice/` folder with a hand-written minimal `rclpy` publisher/subscriber node
 - 🟢 Confirm the technical-debt table values with the instructor and update it
 

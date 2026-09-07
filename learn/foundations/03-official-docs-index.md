@@ -1,4 +1,4 @@
-# 04 — Official ROS 2 documentation index (Jazzy)
+# 03 — Official ROS 2 documentation index (Jazzy)
 
 The authoritative source is **<https://docs.ros.org/en/jazzy/>**. Everything else (blogs,
 YouTube, this repo) is secondary. Deep-link slugs occasionally change between doc builds —
@@ -105,10 +105,37 @@ Section index — <https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libra
 
 ---
 
+## Track B docs (building a stack — pairs with `../build/`)
+
+| Topic | `build/` file | Docs |
+|---|---|---|
+| URDF / Xacro | `04` | <https://docs.ros.org/en/jazzy/Tutorials/Intermediate/URDF/URDF-Main.html> · <https://github.com/ros/xacro/wiki> |
+| TF2 | `04` | <https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Tf2/Tf2-Main.html> · REP-105 <https://www.ros.org/reps/rep-0105.html> |
+| Gazebo (Harmonic) + `ros_gz` | `05` | <https://gazebosim.org/docs/harmonic/> · <https://github.com/gazebosim/ros_gz> |
+| `ros2_control` | `06` | <https://control.ros.org/jazzy/> · demos <https://github.com/ros-controls/ros2_control_demos> |
+| `gz_ros2_control` | `05`/`06` | <https://github.com/ros-controls/gz_ros2_control> |
+| micro-ROS | `06` | <https://micro.ros.org/> |
+| `robot_localization` | `07` | <https://docs.ros.org/en/melodic/api/robot_localization/html/> (params unchanged) |
+| SLAM Toolbox | `07` | <https://github.com/SteveMacenski/slam_toolbox> |
+| Cartographer ROS | `07` | <https://google-cartographer-ros.readthedocs.io/> |
+| Nav2 (concepts + config) | `08` | <https://docs.nav2.org/> · tuning <https://docs.nav2.org/tuning/index.html> |
+| Nav2 plugins (planners/controllers) | `08` | <https://docs.nav2.org/plugins/index.html> |
+| `nav2_simple_commander` (Python API) | `08` | <https://docs.nav2.org/commander_api/index.html> |
+| MoveIt 2 (arms) | `../build/02` | <https://moveit.picknik.ai/main/index.html> |
+| Behavior trees (BT.CPP / Groot2) | `08` | <https://www.behaviortree.dev/> |
+
+---
+
 ## Suggested pre-lab reading budget (~4–6 hours)
 
-1. `01-linux-commands.md` + practice each in a terminal — 45 min
+1. `01-linux-and-shell.md` + practice each in a terminal — 45 min
 2. Official "Configuring your ROS 2 environment" + "Understanding nodes/topics/services" — 90 min
 3. Official "Writing a simple publisher and subscriber (Python)" — do it, don't just read — 60 min
 4. `02-ros2-concepts.md` §4–5 (rclpy anatomy + the obstacle-avoidance walkthrough) — 45 min
-5. `03-beetlebot-runbook.md` — read twice, then recite the connect→arm→drive→disarm→stop chain from memory — 30 min
+5. `../lab/01-lab-day-runbook.md` — read twice, then recite the connect→arm→drive→disarm→stop chain from memory — 30 min
+
+---
+
+Next: `04-ros1-vs-ros2.md`. Then branch — **Track A** (the lab) starts at
+`../lab/00-course-and-lab-map.md`; **Track B** (building a stack) starts at
+`../build/01-three-bots-architecture.md`. Full map: `../README.md`.

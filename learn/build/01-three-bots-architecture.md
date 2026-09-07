@@ -1,4 +1,4 @@
-# 08 — BeetleBot / JetBot / Acrux: full architecture walkthrough
+# 01 — BeetleBot / JetBot / Acrux: full architecture walkthrough
 
 This file is the deep reference for the three robots vendored into this repo as git
 submodules (`BeetleBot/`, `jetbot/`, `acrux/`). It explains, from the **actual checked-out
@@ -8,10 +8,13 @@ SLAM, obstacle avoidance and navigation actually work and how they plug together
 pipeline. BeetleBot is the lab robot; JetBot and Acrux are comparison platforms (see
 `.CLAUDE/CLAUDE.md` Architecture table).
 
-Cross-links: `02-ros2-concepts.md` (ROS 2 basics, `colcon`, the reactive obstacle-avoidance
-script line-by-line), `03-beetlebot-runbook.md` (the lab-day procedure for BeetleBot only).
-This file goes wider (all three bots) and deeper (the Nav2/SLAM/localization internals that
-`02`/`03` intentionally keep lab-exam-level).
+Cross-links: `../foundations/02-ros2-concepts.md` (ROS 2 basics, `colcon`, the reactive
+obstacle-avoidance script line-by-line), `../lab/01-lab-day-runbook.md` (the lab-day
+procedure for BeetleBot only). This file is the **worked example** for Track B — it shows
+three finished stacks; the deep dives that show you how to *build* each layer are
+`03-build-a-ros2-autonomy-stack.md` (the spine) and `04`–`08` (description/TF, simulation,
+control, localization & SLAM, navigation). Where a §5 subsection here explains a mechanism,
+the matching `build/` file explains how to configure and tune it for a new robot.
 
 ---
 
@@ -45,7 +48,7 @@ message and a subscription).
 ## 2. BeetleBot — full package walkthrough
 
 Source: `BeetleBot/lyra_ws/src/` (a normal ROS 2 workspace `src/` layout — see
-`02-ros2-concepts.md` §3 for what a workspace/package/`colcon build` is).
+`../foundations/02-ros2-concepts.md` §3 for what a workspace/package/`colcon build` is).
 
 ```
 lyra_ws/src/
@@ -139,7 +142,7 @@ It composes the smaller launch files (`base.launch.py` — description + `lyra_b
 `lyra_control`; `lidar.launch.py` — `sllidar_ros2`; `odom_ekf.launch.py` /
 `odom_ekf_imu.launch.py` — `lyra_localization`) and, depending on the `mode:=` argument,
 also brings in `lyra_slam` or `lyra_nav2`'s launch files. This is the practical meaning of
-"launch file" from `02-ros2-concepts.md`: one process starts a dozen nodes with consistent
+"launch file" from `../foundations/02-ros2-concepts.md`: one process starts a dozen nodes with consistent
 parameters instead of you running each `ros2 run` by hand.
 
 ### `beetlebot_description`
@@ -180,7 +183,7 @@ cd ~/lyra_ws && colcon build --packages-select <pkg> && source install/setup.bas
 Raw-vs-alias per Development Rule 4: `lyra-*` aliases only exist after
 `source ~/lyra_ws/lyra_commands.sh` (or `docs_ros2/lyra_commands.sh` in the submodule) is
 run on the robot; they wrap exactly the raw commands above. Full reconciled procedure incl.
-the IP/topic-name technical debt: `03-beetlebot-runbook.md`.
+the IP/topic-name technical debt: `../lab/01-lab-day-runbook.md`.
 
 ---
 
@@ -443,7 +446,7 @@ Don't conflate these; they solve overlapping problems in incompatible ways and o
 runs at a time in practice:
 
 **(A) Reactive, no map, no Nav2 — the handout's own node.** Fully detailed already in
-`02-ros2-concepts.md` §5 (windowing, the reverse state machine, the SIGINT stop-20-times
+`../foundations/02-ros2-concepts.md` §5 (windowing, the reverse state machine, the SIGINT stop-20-times
 safety handler) — summary for how it fits *here*: it subscribes `/scan` directly and
 publishes straight to `/cmd_vel_nav`, with **no localization, no map, no costmap** in the
 loop at all. It only knows "something is 0.45 m in front of me right now"; it has no memory
@@ -600,6 +603,14 @@ every path — Nav2's, the joystick's, or the manual teleop's — funnels throug
 | Navigation framework | Nav2 (Regulated Pure Pursuit + Navfn planner) | Nav2 (same node types, different tuning + more launch flexibility via `autobringup` args) | none — teleoperation/notebook-driven only |
 | Simulation | Gazebo Harmonic | Gazebo (`acrux_gazebo`, includes a warehouse world) | none |
 
-Next: nothing further in this repo's `learn/` set walks all three robots at once — for
-ROS 2 concepts applied to *other kinds* of robots entirely (arms, legged, aerial), see
-`09-ros2-across-robot-types.md`.
+Next: `02-ros2-across-robot-types.md` (the same machinery on arms, legged robots, drones,
+multi-robot systems), then `03-build-a-ros2-autonomy-stack.md` to start building your own.
+
+Map from a §5 mechanism here to its builder deep-dive:
+- §5.1 localization (EKF, AMCL) → `07-localization-and-slam.md`
+- §5.2 SLAM (SLAM Toolbox, Cartographer) → `07-localization-and-slam.md`
+- §5.3 obstacle avoidance / costmaps → `08-navigation-and-path-planning.md` §2
+- §5.4 Nav2 (planner, controller, BT) → `08-navigation-and-path-planning.md`
+- §2 `lyra_bridge` / `ros2_control` → `06-control-and-ros2-control.md`
+- URDF / `beetlebot_description` → `04-robot-description-and-tf.md`
+- Gazebo Harmonic → `05-simulation-gazebo.md`

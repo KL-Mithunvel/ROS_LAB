@@ -1,7 +1,7 @@
-# 09 — How ROS 2 is used across different robot types
+# 02 — How ROS 2 is used across different robot types
 
-`02-ros2-concepts.md` teaches the ROS 2 mechanics (nodes/topics/services, `colcon`,
-`rclpy`) and `08-three-bots-architecture.md` shows the *full* autonomy stack in detail — but
+`../foundations/02-ros2-concepts.md` teaches the ROS 2 mechanics (nodes/topics/services, `colcon`,
+`rclpy`) and `01-three-bots-architecture.md` shows the *full* autonomy stack in detail — but
 only for one robot class: wheeled mobile bases (AMRs). This file is the "zoom out" — the
 same nodes/topics/services machinery gets reused for completely different kinds of robots
 (a fixed-base robotic arm, a legged robot, a drone), by swapping out which packages,
@@ -14,7 +14,7 @@ you to work on something that isn't a wheeled AMR.
 ## 1. The one thing that doesn't change: the ROS 2 core
 
 No matter what the robot's body looks like, every ROS 2 robot uses the same primitives from
-`02-ros2-concepts.md` §1: nodes, topics, services, actions, parameters, TF, `colcon`
+`../foundations/02-ros2-concepts.md` §1: nodes, topics, services, actions, parameters, TF, `colcon`
 workspaces. What changes between robot types is:
 
 1. **What message types flow on the topics** (a `Twist` for a wheeled base means
@@ -41,15 +41,15 @@ This is BeetleBot/Acrux, and it's the pattern most ROS 2 tutorials assume by def
 |---|---|---|
 | Command input | `geometry_msgs/Twist` on `/cmd_vel` | "move at this linear + angular velocity" — one message covers the whole body since a wheeled base has one pose (x, y, yaw) to control |
 | Low-level control | a custom bridge (`lyra_bridge`) or `ros2_control` `diff_drive_controller` | converts `Twist` → per-wheel velocities → motor driver |
-| State estimate | `robot_localization` EKF + AMCL | fuses odometry/IMU, localizes on a map (`08` §5.1) |
-| Environment model | SLAM Toolbox/Cartographer building `nav_msgs/OccupancyGrid`, then Nav2 costmaps | 2D grid of the room, inflated around obstacles (`08` §5.2/5.3) |
-| High-level goal | Nav2 (`bt_navigator` + planner + controller) | "go to this (x, y, yaw) pose without hitting anything" (`08` §5.4) |
+| State estimate | `robot_localization` EKF + AMCL | fuses odometry/IMU, localizes on a map (`01` §5.1) |
+| Environment model | SLAM Toolbox/Cartographer building `nav_msgs/OccupancyGrid`, then Nav2 costmaps | 2D grid of the room, inflated around obstacles (`01` §5.2/5.3) |
+| High-level goal | Nav2 (`bt_navigator` + planner + controller) | "go to this (x, y, yaw) pose without hitting anything" (`01` §5.4) |
 | Typical sensors | 2D LiDAR, wheel encoders, IMU, sometimes a depth camera | cheap, sufficient for 2D navigation in a mostly-flat environment |
 
 The defining trait: the robot's **whole body moves as one rigid thing** through a
 **2D (or occasionally 3D, e.g. drones) environment**, so the problem is fundamentally
 "where am I, where do I want to be, what's in the way" — localization + mapping +
-path planning. This is exactly what `08` walks through in depth.
+path planning. This is exactly what `01` walks through in depth.
 
 ---
 
@@ -81,7 +81,7 @@ not "go to this place."
 | "What does the map look like?" | 2D occupancy grid of a room | a 3D "planning scene" — the arm's own geometry plus a handful of known/sensed obstacle shapes, not a whole explored environment |
 | Real-time control | a bridge node/firmware doing PID at a fixed rate (BeetleBot: 20 Hz on the STM32) | `ros2_control`'s hardware interface + the arm's own joint-level servo firmware/drivers doing position/velocity/effort control |
 
-A minimal ROS 2 arm stack, in the same "what talks to what" shape as `08` §5.5's diagram:
+A minimal ROS 2 arm stack, in the same "what talks to what" shape as `01` §5.5's diagram:
 
 ```
    MoveIt 2 (planning scene + OMPL planner)
@@ -107,13 +107,13 @@ recognize what kind of problem you're looking at when you meet one later.
 |---|---|---|
 | **Legged robot** (quadruped/biped) | The body's pose depends on a **gait** (a coordinated joint-angle pattern per leg over time) just to stand/walk at all, before any navigation happens; balance is a real-time control problem, not just "spin the wheels" | `ros2_control` per-joint (like an arm, but many chains at once), a gait/whole-body controller (often robot-specific, e.g. Unitree/ANYbotics stacks, or research frameworks like `champ`), then Nav2 can sit *on top* once a velocity-command interface exists, same as an AMR |
 | **Aerial (drone/MAV)** | Moves in full 3D (x, y, z, roll, pitch, yaw) with no wheels touching the ground — "localization" needs 3D pose estimation (often GPS + IMU + visual-inertial odometry), and "navigation" has to reason about a 3D volume, not a 2D grid | `mavros`/`mavlink` bridges to a flight controller (PX4/ArduPilot) which does the actual real-time attitude/rate control — analogous to BeetleBot's STM32 doing PID that ROS never touches directly; higher-level planning uses 3D costmaps (e.g. `octomap`) instead of Nav2's 2D grid |
-| **Multi-robot systems** | Not a different body — the same node/topic/service model, but multiplied: each robot runs its own graph, usually under its own **namespace** (`/robot1/cmd_vel`, `/robot2/cmd_vel`) and/or its own `ROS_DOMAIN_ID`, with a shared layer (fleet manager, shared map, or `actionlib`-style task allocation) coordinating them | namespacing + remapping (the same `-r`/`-p` args from `02-ros2-concepts.md` §2, just applied per-robot at scale), domain bridges when robots must cross domain IDs |
+| **Multi-robot systems** | Not a different body — the same node/topic/service model, but multiplied: each robot runs its own graph, usually under its own **namespace** (`/robot1/cmd_vel`, `/robot2/cmd_vel`) and/or its own `ROS_DOMAIN_ID`, with a shared layer (fleet manager, shared map, or `actionlib`-style task allocation) coordinating them | namespacing + remapping (the same `-r`/`-p` args from `../foundations/02-ros2-concepts.md` §2, just applied per-robot at scale), domain bridges when robots must cross domain IDs |
 
 ---
 
 ## 5. So which of this repo's tools carry over, and to what?
 
-- **`rclpy`/node anatomy, `colcon`, topics/services/actions, TF, launch files** (`02`) —
+- **`rclpy`/node anatomy, `colcon`, topics/services/actions, TF, launch files** (`foundations/02`) —
   100% the same regardless of robot type. This is the actual transferable skill.
 - **`robot_localization`'s EKF pattern** (fuse multiple noisy sensors into one state
   estimate, publish TF) — reused conceptually for a drone's visual-inertial odometry, not
@@ -129,6 +129,10 @@ recognize what kind of problem you're looking at when you meet one later.
   learn one "how do I control actual hardware from ROS 2" abstraction beyond what
   `lyra_bridge` shows you, make it this one.
 
-Cross-links: `02-ros2-concepts.md` (the ROS 2 mechanics all of the above assumes),
-`08-three-bots-architecture.md` (the full worked example of the AMR pattern from §2 above,
-in three real robots).
+Cross-links: `../foundations/02-ros2-concepts.md` (the ROS 2 mechanics all of the above
+assumes), `01-three-bots-architecture.md` (the full worked example of the AMR pattern from
+§2 above, in three real robots), `03-build-a-ros2-autonomy-stack.md` onward (how to build
+the AMR stack layer by layer — `06` control also covers the `ros2_control` +
+`joint_trajectory_controller` path used by arms and legged robots).
+
+Next: `03-build-a-ros2-autonomy-stack.md`.

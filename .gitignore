@@ -7,6 +7,9 @@
 build/
 install/
 log/
+# ...but learn/build/ is a study-guide folder, not a colcon artifact:
+!learn/build/
+!learn/build/**
 
 # --- Python ---
 __pycache__/
