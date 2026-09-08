@@ -232,8 +232,8 @@ def calc_tractive_effort(P):
     notes = [
         "For flat ground set climb_angle_deg = 0 (all slope terms vanish).",
         "C_rr (rolling drag) and mu_s (slip/grip) are different coefficients.",
-        "'per motor' torque assumes the load is shared equally by the driven wheels;",
-        "  direct-drive wheel -> set gear_ratio = 1 and drivetrain_efficiency = 1.",
+        "'per motor' torque assumes an equal load share; direct-drive wheel "
+        "-> set gear_ratio = 1 and drivetrain_efficiency = 1.",
         "Weight is assumed even across the wheels, payload rigid and level.",
     ]
     return CalcResult("Tractive effort - forces, wheel & motor torque, traction",

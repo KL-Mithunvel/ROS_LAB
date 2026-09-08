@@ -23,9 +23,12 @@
 - [x] `params.yaml` holds all parameters as `{value, unit, desc, confirm}`; BeetleBot
   seed values from `docs/beetlebot/01-introduction.md`, estimates flagged `confirm: true`.
   Edit in-app (all params, or just the ones a calc uses) and save back to YAML.
-- [x] `tests/test_calculations.py` — 12 pytest cases: per-set numeric checks,
-  PDF-handout fidelity (Problems 1-4), slip verdict, error paths, renderer output,
-  "every parameter used by some set". All green; `py_compile` clean.
+- [x] `tests/test_calculations.py` — 14 pytest cases: per-set numeric checks,
+  PDF-handout fidelity (Problems 1-4), slip verdict, error paths, bad-YAML handling,
+  renderer output, "every parameter used by some set". All green; `py_compile` clean.
+- [x] Error-handling pass: clean exit on EOF / Ctrl-C, missing/malformed `params.yaml`
+  caught with a message, resolve() errors caught, Save asks before overwriting, menu
+  hotkeys reviewed (no collisions). `make_sample_output.py` + `SAMPLE_OUTPUT.md` added.
 - [x] Updated `.CLAUDE/CLAUDE.md` (Key Modules, Project-Specific Overrides, Project TODO).
 - [ ] *(kl mithunvel)* replace `confirm: true` params with real BeetleBot figures;
   list + add the remaining calculations wanted.

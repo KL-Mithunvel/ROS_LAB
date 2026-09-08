@@ -85,13 +85,13 @@ def build_menu_system():
 # --------------------------------------------------------------------------- #
 
 def show_result(calc, params, steps):
-    """Compute a calculation and print it (bare answer or full steps)."""
-    flat = parameters.resolve(params)
+    """Compute a calculation set and print it (results only, or full working)."""
     try:
+        flat = parameters.resolve(params)
         result = calc.fn(flat)
-    except (ValueError, ZeroDivisionError, KeyError) as exc:
+    except (ValueError, ZeroDivisionError, KeyError, ArithmeticError) as exc:
         print(f"\n  Cannot compute: {exc}")
-        print("  Fix that parameter (Edit parameters used here) and try again.\n")
+        print("  Fix that parameter (Edit parameters used by this set) and try again.\n")
         return
     print()
     print(calculations.render_steps(result) if steps else calculations.render_answer(result))
@@ -114,8 +114,11 @@ def dispatch(cmd, state):
         parameters.save(params)
         return True
     if cmd == "load_params":
-        state["params"] = parameters.load()
-        print("Reloaded params.yaml.")
+        try:
+            state["params"] = parameters.load()
+            print("Reloaded params.yaml.")
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"Could not reload params.yaml: {exc}")
         return True
 
     # calculation actions:  <action>_<calc id>
@@ -149,11 +152,23 @@ def show_menu(menu_system, state):
 
 
 def main():
-    state = {"params": parameters.load()}
+    try:
+        params = parameters.load()
+    except FileNotFoundError:
+        print(f"error: {parameters.DEFAULT_PARAMS_FILE} not found - cannot start.")
+        return
+    except ValueError as exc:
+        print(f"error: {exc}")
+        return
+
+    state = {"params": params}
     menu_system = build_menu_system()
     print(f"\nLoaded {len(calculations.CALCS)} calculation sets. "
           f"Parameters read from params.yaml.")
-    show_menu(menu_system, state)
+    try:
+        show_menu(menu_system, state)
+    except (EOFError, KeyboardInterrupt):
+        print()   # end the line the prompt left open
     print("Done.")
 
 

@@ -285,4 +285,32 @@
 - **Verified:** `py_compile` clean, `pytest` 12 passed, drove all 5 sets through the menu
   (results + working views).
 - Earlier `git add` of the 20-calc version is now superseded — re-stage before committing.
-- Nothing committed — user commits when ready.
+- Committed by kl mithunvel as `cb8c855` "Regroup robot_calc into 5 calculation sets".
+
+## 2026-09-08 — `practice/robot_calc/` sample output + error-handling hardening
+
+- kl mithunvel asked to (a) put a full run of every set (working + output) into a
+  markdown file in the folder, and (b) re-check the code for error-handling / hotkey /
+  other bugs.
+- **New:** `make_sample_output.py` (runs every set on `params.yaml`, writes the results
+  table + full working for each) and its output `SAMPLE_OUTPUT.md`. README links it.
+- **Bug review + fixes:**
+  - `main.main()` now catches `EOFError` / `KeyboardInterrupt` for a clean exit (was a
+    traceback on Ctrl-C / Ctrl-D / end-of-piped-input), and catches a missing / malformed
+    `params.yaml` on startup with a message instead of a traceback.
+  - `main.show_result()` moved `parameters.resolve()` inside the try (a non-numeric value
+    in the YAML was an uncaught `ValueError`); also catches `ArithmeticError`.
+  - `dispatch()` "reload params" wrapped in try/except.
+  - `parameters.load()` wraps `yaml.YAMLError` as `ValueError` and checks each entry is a
+    mapping with a `value` key.
+  - `parameters.save()` now asks before overwriting (it rewrites via the YAML dumper, which
+    drops the file's comments) and handles `OSError`.
+  - `parameters._edit_keys()` skips a key that isn't in `params.yaml` instead of `KeyError`.
+  - Menu / hotkey handling in `klm_menu.py` reviewed — bad number, bad char, empty and
+    non-alnum input all re-prompt cleanly; no hotkey collisions in any menu (list uses
+    a/c/d/e/f, sub-menus a/s/e/r, 'b' reserved for Back). No changes needed there.
+  - `calc_tractive_effort` note that had wrapped onto two bullets folded into one.
+- **Tests:** +2 (`load` rejects empty / bad-shape / missing file; `_edit_keys` skips an
+  unknown key). 14 pass; `py_compile` clean; drove all 5 sets + save(declined) + reload
+  through the menu; `params.yaml` untouched by the run.
+- Nothing else committed — user stages/commits.

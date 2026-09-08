@@ -37,8 +37,10 @@ Mobile Robot Mechatronics Calculator
   x  Exit
 ```
 
-Parameter edits stay in memory until you choose **Save** — then they are written
-back to `params.yaml`.
+Parameter edits stay in memory until you choose **Save** — which asks first,
+then rewrites `params.yaml` with the current values. The rewrite drops the
+hand-written comments in the file (the values and key order are kept), so keep a
+copy if the comments matter to you.
 
 ## The 5 calculation sets
 
@@ -75,6 +77,10 @@ negative — it brakes).
 Sets 4 and 5 are the worked problems from
 `docs/Kinematics and Dynamics_AMR_Problems.pdf` — they reproduce the handout's
 numbers when the parameters are set to the PDF's values (asserted in the tests).
+
+**[`SAMPLE_OUTPUT.md`](SAMPLE_OUTPUT.md)** has every set run on the default
+`params.yaml`, with the full working and the results table. Regenerate it after
+changing a formula or a default with `python make_sample_output.py`.
 
 ### Assumptions
 

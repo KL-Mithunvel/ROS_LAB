@@ -196,6 +196,30 @@ def test_default_params_run_clean_and_finite():
             assert q.unit
 
 
+def test_load_rejects_bad_files(tmp_path):
+    empty = tmp_path / "empty.yaml"
+    empty.write_text("")
+    with pytest.raises(ValueError):
+        parameters.load(str(empty))
+
+    bad_shape = tmp_path / "bad.yaml"
+    bad_shape.write_text("mass_kg: 2.2\n")          # value, not a mapping with 'value'
+    with pytest.raises(ValueError):
+        parameters.load(str(bad_shape))
+
+    missing = tmp_path / "nope.yaml"
+    with pytest.raises(FileNotFoundError):
+        parameters.load(str(missing))
+
+
+def test_edit_keys_skips_unknown_parameter(capsys):
+    params = parameters.load()
+    # must not raise, and must not call input() for a missing key
+    changed = parameters._edit_keys(params, ["not_a_real_param"])
+    assert changed is False
+    assert "no parameter" in capsys.readouterr().out
+
+
 def test_renderers_produce_text():
     result = calculations.CALCS_BY_ID["tractive_effort"].fn(P)
     answer = calculations.render_answer(result)

@@ -157,6 +157,8 @@ Parameters are edited in-app (all, or just the ones a set uses) and saved back t
 | `parameters.py` | Load / save `params.yaml`; edit-all and edit-subset helpers |
 | `params.yaml` | Robot parameters (`value` / `unit` / `desc` / `confirm`); BeetleBot seed values |
 | `klm_menu.py` | Menu engine, copied verbatim from github.com/KL-Mithunvel/menu |
+| `make_sample_output.py` | Regenerates `SAMPLE_OUTPUT.md` (run after changing a formula/default) |
+| `SAMPLE_OUTPUT.md` | Every set run on the default params — full working + results table |
 | `tests/test_calculations.py` | pytest — per-set numeric checks, PDF-handout fidelity, error paths |
 
 Run: `cd practice/robot_calc && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && python main.py`
