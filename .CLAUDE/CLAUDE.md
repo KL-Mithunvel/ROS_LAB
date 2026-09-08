@@ -98,14 +98,13 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `build/07-localization-and-slam.md` | Odometry, IMU, `robot_localization` EKF, AMCL, `slam_toolbox`/Cartographer — tuning, TF frames, failure modes |
 | `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners, controllers, behavior trees, recovery, tuning `nav2_params.yaml` |
 | `docs/` (top level) | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
-| `docs/beetlebot/`, `docs/wolf/` | Third-party MIT reference docs — verbatim copy of SMARTS-LAB's mirror of VEEROBOT's BeetleBot (Jazzy) and Wolf (Foxy) tutorials; see each folder's `SOURCE.md`. Not instructor handouts. |
-| `BeetleBot/` | Upstream BeetleBot source — **git submodule** (pinned pointer only, see `.gitmodules`) |
-| `jetbot/` | NVIDIA-AI-IOT JetBot — **git submodule**, comparison platform only |
-| `acrux/` | VEEROBOT Acrux — **git submodule**, comparison platform only |
-| `wolf/` | VEEROBOT Wolf (4-wheel AMR; the `docs/wolf/` tutorials' robot) — **git submodule**, comparison platform only |
+| `docs/beetlebot/`, `docs/wolf/` | Third-party MIT reference docs — verbatim copy of SMARTS-LAB's mirror of VEEROBOT's BeetleBot (Jazzy) and Wolf (Foxy) tutorials; see each folder's `SOURCE.md`. Not instructor handouts. Each also has a `net/` subfolder (netplan examples, added — not part of the upstream mirror). |
+| `docs/ros-install/` | VEEROBOT's ROS 2 install scripts, vendored from `VEEROBOT/ros-scripts` `ROS2Install/` (see `SOURCE.md`; no upstream LICENSE). Not instructor handouts. |
+| `bots/` | Robot upstream sources — five **git submodules** (pinned pointer only, see `.gitmodules`): `BeetleBot/` (the lab robot), `jetbot/` (NVIDIA, non-ROS), `acrux/`, `wolf/`, `rhino/` (VEEROBOT, comparison platforms). Full list + pinned commits in `learn/index.md`. |
+| `learn/index.md` | Index of every upstream repo + document this repo pulls from, with original links and pinned commits |
 | `TODO.md`, `.CLAUDE/CLAUDE-LOG.md` | Companion tracker + session log (see `CLAUDE-COMMON.md`) |
 
-### The robot's ROS 2 graph (for understanding, from `BeetleBot/` source + handouts)
+### The robot's ROS 2 graph (for understanding, from `bots/BeetleBot/` source + handouts)
 
 ```
    PC (Linux)                         Raspberry Pi 5 (Ubuntu 24.04 + ROS 2 Jazzy)
@@ -182,16 +181,23 @@ BeetleBot / your-robot figures.
   itself mirrors <https://docs.veerobot.com/ros-robots/>. Provenance + license in each
   folder's `SOURCE.md`. Keep the `.md`/image files as copied (don't edit upstream content);
   refresh by re-copying from a newer upstream commit and updating `SOURCE.md`. BeetleBot docs
-  target ROS 2 Jazzy; **Wolf docs target ROS 2 Foxy / Ubuntu 20.04** (older).
+  target ROS 2 Jazzy; **Wolf docs target ROS 2 Foxy / Ubuntu 20.04** (older). The added
+  `docs/{beetlebot,wolf}/net/` subfolders (netplan examples from `VEEROBOT/ros-scripts`) are
+  **not** part of the verbatim mirror — refresh them from `ros-scripts`, not SMARTS-LAB.
+- `docs/ros-install/` — vendored from `VEEROBOT/ros-scripts` `ROS2Install/` (commit
+  `9529dd9`). No upstream LICENSE; `install_ros2_jazzy.sh` is Apache-2.0. Refresh by
+  re-copying + updating `docs/ros-install/SOURCE.md`.
 - `maps/`, rosbags — if produced during the lab, save on the **robot**, then `scp` to the PC.
   Do not commit `.pgm`/`.yaml` maps or `rosbag2_*` dirs here (they are gitignored).
-- `BeetleBot/`, `jetbot/`, `acrux/`, `wolf/` — **git submodules** (`.gitmodules`). This repo
-  tracks only a pinned commit pointer for each, never their file contents — `git submodule
-  update --remote` + committing the new pointer is how you refresh them, not editing files
-  inside. Note `wolf/` (the code repo, `VEEROBOT/wolf`) targets ROS 2 **Humble**, whereas
-  `docs/wolf/` (the tutorial text) targets **Foxy** — the two upstreams disagree.
+- `bots/BeetleBot/`, `bots/jetbot/`, `bots/acrux/`, `bots/wolf/`, `bots/rhino/` — **git
+  submodules** (`.gitmodules`). This repo tracks only a pinned commit pointer for each, never
+  their file contents — `git submodule update --remote` + `git add bots` + commit is how you
+  refresh them, not editing files inside. `learn/index.md` has the full list + pinned
+  commits. Note `bots/wolf` and `bots/rhino` (the code repos) target ROS 2 **Humble**,
+  whereas `docs/wolf/` (the tutorial text) targets **Foxy** — the two upstreams disagree.
 - No credentials belong in this repo. Wi-Fi / SSH passwords live only in the handouts as
-  given; do not copy them into new tracked files.
+  given; do not copy them into new tracked files — the `docs/**/net/*.yaml` netplan examples
+  have their WiFi password redacted to `<your-wifi-password>` for this reason.
 
 ---
 
@@ -280,7 +286,8 @@ machine). Study that one; the plain one is the simpler first version.
 
 Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not started  |  ✅ Done
 
-- ✅ Track BeetleBot, JetBot, Acrux, Wolf upstream sources as git submodules (`BeetleBot/`, `jetbot/`, `acrux/`, `wolf/`)
+- ✅ Track BeetleBot, JetBot, Acrux, Wolf, Rhino upstream sources as git submodules under `bots/`
+- ✅ Vendor `VEEROBOT/ros-scripts` install scripts (`docs/ros-install/`) + netplan examples (`docs/{beetlebot,wolf}/net/`); add `learn/index.md` source index
 - ✅ Rewrite this file from library-template to real project brief
 - ✅ Create `learn/` study guides (linux, ROS 2 concepts, runbook, doc index)
 - ✅ Fill `README.md`, `TODO.md`, `.CLAUDE/CLAUDE-LOG.md`

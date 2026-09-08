@@ -1,0 +1,26 @@
+# /etc/netplan/70-wolf-net.yaml
+# Static WiFi IP for the robot (newer netplan syntax: routes: instead of gateway4).
+# From VEEROBOT/ros-scripts  ros2_network_yaml/70-wolf-net.yaml.
+# Password redacted; nameservers de-duplicated; a stray TAB on the "via:" line
+# (invalid YAML upstream) replaced with spaces. Everything else verbatim.
+#
+# Apply with:  sudo netplan generate && sudo netplan apply
+# YAML is indentation-strict: 2 spaces per level, never a tab.
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+      optional: true
+  wifis:
+    wlan0:
+      dhcp4: no
+      addresses: [192.168.1.138/24]
+      routes:
+        - to: default
+          via: 192.168.1.1
+      nameservers:
+        addresses: [192.168.1.1, 8.8.8.8]
+      access-points:
+        "wolf_24G":
+          password: "<your-wifi-password>"

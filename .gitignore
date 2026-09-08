@@ -1,7 +1,7 @@
-# --- BeetleBot / JetBot / Acrux / Wolf are tracked as git submodules (see .gitmodules) ---
+# --- bots/ holds the robot sources as git submodules (BeetleBot, jetbot, acrux, wolf, rhino) ---
 # They are NOT ignored: only a commit pointer is tracked here, not their file contents.
 # First checkout:  git submodule update --init --recursive
-# Refresh:          git submodule update --remote
+# Refresh:          git submodule update --remote  (then commit the moved pointer)
 
 # --- ROS 2 / colcon build artifacts (if you build a workspace inside this repo) ---
 build/

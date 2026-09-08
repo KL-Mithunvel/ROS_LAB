@@ -94,11 +94,11 @@ Section index — <https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libra
 
 - Vendor docs: <https://docs.veerobot.com/ros-robots/beetle-bot> (the README says
   "40–60 hours beginner → autonomous navigation")
-- Upstream source: <https://github.com/VEEROBOT/BeetleBot> (cloned locally at `BeetleBot/`)
-  - `BeetleBot/docs_ros2/LYRA_QUICK_REFERENCE.md` — the `lyra-*` command reference + a good
+- Upstream source: <https://github.com/VEEROBOT/BeetleBot> (submodule at `bots/BeetleBot/`)
+  - `bots/BeetleBot/docs_ros2/LYRA_QUICK_REFERENCE.md` — the `lyra-*` command reference + a good
     troubleshooting matrix
-  - `BeetleBot/docs_ros2/README.md`, `LYRA_COMMAND_UTILITY_SETUP.md` — command-utility setup
-  - `BeetleBot/lyra_ws/src/` — the actual packages (`lyra_bringup`, `lyra_control`, `lyra_bridge`, …)
+  - `bots/BeetleBot/docs_ros2/README.md`, `LYRA_COMMAND_UTILITY_SETUP.md` — command-utility setup
+  - `bots/BeetleBot/lyra_ws/src/` — the actual packages (`lyra_bringup`, `lyra_control`, `lyra_bridge`, …)
 
 > Note the mismatch flagged in `.CLAUDE/CLAUDE.md` → Known Technical Debt: the upstream repo
 > drives `/cmd_vel`, the lab handouts drive `/cmd_vel_nav`. **Trust the handouts for the lab.**

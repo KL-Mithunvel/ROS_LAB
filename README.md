@@ -19,10 +19,8 @@ The guides are split into two tracks accordingly — see `learn/README.md`.
 |------|-----------|
 | `learn/` | Study guides — start at `learn/README.md`. Split into `foundations/` (shared), `lab/` (Track A — the graded lab), `build/` (Track B — building ROS 2 systems) |
 | `docs/` | The raw instructor handouts (BeetleBot manual + obstacle-avoidance scripts). Plus `docs/beetlebot/` and `docs/wolf/` — MIT-licensed VEEROBOT tutorial docs mirrored from [SMARTS-LAB/Documention](https://github.com/SMARTS-LAB/Documention) (see each folder's `SOURCE.md`) |
-| `BeetleBot/` | **Git submodule** pinned to [github.com/VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot) — the lab robot's upstream source |
-| `jetbot/` | **Git submodule** pinned to [NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot) — comparison platform only, not used in this lab |
-| `acrux/` | **Git submodule** pinned to [VEEROBOT/acrux](https://github.com/VEEROBOT/acrux) — another VEEROBOT robot platform, comparison only |
-| `wolf/` | **Git submodule** pinned to [VEEROBOT/wolf](https://github.com/VEEROBOT/wolf) — VEEROBOT 4-wheel AMR (the `docs/wolf/` tutorials' robot), comparison only |
+| `bots/` | Robot upstream sources, each a **git submodule** (pinned pointer only): `BeetleBot/` (the lab robot, [VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot)), plus comparison platforms `jetbot/` ([NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot)), `acrux/`, `wolf/`, `rhino/` (all VEEROBOT). See [`learn/index.md`](learn/index.md) |
+| `docs/ros-install/` | VEEROBOT's ROS 2 install scripts, vendored from [VEEROBOT/ros-scripts](https://github.com/VEEROBOT/ros-scripts) (see its `SOURCE.md`) |
 | `.CLAUDE/` | Project brief + working rules for AI-assisted sessions |
 | `TODO.md` | Task tracker |
 
@@ -45,18 +43,19 @@ Full map with one-line descriptions of every file: **`learn/README.md`**. In sho
 `03-build-a-ros2-autonomy-stack.md` (the spine) → `04` description/TF → `05` simulation →
 `06` control / `ros2_control` → `07` localization & SLAM → `08` navigation & path planning.
 
-## Get / refresh the reference source (git submodules)
+## Get / refresh the robot sources (git submodules)
 
-`BeetleBot/`, `jetbot/`, `acrux/`, and `wolf/` are **git submodules** — this repo tracks a
-pinned commit pointer for each, not their file contents. Cloning this repo alone leaves
-those folders empty; you need one extra step.
+The five robots under `bots/` are **git submodules** — this repo tracks a pinned commit
+pointer for each, not their file contents. Cloning this repo alone leaves those folders
+empty; you need one extra step. Full list with pinned commits: [`learn/index.md`](learn/index.md).
 
-| Repo | URL | Role |
+| Path | URL | Role |
 |------|-----|------|
-| BeetleBot | https://github.com/VEEROBOT/BeetleBot | The lab robot's upstream source (VEEROBOT / "Lyra") |
-| JetBot | https://github.com/NVIDIA-AI-IOT/jetbot | NVIDIA's Jetson-based robot — reference/comparison only |
-| Acrux | https://github.com/VEEROBOT/acrux | Another VEEROBOT robot platform — reference/comparison only |
-| Wolf | https://github.com/VEEROBOT/wolf | VEEROBOT 4-wheel AMR — the robot the `docs/wolf/` tutorials cover; reference/comparison only |
+| `bots/BeetleBot` | https://github.com/VEEROBOT/BeetleBot | The lab robot's upstream source (VEEROBOT / "Lyra") |
+| `bots/jetbot` | https://github.com/NVIDIA-AI-IOT/jetbot | NVIDIA's Jetson robot — reference/comparison only |
+| `bots/acrux` | https://github.com/VEEROBOT/acrux | VEEROBOT robot platform — reference/comparison only |
+| `bots/wolf` | https://github.com/VEEROBOT/wolf | VEEROBOT 4-wheel AMR (the `docs/wolf/` tutorials' robot) — comparison only |
+| `bots/rhino` | https://github.com/VEEROBOT/rhino | VEEROBOT 4-wheel AMR — comparison only |
 
 ```bash
 # first checkout of this repo (or after a fresh clone)
@@ -64,5 +63,5 @@ git submodule update --init --recursive
 
 # pull each submodule's latest upstream commit and re-pin it
 git submodule update --remote
-git add BeetleBot jetbot acrux wolf    # stage the new pin, then commit it
+git add bots        # stage the new pins, then commit them
 ```

@@ -8,6 +8,24 @@
 
 ## Done
 
+### bots/ restructure + Rhino + ros-scripts vendoring (2026-09-08, commit: _pending_)
+
+- [x] Added `VEEROBOT/rhino` as a git submodule (another 4-wheel AMR, ROS 2 Humble).
+- [x] Moved all five robot submodules into `bots/` (`git mv` for BeetleBot/jetbot/acrux/wolf,
+  fresh add for rhino) — root was getting crowded. `.gitmodules` paths + `.git/config` +
+  each submodule's `.git` gitdir all updated; `git submodule status` clean.
+- [x] Vendored `VEEROBOT/ros-scripts` `ROS2Install/` → `docs/ros-install/` (3 install
+  scripts + upstream README + `SOURCE.md`; no upstream LICENSE, `install_ros2_jazzy.sh`
+  is Apache-2.0).
+- [x] Copied the repo's netplan examples (`ros2_network_yaml/`) into `docs/beetlebot/net/`
+  and `docs/wolf/net/` with a README each — **WiFi password redacted** to
+  `<your-wifi-password>` (repo rule: no credentials in tracked files), nameservers
+  de-duplicated, a stray TAB in `70-wolf-net.yaml` fixed.
+- [x] Wrote `learn/index.md` — index of every upstream repo + document (original links,
+  pinned commits).
+- [x] Updated all path references: `.gitignore`, `README.md`, `.CLAUDE/CLAUDE.md`,
+  `learn/build/01`, `learn/foundations/01` + `03`. (CLAUDE-LOG history left as-is.)
+
 ### `practice/robot_calc/` — mechatronics calculator (2026-09-08, commit: _pending_)
 
 - [x] Built a menu-driven CLI mechatronics calculator under `practice/robot_calc/`
@@ -41,11 +59,9 @@
 - [x] Updated `.CLAUDE/CLAUDE.md` (Architecture table, Data Files, Development Rule 2) and
   `README.md` to record these as third-party reference docs, distinct from the read-only
   instructor handouts. Wolf docs target ROS 2 **Foxy / Ubuntu 20.04** (noted).
-- [x] Track Wolf as a git submodule — `wolf/` → [VEEROBOT/wolf](https://github.com/VEEROBOT/wolf)
-  `@35bb3b5` (heads/main), same setup as the other three bots (`.gitmodules`, `.gitignore`,
-  README + `.CLAUDE/CLAUDE.md` tables). *(2026-09-08, commit: _pending_)*
-- [ ] *(future)* add Wolf to the `learn/build/` robot comparisons and the ROS-distro tables
-  (note: `wolf/` code targets ROS 2 Humble, `docs/wolf/` text targets Foxy)
+- [x] Track Wolf as a git submodule — committed `bfd3ad0`, then moved to `bots/wolf/` (below).
+- [ ] *(future)* add Wolf + Rhino to the `learn/build/` robot comparisons and the ROS-distro
+  tables (both code repos target ROS 2 Humble; `docs/wolf/` tutorial text targets Foxy)
 
 ### `learn/` restructure + Track B build-out (2026-09-07, commit: _pending_)
 

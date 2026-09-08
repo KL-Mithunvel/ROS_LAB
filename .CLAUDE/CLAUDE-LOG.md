@@ -328,4 +328,38 @@
 - **Files changed:** `.gitmodules` (+`wolf` entry), `.gitignore` (comment), `README.md`
   (Layout table + submodule table + clone command), `.CLAUDE/CLAUDE.md` (Architecture
   table + Data Files + Project TODO), `TODO.md`. New gitlink `wolf`.
-- Nothing committed — user stages/commits.
+- Committed by kl mithunvel as `bfd3ad0` "Track Wolf robot as a git submodule".
+
+## 2026-09-08 — bots/ folder, Rhino submodule, ros-scripts vendoring, learn/index.md
+
+Four things in one block, all confirmed with the user first (two via a question):
+
+1. **Rhino** — `git submodule add https://github.com/VEEROBOT/rhino.git bots/rhino`
+   (`--name rhino`). Pinned `68b33a7` (branch `main`, no tags). Verified it's a real robot
+   repo (same layout as Wolf: `four_w_amr`, `four_w_amr_nav2`, `micro_ros`, …; ROS 2 Humble).
+2. **bots/ restructure** — user said root was crowded (5 bot folders) and asked my opinion;
+   agreed. `git mv BeetleBot|jetbot|acrux|wolf → bots/…`; rhino added straight into `bots/`.
+   `git mv` updated `.gitmodules` paths, `.git/config`, and each worktree's `.git` gitdir
+   file; `.git/modules/` dirs stay flat (BeetleBot/acrux/jetbot/rhino/wolf). `git submodule
+   status` and `git -C bots/<x> status` both clean. First rhino add landed as name
+   `bots/rhino`; re-added with `--name rhino` for a consistent `.gitmodules`.
+3. **VEEROBOT/ros-scripts** (`9529dd9`) — copied `ROS2Install/` → `docs/ros-install/`
+   (`install_ros2.sh`, `install_ros2_jazzy.sh`, `install_ros2_v2.sh`, `UPSTREAM_README.md`,
+   + a `SOURCE.md` and `README.md`). Upstream has **no LICENSE** — noted; `install_ros2_jazzy.sh`
+   carries an Apache-2.0 header (ex-`Tiryoh/ros2_setup_scripts_ubuntu`). Copied
+   `ros2_network_yaml/` (netplan configs) into **`docs/beetlebot/net/`** and
+   **`docs/wolf/net/`** with a README each, as the user asked ("under beetle bot and wolf").
+   **Redactions vs upstream:** WiFi `password:` → `<your-wifi-password>` (repo Development
+   Rule 6 — no credentials in tracked files); `nameservers` de-duplicated; a literal TAB on
+   the `via:` line of `70-wolf-net.yaml` (invalid YAML upstream) replaced with spaces. All
+   four YAMLs `yaml.safe_load`-clean; all three scripts `bash -n`-clean.
+4. **`learn/index.md`** (new) — index of every upstream repo + document this repo pulls
+   from: the 5 bot submodules (URL + pinned commit + role), `ros-scripts`, the SMARTS-LAB
+   vendored docs, the instructor `docs/` handouts, and links-only for the official ROS/Nav2/
+   Gazebo docs.
+- **Path references updated** for the `bots/` move: `.gitignore`, `README.md`,
+  `.CLAUDE/CLAUDE.md` (Architecture table, ROS-graph heading, Data Files, Project TODO),
+  `learn/build/01-three-bots-architecture.md` (7 source paths), `learn/foundations/01`
+  (submodule comment), `learn/foundations/03` (BeetleBot doc paths). Old CLAUDE-LOG entries
+  left unchanged (audit trail — they describe the state at the time).
+- Nothing committed — user stages/commits ("stage it up and let me know").

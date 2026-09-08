@@ -1,7 +1,7 @@
 # 01 — BeetleBot / JetBot / Acrux: full architecture walkthrough
 
 This file is the deep reference for the three robots vendored into this repo as git
-submodules (`BeetleBot/`, `jetbot/`, `acrux/`). It explains, from the **actual checked-out
+submodules (`bots/BeetleBot/`, `bots/jetbot/`, `bots/acrux/`). It explains, from the **actual checked-out
 source** (not just each README): what each robot is, every package and file and what it's
 for, the exact commands to set up and run each, and — the main event — **how localization,
 SLAM, obstacle avoidance and navigation actually work and how they plug together** into one
@@ -37,7 +37,7 @@ the matching `build/` file explains how to configure and tune it for a new robot
 **Why JetBot is worth studying even though it has no ROS:** every ROS concept in this repo
 (publish velocity commands, read a camera, run a control loop) exists in JetBot too, just
 built from scratch in plain Python instead of using ROS's pub/sub + message types. Comparing
-`jetbot/jetbot/robot.py`'s `Robot.forward()` against `lyra_bridge`'s `_cmd_vel_callback` +
+`bots/jetbot/jetbot/robot.py`'s `Robot.forward()` against `lyra_bridge`'s `_cmd_vel_callback` +
 `_motor_control_loop` shows you exactly what ROS is buying you: message types, topics,
 timers, launch files, and interoperability — none of which JetBot has, and all of which it
 re-implements ad hoc (a `traitlets`-based `Robot` singleton object instead of a `Twist`
@@ -47,7 +47,7 @@ message and a subscription).
 
 ## 2. BeetleBot — full package walkthrough
 
-Source: `BeetleBot/lyra_ws/src/` (a normal ROS 2 workspace `src/` layout — see
+Source: `bots/BeetleBot/lyra_ws/src/` (a normal ROS 2 workspace `src/` layout — see
 `../foundations/02-ros2-concepts.md` §3 for what a workspace/package/`colcon build` is).
 
 ```
@@ -189,12 +189,12 @@ the IP/topic-name technical debt: `../lab/01-lab-day-runbook.md`.
 
 ## 3. Acrux — full package walkthrough
 
-Source: `acrux/` top level (this submodule's packages sit at the repo root, not under a
+Source: `bots/acrux/` top level (this submodule's packages sit at the repo root, not under a
 `src/` subfolder like BeetleBot — you'd `git clone` it *into* `~/ros2_ws/src/acrux` per its
 own README). ROS 2 **Humble**, not Jazzy — same concepts, different distro.
 
 ```
-acrux/
+bots/acrux/
 ├── acrux_bringup/       top-level launch: bringup.launch.py, autobringup.launch.py
 ├── acrux_description/    URDF/xacro + meshes + RViz + display/state-publisher launch
 ├── acrux_firmware/        ESP32 bridge params, LiDAR/RealSense/joystick launch
@@ -262,7 +262,7 @@ localize + navigate on an existing `map_file`), `realsense`, `merge_scan`.
 ```bash
 # Clone into a workspace (their README's own convention — note ros2_ws here)
 cd ~/ros2_ws/src && git clone -b ros2-humble https://github.com/rigbetellabs/acrux.git
-cat acrux/requirements.txt | xargs sudo apt-get install -y      # installs Nav2, cartographer, xacro, teleop, etc.
+cat bots/acrux/requirements.txt | xargs sudo apt-get install -y   # installs Nav2, cartographer, xacro, teleop, etc.
 cd ~/ros2_ws && colcon build --symlink-install
 
 # On the robot, dev mode (stops the auto-start production service)
@@ -286,7 +286,7 @@ cd ~/ros2_ws/src/acrux && ./demo.sh
 
 ## 4. JetBot — the non-ROS contrast case
 
-Source: `jetbot/jetbot/` — a plain installable Python package (`setup.py` → `pip install`),
+Source: `bots/jetbot/jetbot/` — a plain installable Python package (`setup.py` → `pip install`),
 not a ROS workspace. Structure:
 
 | File/dir | Role |

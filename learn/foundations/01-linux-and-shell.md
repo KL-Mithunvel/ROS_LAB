@@ -508,7 +508,7 @@ vcs pull src                          # update them all
 ```bash
 git clone https://github.com/you/my_robot.git ~/ros2_ws/src/my_robot
 git status ; git add -A ; git commit -m "message" ; git push
-git submodule update --init --recursive        # this repo vendors BeetleBot/acrux/jetbot as submodules
+git submodule update --init --recursive        # this repo vendors the robots under bots/ as submodules
 ```
 
 A workspace's `.gitignore` must exclude the build output:
