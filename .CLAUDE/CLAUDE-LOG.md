@@ -223,3 +223,39 @@
 - **Not touched:** `docs/` (read-only), the lab checklist *content* (only moved + renumbered
   + Next-links), the submodules, `CLAUDE-COMMON.md`.
 - Nothing committed — user commits when ready.
+
+## 2026-09-08 — `practice/robot_calc/` mechatronics calculator
+
+- kl mithunvel asked for a menu-driven program (in the style of his `menu` and
+  `Furnace_simulation` repos) that does mobile-robot mechatronics calculations: a list of
+  all calcs, then per-calc "view answer / view answer with steps / edit parameters / run".
+  Mid-task he added `docs/Kinematics and Dynamics_AMR_Problems.pdf` and asked for those
+  worked problems too.
+- **Decisions (agreed with user):** location `practice/robot_calc/`; parameters in
+  `params.yaml` (per PROJ_STARTER's YAML rule); 4 seed force/torque calcs + the rest built
+  out from his list. This is the first real code in the repo — `practice/` subprojects now
+  carry the full `CLAUDE-COMMON.md` venv / requirements / pytest discipline (recorded in
+  `CLAUDE.md` Key Modules + Project-Specific Overrides).
+- **Files created (all new, `practice/robot_calc/`):**
+  - `klm_menu.py` — menu engine, copied verbatim from github.com/KL-Mithunvel/menu.
+  - `calculations.py` — `Step`/`CalcResult`/`Calc` dataclasses, numeric helpers, 20 calc
+    functions, the `CALCS` registry (menu is generated from it), and the answer / full-steps
+    renderers.
+  - `parameters.py` — YAML load/save, edit-all and edit-only-what-this-calc-uses helpers.
+  - `params.yaml` — 28 parameters as `{value, unit, desc, confirm}`; BeetleBot seed values,
+    estimates flagged `confirm: true` (incl. `design_safety_factor` and
+    `motor_stall_torque_nm` for the motor-sizing calc).
+  - `main.py` — menu definitions built from `CALCS` + dispatch loop (entry point).
+  - `requirements.txt` (PyYAML, pytest), `README.md`, `tests/test_calculations.py`.
+- **Calculations:** acceleration, accel force, friction/traction force, rolling resistance,
+  gravity-on-slope, force to move (flat), force to climb, total tractive force, total wheel
+  torque, torque per driven wheel, torque per motor (through gearbox), max no-load speed,
+  wheel rpm at top speed, battery runtime + range, drive power, traction check; plus the PDF
+  cases — diff-drive forward kinematics (v, ω, ẋ, ẏ), inverse kinematics (circular path →
+  wheel ω), straight-line acceleration torque, pure-spin wheel torque. The last four
+  reproduce the PDF's numeric answers when set to its parameter values (asserted in tests).
+- **Verified:** `.venv` created, `pip install -r requirements.txt`, `py_compile` clean,
+  `pytest` = 32 passed; drove the menu end to end with piped input.
+- **Left for kl mithunvel:** replace the `confirm: true` params with real BeetleBot figures;
+  hand over the rest of the calculation list to add.
+- Nothing committed — user commits when ready.
