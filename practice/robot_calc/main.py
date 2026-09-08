@@ -4,10 +4,10 @@ main.py — entry point for the mobile-robot mechatronics calculator.
 Menu-driven, built on the klm_menu engine:
 
     Main menu
-      -> All calculations            (pick one)
-           -> View answer only
-           -> View answer with full steps
-           -> Edit parameters used here
+      -> Calculation sets            (pick one; each runs a whole group)
+           -> View results only
+           -> View results with full working
+           -> Edit parameters used by this set
            -> Run / recalculate
       -> Edit robot parameters
       -> Print all parameters
@@ -22,7 +22,7 @@ import klm_menu
 import parameters
 import calculations
 
-# Single-letter hotkeys for the calculation list. 'b' is reserved for "Back".
+# Single-letter hotkeys for the set list. 'b' is reserved for "Back".
 HOTKEYS = [c for c in string.ascii_lowercase if c != "b"]
 
 MAIN = "main"
@@ -47,9 +47,9 @@ def build_menu_system():
             "menu": calc.title,
             "name": sub_name,
             "options": [
-                [f"ans_{calc.id}", "View answer only", "a"],
-                [f"steps_{calc.id}", "View answer with full steps", "s"],
-                [f"edit_{calc.id}", "Edit parameters used here", "e"],
+                [f"ans_{calc.id}", "View results only", "a"],
+                [f"steps_{calc.id}", "View results with full working", "s"],
+                [f"edit_{calc.id}", "Edit parameters used by this set", "e"],
                 [f"run_{calc.id}", "Run / recalculate", "r"],
             ],
             "back_option": True,
@@ -60,7 +60,7 @@ def build_menu_system():
         "menu": "Mobile Robot Mechatronics Calculator",
         "name": MAIN,
         "options": [
-            ["menu:calc_list", "All calculations", "c"],
+            ["menu:calc_list", "Calculation sets", "c"],
             ["edit_all", "Edit robot parameters", "e"],
             ["print_all", "Print all parameters", "p"],
             ["save_params", "Save parameters to params.yaml", "v"],
@@ -71,7 +71,7 @@ def build_menu_system():
         "back_to": None,
     }
     menu_system[CALC_LIST] = {
-        "menu": "All Calculations",
+        "menu": "Calculation Sets",
         "name": CALC_LIST,
         "options": calc_list_options,
         "back_option": True,
@@ -151,7 +151,7 @@ def show_menu(menu_system, state):
 def main():
     state = {"params": parameters.load()}
     menu_system = build_menu_system()
-    print(f"\nLoaded {len(calculations.CALCS)} calculations. "
+    print(f"\nLoaded {len(calculations.CALCS)} calculation sets. "
           f"Parameters read from params.yaml.")
     show_menu(menu_system, state)
     print("Done.")

@@ -136,30 +136,37 @@ with its own `.venv` / `requirements.txt` / `tests/` and a note in this section.
 ### `practice/robot_calc/` — mobile-robot mechatronics calculator
 
 A standalone menu-driven CLI study tool (lab exercise), built on the `klm_menu` engine
-(github.com/KL-Mithunvel/menu). Given a set of robot parameters it computes 20
-mechatronics quantities — acceleration / friction / gravity / total force, wheel and
-motor torque, max speed, battery runtime, traction margin, plus differential-drive
-forward + inverse kinematics and straight-line / pure-spin dynamics — each viewable as a
-bare answer or with full worked steps. Parameters are edited in-app (all, or just the
-ones a calculation uses) and saved back to `params.yaml`.
+(github.com/KL-Mithunvel/menu). Given ~28 robot parameters it runs any of **5 calculation
+sets**, each computing a whole group of related quantities at once, viewable as a results
+table alone or with the full working:
+
+1. `tractive_effort` — acceleration, all resistive/driving forces, total tractive force,
+   wheel torque, torque per driven wheel, torque per motor (gearbox + efficiency + safety
+   factor, vs stall), traction margin + slip verdict + max climb angle
+2. `speed_gearing` — max no-load speed (m/s, km/h), wheel rpm and motor-shaft rpm at target speed
+3. `battery_power` — usable capacity, runtime (h/min), range (m/km), drive power + pack current on the slope
+4. `dd_kinematics` — differential-drive forward + inverse kinematics
+5. `dd_dynamics` — differential-drive straight-line acceleration + pure-spin wheel torque
+
+Parameters are edited in-app (all, or just the ones a set uses) and saved back to `params.yaml`.
 
 | File | Role |
 |------|------|
-| `main.py` | Entry point; builds the menu system from the calc registry + dispatch loop |
-| `calculations.py` | `Step` / `CalcResult` / `Calc` dataclasses, numeric helpers, the 20 calcs, the `CALCS` registry, the answer / steps renderers |
+| `main.py` | Entry point; builds the menu from the `CALCS` registry + dispatch loop |
+| `calculations.py` | `Step` / `Quantity` / `CalcResult` / `Calc` dataclasses, numeric helpers, the 5 set functions, the `CALCS` registry, the results / working renderers |
 | `parameters.py` | Load / save `params.yaml`; edit-all and edit-subset helpers |
 | `params.yaml` | Robot parameters (`value` / `unit` / `desc` / `confirm`); BeetleBot seed values |
 | `klm_menu.py` | Menu engine, copied verbatim from github.com/KL-Mithunvel/menu |
-| `tests/test_calculations.py` | pytest — numeric checks on every calc, PDF-handout fidelity, error paths |
+| `tests/test_calculations.py` | pytest — per-set numeric checks, PDF-handout fidelity, error paths |
 
 Run: `cd practice/robot_calc && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && python main.py`
 Test: `pytest` from that folder.
 
-The last four calcs reproduce the worked problems in
-`docs/Kinematics and Dynamics_AMR_Problems.pdf`. Many `params.yaml` values
-(`wheel_radius_m`, `gear_ratio`, `motor_no_load_rpm`, `track_width_m`, `accel_time_s`,
-`climb_angle_deg`, the coefficients, `moment_of_inertia_kgm2`) are estimates flagged
-`confirm: true` — replace them with real BeetleBot / your-robot figures.
+Sets 4–5 reproduce the worked problems in `docs/Kinematics and Dynamics_AMR_Problems.pdf`.
+Many `params.yaml` values (`wheel_radius_m`, `gear_ratio`, `motor_no_load_rpm`,
+`track_width_m`, `accel_time_s`, `climb_angle_deg`, the coefficients,
+`moment_of_inertia_kgm2`) are estimates flagged `confirm: true` — replace them with real
+BeetleBot / your-robot figures.
 
 ---
 
@@ -278,7 +285,8 @@ Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not start
 - 🟡 Verify the guides (esp. the new `build/` files) against a live ROS 2 Jazzy + Gazebo
   Harmonic environment — written against docs/source, not yet run end to end
 - ✅ Add `practice/robot_calc/` — menu-driven mobile-robot mechatronics calculator
-  (20 calcs incl. the `Kinematics and Dynamics_AMR_Problems.pdf` cases; pytest suite)
+  (5 grouped calculation sets, incl. the `Kinematics and Dynamics_AMR_Problems.pdf`
+  cases; ~28 params in `params.yaml`; pytest suite)
 - 🟢 Add a hand-written minimal `rclpy` publisher/subscriber node under `practice/`
 - 🟡 Fill in real BeetleBot values for the `confirm: true` params in
   `practice/robot_calc/params.yaml`; add the rest of kl mithunvel's wanted calculations

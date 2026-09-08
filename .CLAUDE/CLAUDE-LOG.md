@@ -259,3 +259,30 @@
 - **Left for kl mithunvel:** replace the `confirm: true` params with real BeetleBot figures;
   hand over the rest of the calculation list to add.
 - Nothing committed — user commits when ready.
+
+## 2026-09-08 — `practice/robot_calc/` regrouped into 5 sets
+
+- Staged the first version (20 one-output calcs), then kl mithunvel said 20 was too many
+  and asked to combine the small calcs into "a set of calculations in one place then the
+  other". Confirmed the split via a question; he picked the 5-set plan.
+- **`calculations.py` rewritten:** `CalcResult` now holds `title` + a list of `Quantity`
+  (name/value/unit/note) + `steps` + `notes` instead of one value + extras. The 20 functions
+  became 5 set functions — `calc_tractive_effort`, `calc_speed_gearing`, `calc_battery_power`,
+  `calc_dd_kinematics`, `calc_dd_dynamics` — each returning the whole group. Shared numeric
+  helpers (`_acceleration`, `_normal_force`, `_rolling_resistance`, `_grade_force`, …) kept.
+  Renderers: `render_answer` = results table (blank-line-grouped by the `group:` name
+  prefix); `render_steps` = full working then the table then notes. `_n()` now uses
+  thousands separators instead of scientific notation for ordinary sizes.
+- **`main.py`:** menu wording only ("Calculation sets", "View results only / with full
+  working", "Edit parameters used by this set"); dispatch unchanged (`<action>_<set id>`).
+- **`params.yaml`:** unchanged — all 28 params are still each used by ≥1 set (a test now
+  enforces this).
+- **`tests/test_calculations.py` rewritten:** 12 cases — per-set output checks by name,
+  PDF Problems 1–4 fidelity, slip verdict, zero-accel-time / zero-current errors,
+  every-param-used, renderer text.
+- **Docs updated:** `README.md` (5-set walkthrough + updated "add a set"), `CLAUDE.md`
+  Key Modules + Project TODO, `TODO.md`.
+- **Verified:** `py_compile` clean, `pytest` 12 passed, drove all 5 sets through the menu
+  (results + working views).
+- Earlier `git add` of the 20-calc version is now superseded — re-stage before committing.
+- Nothing committed — user commits when ready.

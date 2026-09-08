@@ -13,19 +13,19 @@
 - [x] Built a menu-driven CLI mechatronics calculator under `practice/robot_calc/`
   (own `.venv`, `requirements.txt` = PyYAML + pytest), on the `klm_menu` engine
   (copied verbatim from github.com/KL-Mithunvel/menu), same shape as `Furnace_simulation`.
-- [x] 20 calculations, each shown as a bare answer or with full worked steps:
-  acceleration, accel force, friction/traction force, rolling resistance, gravity-on-slope,
-  force to move (flat), force to climb, total tractive force, total wheel torque,
-  torque per driven wheel, torque per motor, max (no-load) speed, wheel rpm at top speed,
-  battery runtime + range, drive power, traction check — plus the four
-  `docs/Kinematics and Dynamics_AMR_Problems.pdf` cases (diff-drive forward + inverse
-  kinematics, straight-line acceleration torque, pure-spin wheel torque).
+- [x] **5 grouped calculation sets**, each runs its whole group and shows a results table
+  or the full working: (1) tractive effort — acceleration, all forces, wheel + motor
+  torque, traction margin/verdict/max-climb-angle; (2) speed, wheel rpm & gearing;
+  (3) battery runtime, range & drive power; (4) diff-drive kinematics (forward + inverse);
+  (5) diff-drive dynamics (straight-line accel + pure spin). Sets 4–5 reproduce the
+  `docs/Kinematics and Dynamics_AMR_Problems.pdf` worked answers.
+  *(Started as 20 tiny one-output calcs; kl mithunvel asked to combine them into sets.)*
 - [x] `params.yaml` holds all parameters as `{value, unit, desc, confirm}`; BeetleBot
   seed values from `docs/beetlebot/01-introduction.md`, estimates flagged `confirm: true`.
   Edit in-app (all params, or just the ones a calc uses) and save back to YAML.
-- [x] `tests/test_calculations.py` — 32 pytest cases: per-calc numeric checks,
-  PDF-handout fidelity (Problems 1-4), error paths, renderer output. All green;
-  `py_compile` clean.
+- [x] `tests/test_calculations.py` — 12 pytest cases: per-set numeric checks,
+  PDF-handout fidelity (Problems 1-4), slip verdict, error paths, renderer output,
+  "every parameter used by some set". All green; `py_compile` clean.
 - [x] Updated `.CLAUDE/CLAUDE.md` (Key Modules, Project-Specific Overrides, Project TODO).
 - [ ] *(kl mithunvel)* replace `confirm: true` params with real BeetleBot figures;
   list + add the remaining calculations wanted.

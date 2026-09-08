@@ -1,9 +1,10 @@
 # robot_calc — mobile-robot mechatronics calculator
 
 A small menu-driven CLI study tool (lab exercise). You set a handful of robot
-parameters, then it works out the mechatronics quantities you need when sizing a
-mobile robot's drivetrain — force, torque, speed, battery runtime — and shows
-either the bare answer or the full worked steps.
+parameters, then pick a **calculation set** — each set works out a whole group of
+related mechatronics quantities at once (all the forces and torques, or speed and
+gearing, or battery life, ...) and shows either the results table alone or the
+full working.
 
 Built on the [`klm_menu`](https://github.com/KL-Mithunvel/menu) engine, same
 pattern as [`Furnace_simulation`](https://github.com/KL-Mithunvel/Furnace_simulation).
@@ -24,10 +25,10 @@ python main.py
 
 ```
 Mobile Robot Mechatronics Calculator
-  c  All calculations ........ pick one, then:
-        a  View answer only
-        s  View answer with full steps
-        e  Edit the parameters this calculation uses
+  c  Calculation sets ......... pick one, then:
+        a  View results only
+        s  View results with full working
+        e  Edit the parameters this set uses
         r  Run / recalculate
   e  Edit robot parameters ... edit every parameter
   p  Print all parameters
@@ -39,47 +40,50 @@ Mobile Robot Mechatronics Calculator
 Parameter edits stay in memory until you choose **Save** — then they are written
 back to `params.yaml`.
 
-## Calculations
+## The 5 calculation sets
 
-| id | what it gives |
-|----|---------------|
-| `acceleration` | average acceleration to reach top speed in the set time |
-| `accel_force` | force to produce that acceleration (`F = m a`) |
-| `friction_force` | grip available at the driven wheels before they slip (`mu_s N`) |
-| `rolling_resistance` | rolling/bearing drag (`C_rr N`) |
-| `gravity_slope` | weight component down the slope (`m g sin theta`) |
-| `force_to_move` | force to move on flat ground at steady speed |
-| `force_to_climb` | force to climb the slope at steady speed (rolling + gravity) |
-| `total_force` | total tractive force = accel + rolling + gravity |
-| `total_torque` | total wheel torque (`F_total r`) |
-| `torque_per_wheel` | that torque split across the driven wheels |
-| `motor_torque` | torque per motor: wheel torque through the gearbox + efficiency, times a design safety factor, checked against motor stall torque |
-| `max_speed` | no-load top speed from wheel rpm and radius |
-| `wheel_rpm` | wheel rev/min needed for the target top speed |
-| `battery_runtime` | runtime and range from capacity and average current |
-| `drive_power` | power/current to hold top speed up the slope |
-| `traction_check` | does the required force exceed the available grip? |
-| `fwd_kinematics` | diff-drive forward kinematics: wheel speeds -> body `v`, `omega`, and global `x_dot`, `y_dot` |
-| `inv_kinematics` | diff-drive inverse kinematics: circular path (`R`, `v`) -> wheel angular velocities |
-| `dd_accel_torque` | straight-line acceleration torque per wheel (frictionless, no gearbox) |
-| `dd_spin_torque` | pure spin-on-the-spot: torque from each wheel motor (one drives, one brakes) |
+### 1. `tractive_effort` — forces, wheel & motor torque, traction
+Acceleration to reach top speed; the acceleration force, rolling resistance and
+gravity-on-slope force; force to move on the flat and force to climb (both at
+steady speed); the total tractive force; total wheel torque, torque per driven
+wheel, and torque per motor (through the gearbox + efficiency, times the design
+safety factor, as a % of motor stall torque); the friction available at the
+driven wheels, the traction margin with a slip verdict, and the steepest slope
+the wheels can hold.
 
-The last four are the worked cases from
-`docs/Kinematics and Dynamics_AMR_Problems.pdf` (differential-drive kinematics
-and dynamics). Each reproduces the handout's answer when you set its parameters
-to the values in the PDF — see the notes printed with each one. They use the
-extra parameters `track_width_m`, `wheel_omega_left_rads`, `wheel_omega_right_rads`,
-`heading_deg`, `path_linear_speed_mps`, `path_radius_m`, `initial_speed_mps`,
-`moment_of_inertia_kgm2`, `angular_accel_rads2`.
+### 2. `speed_gearing` — speed, wheel rpm & gearing
+Max no-load linear speed (m/s and km/h) from the wheel-output rpm and radius; the
+wheel angular speed and rpm needed for the target top speed; and the motor-shaft
+rpm that implies through the gear ratio.
 
-### Sign conventions / assumptions
+### 3. `battery_power` — battery runtime, range & drive power
+Usable capacity, runtime (h and min), range at top speed (m and km), the
+electrical drive power to hold top speed up the slope, and the pack current that
+draws.
+
+### 4. `dd_kinematics` — differential-drive kinematics (forward & inverse)
+**Forward:** wheel angular velocities → body `v`, `omega`, and global `x_dot`,
+`y_dot`. **Inverse:** a circular path (`path_radius_m`, `path_linear_speed_mps`) →
+the wheel ground speeds and angular velocities to follow it.
+
+### 5. `dd_dynamics` — differential-drive dynamics (acceleration & pure spin)
+**Straight-line:** acceleration, total force, force per driven wheel and torque
+per wheel (frictionless, no gearbox). **Pure spin:** chassis torque from `I·alpha`,
+the wheel-force couple, and the right/left motor torques (the left one is
+negative — it brakes).
+
+Sets 4 and 5 are the worked problems from
+`docs/Kinematics and Dynamics_AMR_Problems.pdf` — they reproduce the handout's
+numbers when the parameters are set to the PDF's values (asserted in the tests).
+
+### Assumptions
 
 * `climb_angle_deg = 0` makes every slope term vanish — use it for flat-ground work.
-* Two different coefficients: `rolling_resistance_coeff` (C_rr, wheel drag) and
-  `surface_friction_coeff` (mu_s, the slip/grip limit). They are not the same thing.
-* Weight is assumed evenly spread across the wheels, payload rigid and level.
-* `max_speed` treats `motor_no_load_rpm` as the **wheel** output speed (after the
-  gearbox). `motor_torque` uses `gear_ratio` to go from wheel torque to motor torque.
+* Two different coefficients: `rolling_resistance_coeff` (C_rr, wheel/bearing drag)
+  and `surface_friction_coeff` (mu_s, the slip/grip limit). Not the same thing.
+* Weight is assumed even across the wheels, payload rigid and level.
+* `motor_no_load_rpm` is the **wheel** output speed (after the gearbox); the
+  motor-shaft speed is that times `gear_ratio`.
 
 ## Parameters (`params.yaml`)
 
@@ -87,34 +91,34 @@ Each entry is `{value, unit, desc, confirm}`. `confirm: true` marks a seed value
 that is an estimate — replace it with a real figure for your robot. The seeds are
 for the VEEROBOT BeetleBot (`docs/beetlebot/01-introduction.md`); mass, pack
 voltage and capacity are from its spec sheet, the rest (`wheel_radius_m`,
-`gear_ratio`, `motor_no_load_rpm`, `accel_time_s`, `climb_angle_deg`, the
-coefficients) are placeholders.
+`gear_ratio`, `motor_no_load_rpm`, `accel_time_s`, `climb_angle_deg`,
+`track_width_m`, `moment_of_inertia_kgm2`, the coefficients, the diff-drive
+example inputs) are placeholders.
 
-## Add a calculation
+## Add a quantity or a set
 
-1. In `calculations.py`, write a function that returns a `CalcResult`:
+To add one quantity to an existing set: compute it inside that set's function in
+`calculations.py` and append a `Quantity(name, value, unit)` to `outputs` (and a
+`Step(...)` if you want it shown in the working).
 
-   ```python
-   def calc_wheelbase_turn_radius(P):
-       r = P["track_width_m"] / 2.0 / math.tan(math.radians(P["steer_angle_deg"]))
-       return CalcResult(
-           "Minimum turn radius", r, "m",
-           steps=[Step("Ackermann geometry",
-                       "R = (track / 2) / tan(delta)",
-                       f"R = ({P['track_width_m']}/2) / tan({P['steer_angle_deg']} deg)",
-                       f"{r:.4g} m")],
-           notes=["..."])
-   ```
+To add a whole new set:
 
-2. Add any new parameters to `params.yaml`.
-3. Register it in the `CALCS` list:
+```python
+def calc_turn_radius(P):
+    r = P["track_width_m"] / 2.0 / math.tan(math.radians(P["steer_angle_deg"]))
+    return CalcResult(
+        "Minimum turn radius",
+        outputs=[Quantity("minimum turn radius", r, "m")],
+        steps=[Step("Ackermann geometry",
+                    "R = (track / 2) / tan(delta)",
+                    f"R = ({_n(P['track_width_m'])}/2) / tan({_n(P['steer_angle_deg'])} deg)",
+                    f"{_n(r)} m")])
+```
 
-   ```python
-   Calc("turn_radius", "Minimum turn radius",
-        ["track_width_m", "steer_angle_deg"], calc_wheelbase_turn_radius),
-   ```
-
-4. Add an expected value to `tests/test_calculations.py` (`EXPECTED`).
+1. Add any new parameters to `params.yaml`.
+2. Register the set in `CALCS`:
+   `Calc("turn_radius", "Minimum turn radius", ["track_width_m", "steer_angle_deg"], calc_turn_radius)`
+3. Add a test in `tests/test_calculations.py`.
 
 The menu entry and its sub-menu are generated from `CALCS` automatically.
 
