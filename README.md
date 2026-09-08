@@ -18,7 +18,7 @@ The guides are split into two tracks accordingly — see `learn/README.md`.
 | Path | What it is |
 |------|-----------|
 | `learn/` | Study guides — start at `learn/README.md`. Split into `foundations/` (shared), `lab/` (Track A — the graded lab), `build/` (Track B — building ROS 2 systems) |
-| `docs/` | The raw handouts I was given (BeetleBot manual + obstacle-avoidance scripts) |
+| `docs/` | The raw instructor handouts (BeetleBot manual + obstacle-avoidance scripts). Plus `docs/beetlebot/` and `docs/wolf/` — MIT-licensed VEEROBOT tutorial docs mirrored from [SMARTS-LAB/Documention](https://github.com/SMARTS-LAB/Documention) (see each folder's `SOURCE.md`) |
 | `BeetleBot/` | **Git submodule** pinned to [github.com/VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot) — the lab robot's upstream source |
 | `jetbot/` | **Git submodule** pinned to [NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot) — comparison platform only, not used in this lab |
 | `acrux/` | **Git submodule** pinned to [VEEROBOT/acrux](https://github.com/VEEROBOT/acrux) — another VEEROBOT robot platform, comparison only |

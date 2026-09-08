@@ -97,7 +97,8 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `build/06-control-and-ros2-control.md` | `ros2_control` architecture, diff-drive/ackermann controllers, hardware interfaces, PID, MCU boundary / micro-ROS |
 | `build/07-localization-and-slam.md` | Odometry, IMU, `robot_localization` EKF, AMCL, `slam_toolbox`/Cartographer — tuning, TF frames, failure modes |
 | `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners, controllers, behavior trees, recovery, tuning `nav2_params.yaml` |
-| `docs/` | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
+| `docs/` (top level) | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
+| `docs/beetlebot/`, `docs/wolf/` | Third-party MIT reference docs — verbatim copy of SMARTS-LAB's mirror of VEEROBOT's BeetleBot (Jazzy) and Wolf (Foxy) tutorials; see each folder's `SOURCE.md`. Not instructor handouts. |
 | `BeetleBot/` | Upstream BeetleBot source — **git submodule** (pinned pointer only, see `.gitmodules`) |
 | `jetbot/` | NVIDIA-AI-IOT JetBot — **git submodule**, comparison platform only |
 | `acrux/` | VEEROBOT Acrux — **git submodule**, comparison platform only |
@@ -136,7 +137,14 @@ If practice code is added later (e.g. a personal `rclpy` node), it goes in a new
 
 ## Data Files
 
-- `docs/` — instructor handouts (`.txt` + `.docx`). **Committed, read-only source. Never edit.**
+- `docs/*.txt`, `docs/*.docx`, `docs/*.pdf` — instructor handouts + syllabus. **Committed, read-only source. Never edit.**
+- `docs/beetlebot/`, `docs/wolf/` — third-party **MIT-licensed** reference docs: a verbatim
+  copy of the `beetle bot/` and `wolf robot/` folders from
+  <https://github.com/SMARTS-LAB/Documention> (commit `c9eb011`, retrieved 2026-09-08), which
+  itself mirrors <https://docs.veerobot.com/ros-robots/>. Provenance + license in each
+  folder's `SOURCE.md`. Keep the `.md`/image files as copied (don't edit upstream content);
+  refresh by re-copying from a newer upstream commit and updating `SOURCE.md`. BeetleBot docs
+  target ROS 2 Jazzy; **Wolf docs target ROS 2 Foxy / Ubuntu 20.04** (older).
 - `maps/`, rosbags — if produced during the lab, save on the **robot**, then `scp` to the PC.
   Do not commit `.pgm`/`.yaml` maps or `rosbag2_*` dirs here (they are gitignored).
 - `BeetleBot/`, `jetbot/`, `acrux/` — **git submodules** (`.gitmodules`). This repo tracks
@@ -204,8 +212,11 @@ machine). Study that one; the plain one is the simpler first version.
    `learn/` must be one that actually works on ROS 2 Jazzy / Ubuntu. When unsure, check the
    official docs (`learn/foundations/03-official-docs-index.md`) or the vendored submodule
    source, and cite where it came from.
-2. **`docs/` is read-only.** It is the instructor's source material. Corrections and
-   reconciliations go in `learn/lab/01-lab-day-runbook.md`, never by editing a handout.
+2. **The `docs/` handouts (`*.txt`/`*.docx`/`*.pdf`) are read-only.** They are the
+   instructor's source material. Corrections and reconciliations go in
+   `learn/lab/01-lab-day-runbook.md`, never by editing a handout. The vendored reference
+   sets `docs/beetlebot/` and `docs/wolf/` are also kept verbatim (refresh by re-copying
+   from upstream, don't hand-edit their `.md` files).
 2a. **Keep the two tracks separate.** `learn/foundations/` = shared prerequisites;
    `learn/lab/` = the graded BeetleBot lab (stays exam-focused, BeetleBot-specific);
    `learn/build/` = general "build a ROS 2 stack for any robot" material. Lab-specific

@@ -147,6 +147,28 @@
   reference depth, not a replacement for the existing lab-focused guides.
 - Nothing committed — user commits when ready.
 
+## 2026-09-08 — Vendored VEEROBOT BeetleBot + Wolf tutorial docs into `docs/`
+
+- **User's ask:** take the beetlebot and wolf bot documents from
+  <https://github.com/SMARTS-LAB/Documention> and duplicate them into `docs/`.
+- Checked the repo: MIT-licensed, it mirrors VEEROBOT's official tutorial docs
+  (<https://docs.veerobot.com/ros-robots/>). Cloned at commit `c9eb011`.
+- **Decisions (user via AskUserQuestion):** folder names without spaces
+  (`docs/beetlebot/`, `docs/wolf/`); just copy the docs now — don't wire Wolf into the
+  `learn/` robot comparisons yet.
+- **Done:**
+  - `docs/beetlebot/` ← `beetle bot/` (15 numbered `.md` + `README.md` + `images/beetlebot.jpeg`), verbatim.
+  - `docs/wolf/` ← `wolf robot/` (16 numbered `.md` + `README.md` + `images/*` ×4), verbatim.
+  - `docs/beetlebot/SOURCE.md`, `docs/wolf/SOURCE.md` — origin URL, commit SHA, retrieval
+    date, full MIT license text (MIT requires the notice travels with the copy).
+  - `.CLAUDE/CLAUDE.md` — Architecture table row, Data Files entry, Development Rule 2 now
+    scope "read-only" to the instructor handouts (`*.txt`/`*.docx`/`*.pdf`) and say the
+    vendored sets are kept verbatim / refreshed by re-copying.
+  - `README.md` layout table, `TODO.md` updated.
+- **Note:** Wolf's docs target **ROS 2 Foxy / Ubuntu 20.04** (EOL 2023) — older than
+  BeetleBot's Jazzy; flagged in `docs/wolf/SOURCE.md`.
+- Nothing committed — user commits when ready.
+
 ## 2026-09-07 — `learn/` restructure into two tracks + Track B build-out (all 11 phases)
 
 - **User's ask:** (1) add a ROS 1 vs ROS 2 guide; (2) rework the Linux guide to cover ROS
