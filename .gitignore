@@ -1,4 +1,4 @@
-# --- BeetleBot / JetBot / Acrux are tracked as git submodules (see .gitmodules) ---
+# --- BeetleBot / JetBot / Acrux / Wolf are tracked as git submodules (see .gitmodules) ---
 # They are NOT ignored: only a commit pointer is tracked here, not their file contents.
 # First checkout:  git submodule update --init --recursive
 # Refresh:          git submodule update --remote

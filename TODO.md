@@ -41,8 +41,11 @@
 - [x] Updated `.CLAUDE/CLAUDE.md` (Architecture table, Data Files, Development Rule 2) and
   `README.md` to record these as third-party reference docs, distinct from the read-only
   instructor handouts. Wolf docs target ROS 2 **Foxy / Ubuntu 20.04** (noted).
-- [ ] *(future, not now)* consider tracking Wolf as a submodule + adding it to the
-  `learn/build/` robot comparisons and the ROS-distro/version tables
+- [x] Track Wolf as a git submodule — `wolf/` → [VEEROBOT/wolf](https://github.com/VEEROBOT/wolf)
+  `@35bb3b5` (heads/main), same setup as the other three bots (`.gitmodules`, `.gitignore`,
+  README + `.CLAUDE/CLAUDE.md` tables). *(2026-09-08, commit: _pending_)*
+- [ ] *(future)* add Wolf to the `learn/build/` robot comparisons and the ROS-distro tables
+  (note: `wolf/` code targets ROS 2 Humble, `docs/wolf/` text targets Foxy)
 
 ### `learn/` restructure + Track B build-out (2026-09-07, commit: _pending_)
 

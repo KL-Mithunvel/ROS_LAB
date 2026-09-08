@@ -102,6 +102,7 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `BeetleBot/` | Upstream BeetleBot source — **git submodule** (pinned pointer only, see `.gitmodules`) |
 | `jetbot/` | NVIDIA-AI-IOT JetBot — **git submodule**, comparison platform only |
 | `acrux/` | VEEROBOT Acrux — **git submodule**, comparison platform only |
+| `wolf/` | VEEROBOT Wolf (4-wheel AMR; the `docs/wolf/` tutorials' robot) — **git submodule**, comparison platform only |
 | `TODO.md`, `.CLAUDE/CLAUDE-LOG.md` | Companion tracker + session log (see `CLAUDE-COMMON.md`) |
 
 ### The robot's ROS 2 graph (for understanding, from `BeetleBot/` source + handouts)
@@ -184,9 +185,11 @@ BeetleBot / your-robot figures.
   target ROS 2 Jazzy; **Wolf docs target ROS 2 Foxy / Ubuntu 20.04** (older).
 - `maps/`, rosbags — if produced during the lab, save on the **robot**, then `scp` to the PC.
   Do not commit `.pgm`/`.yaml` maps or `rosbag2_*` dirs here (they are gitignored).
-- `BeetleBot/`, `jetbot/`, `acrux/` — **git submodules** (`.gitmodules`). This repo tracks
-  only a pinned commit pointer for each, never their file contents — `git submodule update
-  --remote` + committing the new pointer is how you refresh them, not editing files inside.
+- `BeetleBot/`, `jetbot/`, `acrux/`, `wolf/` — **git submodules** (`.gitmodules`). This repo
+  tracks only a pinned commit pointer for each, never their file contents — `git submodule
+  update --remote` + committing the new pointer is how you refresh them, not editing files
+  inside. Note `wolf/` (the code repo, `VEEROBOT/wolf`) targets ROS 2 **Humble**, whereas
+  `docs/wolf/` (the tutorial text) targets **Foxy** — the two upstreams disagree.
 - No credentials belong in this repo. Wi-Fi / SSH passwords live only in the handouts as
   given; do not copy them into new tracked files.
 
@@ -277,7 +280,7 @@ machine). Study that one; the plain one is the simpler first version.
 
 Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not started  |  ✅ Done
 
-- ✅ Track BeetleBot, JetBot, Acrux upstream sources as git submodules (`BeetleBot/`, `jetbot/`, `acrux/`)
+- ✅ Track BeetleBot, JetBot, Acrux, Wolf upstream sources as git submodules (`BeetleBot/`, `jetbot/`, `acrux/`, `wolf/`)
 - ✅ Rewrite this file from library-template to real project brief
 - ✅ Create `learn/` study guides (linux, ROS 2 concepts, runbook, doc index)
 - ✅ Fill `README.md`, `TODO.md`, `.CLAUDE/CLAUDE-LOG.md`

@@ -314,3 +314,18 @@
   unknown key). 14 pass; `py_compile` clean; drove all 5 sets + save(declined) + reload
   through the menu; `params.yaml` untouched by the run.
 - Nothing else committed — user stages/commits.
+
+## 2026-09-08 — Wolf tracked as a git submodule
+
+- kl mithunvel asked to hook up git for Wolf the same way as the other bots.
+- `git submodule add https://github.com/VEEROBOT/wolf.git wolf` — pinned at `35bb3b5`
+  (its only branch, `main`; no tags). Verified the repo is the right one first: it holds
+  `four_w_amr`, `four_w_amr_nav2`, `micro_ros`, `teleop_twist_joy` and motor `.cpp`s — the
+  4-wheel AMR the `docs/wolf/` tutorials cover.
+- **Discrepancy noted:** `VEEROBOT/wolf` README targets **ROS 2 Humble**; `docs/wolf/`
+  (SMARTS-LAB mirror of the VEEROBOT docs) says **Foxy**. Recorded in `.CLAUDE/CLAUDE.md`
+  Data Files and `TODO.md`.
+- **Files changed:** `.gitmodules` (+`wolf` entry), `.gitignore` (comment), `README.md`
+  (Layout table + submodule table + clone command), `.CLAUDE/CLAUDE.md` (Architecture
+  table + Data Files + Project TODO), `TODO.md`. New gitlink `wolf`.
+- Nothing committed — user stages/commits.

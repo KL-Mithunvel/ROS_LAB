@@ -22,6 +22,7 @@ The guides are split into two tracks accordingly — see `learn/README.md`.
 | `BeetleBot/` | **Git submodule** pinned to [github.com/VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot) — the lab robot's upstream source |
 | `jetbot/` | **Git submodule** pinned to [NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot) — comparison platform only, not used in this lab |
 | `acrux/` | **Git submodule** pinned to [VEEROBOT/acrux](https://github.com/VEEROBOT/acrux) — another VEEROBOT robot platform, comparison only |
+| `wolf/` | **Git submodule** pinned to [VEEROBOT/wolf](https://github.com/VEEROBOT/wolf) — VEEROBOT 4-wheel AMR (the `docs/wolf/` tutorials' robot), comparison only |
 | `.CLAUDE/` | Project brief + working rules for AI-assisted sessions |
 | `TODO.md` | Task tracker |
 
@@ -46,15 +47,16 @@ Full map with one-line descriptions of every file: **`learn/README.md`**. In sho
 
 ## Get / refresh the reference source (git submodules)
 
-`BeetleBot/`, `jetbot/`, and `acrux/` are **git submodules** — this repo tracks a pinned
-commit pointer for each, not their file contents. Cloning this repo alone leaves those
-three folders empty; you need one extra step.
+`BeetleBot/`, `jetbot/`, `acrux/`, and `wolf/` are **git submodules** — this repo tracks a
+pinned commit pointer for each, not their file contents. Cloning this repo alone leaves
+those folders empty; you need one extra step.
 
 | Repo | URL | Role |
 |------|-----|------|
 | BeetleBot | https://github.com/VEEROBOT/BeetleBot | The lab robot's upstream source (VEEROBOT / "Lyra") |
 | JetBot | https://github.com/NVIDIA-AI-IOT/jetbot | NVIDIA's Jetson-based robot — reference/comparison only |
 | Acrux | https://github.com/VEEROBOT/acrux | Another VEEROBOT robot platform — reference/comparison only |
+| Wolf | https://github.com/VEEROBOT/wolf | VEEROBOT 4-wheel AMR — the robot the `docs/wolf/` tutorials cover; reference/comparison only |
 
 ```bash
 # first checkout of this repo (or after a fresh clone)
@@ -62,5 +64,5 @@ git submodule update --init --recursive
 
 # pull each submodule's latest upstream commit and re-pin it
 git submodule update --remote
-git add BeetleBot jetbot acrux    # stage the new pin, then commit it
+git add BeetleBot jetbot acrux wolf    # stage the new pin, then commit it
 ```

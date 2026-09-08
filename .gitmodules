@@ -7,3 +7,6 @@
 [submodule "acrux"]
 	path = acrux
 	url = https://github.com/VEEROBOT/acrux.git
+[submodule "wolf"]
+	path = wolf
+	url = https://github.com/VEEROBOT/wolf.git
