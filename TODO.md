@@ -8,6 +8,22 @@
 
 ## Done
 
+### UNO Smart Robot Car Kit — merged line-follow + obstacle-avoidance sketch (2026-09-23, commit: _pending_)
+
+- [x] Merged `Line_tracking_car.ino` + `Obstacle_Avoidance_Car.ino` into a new state-machine
+  sketch: follows the line by default, stops and steers around an obstacle (<20 cm ahead)
+  via the servo/ultrasonic — probes left first, falls back to right if left is blocked,
+  backs off and re-scans if both are blocked — then reacquires the line and resumes.
+- [x] Found + fixed a real bug: the two original sketches use opposite motor pin polarity
+  for their `forward()`/`back()` (line-tracking sketch's names were swapped relative to
+  its own comments). Standardized on the obstacle-avoidance sketch's (correct) mapping.
+- [x] Moved both originals into a new subfolder (`git mv`, history preserved) and added the
+  merge there: `docs/UNO Smart Robot Car Kit/line_follow_obstacle_avoid/` now holds
+  `Line_tracking_car.ino`, `Obstacle_Avoidance_Car.ino`, and
+  `Line_Follow_Obstacle_Avoid_Car.ino`.
+- [ ] *(kl mithunvel)* flash + tune on the real kit — `OBSTACLE_DISTANCE_CM`, `AVOID_TURN_MS`,
+  `AVOID_FORWARD_MS`, `LINE_SEARCH_TIMEOUT_MS`, `carSpeed` are untested estimates.
+
 ### bots/ restructure + Rhino + ros-scripts vendoring (2026-09-08, commit: _pending_)
 
 - [x] Added `VEEROBOT/rhino` as a git submodule (another 4-wheel AMR, ROS 2 Humble).

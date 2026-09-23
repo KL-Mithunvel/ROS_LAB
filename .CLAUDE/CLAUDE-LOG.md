@@ -363,3 +363,38 @@ Four things in one block, all confirmed with the user first (two via a question)
   (submodule comment), `learn/foundations/03` (BeetleBot doc paths). Old CLAUDE-LOG entries
   left unchanged (audit trail — they describe the state at the time).
 - Nothing committed — user stages/commits ("stage it up and let me know").
+
+## 2026-09-23 — Merged line-following + obstacle-avoidance sketch for the UNO Smart Robot Car Kit
+
+- User asked to combine `docs/UNO Smart Robot Car Kit/Line_tracking_car.ino` and
+  `Obstacle_Avoidance_Car.ino` (both Elegoo example sketches for the same kit) so the
+  car follows a line by default, steers around an obstacle when one appears ahead, and
+  reacquires the line afterward — including reacting if the first turn direction has no
+  clear path.
+- **Bug found while comparing the two sketches:** their motor pin mappings are
+  electrically opposite for the same named function — `Line_tracking_car.ino`'s
+  `forward()`/`back()` drive the identical physical pin states as
+  `Obstacle_Avoidance_Car.ino`'s `back()`/`forward()` (verified by comparing each
+  function's raw HIGH/LOW pattern per pin). The obstacle-avoidance sketch's function
+  names match its own `Serial.println` comments; the line-tracking sketch's don't
+  (`forward(){ ... println("go back!"); }`) — its names are swapped from correct wiring.
+  Standardized the merged sketch on the obstacle-avoidance sketch's pin mapping.
+- User then asked to move both originals into a separate folder alongside the merge.
+  Created `docs/UNO Smart Robot Car Kit/line_follow_obstacle_avoid/` and `git mv`'d both
+  originals into it (history preserved), then added the merged sketch there too.
+- **New file:** `docs/UNO Smart Robot Car Kit/line_follow_obstacle_avoid/Line_Follow_Obstacle_Avoid_Car.ino`
+  — state-machine sketch: `loop()` pings the ultrasonic every pass; below
+  `OBSTACLE_DISTANCE_CM` (20 cm) it stops and probes left with the servo, steers around
+  left if clear, probes right and steers around there if left is blocked, backs off and
+  lets the next `loop()` re-scan if both sides are blocked. After going around, creeps
+  forward sweeping the IR sensors (with a timeout) until the line is found, then hands
+  control back to normal line-following. Dropped the originals' blocking
+  `while(LT_R);`/`while(LT_L);` spins in favor of a per-loop check, so obstacle checks
+  stay responsive during a turn.
+- **Files moved (`git mv`, history preserved):**
+  `docs/UNO Smart Robot Car Kit/Line_tracking_car.ino` →
+  `docs/UNO Smart Robot Car Kit/line_follow_obstacle_avoid/Line_tracking_car.ino`;
+  `Obstacle_Avoidance_Car.ino` → same folder.
+- Not yet run on real hardware — untested firmware, written from the two source sketches.
+  Tuning constants (`OBSTACLE_DISTANCE_CM`, `AVOID_TURN_MS`, `AVOID_FORWARD_MS`,
+  `LINE_SEARCH_TIMEOUT_MS`, `carSpeed`) are estimates; user should tune on the actual kit.
