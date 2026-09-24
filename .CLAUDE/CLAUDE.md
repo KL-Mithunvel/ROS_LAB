@@ -88,6 +88,7 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `lab/02-lab1-turtlesim-and-workspace.md` | Lab 1 checklist: workspace setup, turtlesim publish/subscribe |
 | `lab/03-lab2-beetlebot-movement.md` | Lab 2 checklist: connect to the robot, arm, drive, teleop |
 | `lab/04-lab3-obstacle-avoidance.md` | Lab 3 checklist: deploy/run the obstacle-avoidance node, v1-vs-v2 comparison |
+| `lab/05-lab4-color-detection.md` | Lab 4 checklist: deploy/run the camera-based HSV colour control node |
 | **`learn/build/`** | **Track B — building a ROS 2 autonomy stack for any robot** |
 | `build/01-three-bots-architecture.md` | Full package walkthrough of BeetleBot/Acrux/JetBot; how localization, SLAM, obstacle avoidance and Nav2 plug together end to end |
 | `build/02-ros2-across-robot-types.md` | ROS 2 on arms (MoveIt 2, `ros2_control`), legged robots, drones, multi-robot systems |
@@ -245,6 +246,7 @@ real values with the lab instructor on the day. Do not assume; the safe move is 
 | 5 | Wi-Fi password | `15619xxx` (docx, truncated) | n/a | Get the full password from the instructor |
 | 6 | Workspace name | `~/lyra_ws` (robot's own) vs `~/ros2_ws` / `~/<registerno>_ws` (your workspace, docx) | `~/lyra_ws` | The robot's stack is `~/lyra_ws`; you build *your* code in your own `~/<registerno>_ws` |
 | 7 | Serial port | `/dev/ttyAMA0` (quick ref) vs `/dev/ttyACM0` (common example text) | `/dev/ttyAMA0` | Robot-side detail; only matters for bridge debugging |
+| 8 | `docs/color_detection_beetlebot` isn't a handout | Sits in `docs/`, which is otherwise read-only instructor material | n/a | It's kl mithunvel's own node (own code, no file extension) — documented in `learn/lab/05-lab4-color-detection.md`. Parked as-is for now; a broader documentation-format reformat is planned that will likely relocate it into `practice/` (own `.venv`/`requirements.txt`/`tests/`, matching `practice/robot_calc/`) |
 
 Also: the two `docs/*Obstacle_avoid*.txt` files are two versions of the same task — the
 **"Updated"** one is the fuller implementation (left/front/right windowing + reverse state
@@ -299,6 +301,9 @@ Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not start
 - ✅ Add `practice/robot_calc/` — menu-driven mobile-robot mechatronics calculator
   (5 grouped calculation sets, incl. the `Kinematics and Dynamics_AMR_Problems.pdf`
   cases; ~28 params in `params.yaml`; pytest suite)
+- ✅ Add `learn/lab/05-lab4-color-detection.md` — Lab 4 checklist for the camera-based HSV
+  colour control node (`docs/color_detection_beetlebot`); mapped into `learn/lab/00`,
+  `learn/README.md`, and flagged in Known Technical Debt (own code parked in `docs/`)
 - 🟢 Add a hand-written minimal `rclpy` publisher/subscriber node under `practice/`
 - 🟡 Fill in real BeetleBot values for the `confirm: true` params in
   `practice/robot_calc/params.yaml`; add the rest of kl mithunvel's wanted calculations

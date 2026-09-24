@@ -398,3 +398,36 @@ Four things in one block, all confirmed with the user first (two via a question)
 - Not yet run on real hardware — untested firmware, written from the two source sketches.
   Tuning constants (`OBSTACLE_DISTANCE_CM`, `AVOID_TURN_MS`, `AVOID_FORWARD_MS`,
   `LINE_SEARCH_TIMEOUT_MS`, `carSpeed`) are estimates; user should tune on the actual kit.
+
+## 2026-09-23 — documented Lab 4 (colour detection node)
+
+User added `docs/color_detection_beetlebot` (commit `2db5c3f`, prior to this session) — their
+own `rclpy` node from last week's lab work, not an instructor handout: subscribes
+`/pi_camera/image_raw`, HSV-thresholds a centre ROI (green/red/blue), publishes `Twist` on
+`/cmd_vel_nav` (green→forward, red→stop, blue→backward, with hysteresis — holds last command
+if nothing clears the 20% coverage threshold). Asked to "update the document accordingly".
+
+- Read the node in full first. Noted it maps to syllabus Experiment 5 ("Object detection
+  using OpenCV" — `learn/lab/00-course-and-lab-map.md` §1) and that its shutdown safety
+  differs from the obstacle-avoidance node's: `try/except KeyboardInterrupt` + `finally:`
+  publishing a zero `Twist` 10×, not a `signal.signal(SIGINT, ...)` handler.
+- Flagged before writing anything: `docs/color_detection_beetlebot` sits in `docs/`, which
+  this repo defines as read-only instructor handouts — it doesn't belong there structurally.
+  Asked the user via `AskUserQuestion` (leave as-is + document vs. move into `practice/` with
+  its own `.venv`/`requirements.txt`/`tests/` now). User: leave as-is for now — "there is
+  some issue with over all document format with some other work also we will check and
+  reformat later". Documented only; did not move the file.
+- Wrote **`learn/lab/05-lab4-color-detection.md`** (new) — same checklist shape as
+  `04-lab3-obstacle-avoidance.md`: what the node does, the shutdown-safety difference called
+  out explicitly, full deploy sequence (bringup with `camera:=true`, cv_bridge/OpenCV dep
+  check, copy node into `lyra_control` as `color_control.py`, register entry point,
+  `colcon build`, arm, run, disarm), HSV tuning notes, viva checklist, and a closing note on
+  the file's current location + the planned future move.
+- **Files changed:** `learn/lab/00-course-and-lab-map.md` (table row + study-path entry),
+  `learn/README.md` (Track A table row 05, bumped "future labs" to `06-…`),
+  `.CLAUDE/CLAUDE.md` (Architecture table row, Known Technical Debt #8 — flags the `docs/`
+  placement, Project TODO ✅ line), `TODO.md` (dated Done entry), `TODO.md`/this file kept in
+  sync per the companion-file rule. New file: `learn/lab/05-lab4-color-detection.md`.
+- Noted in passing: while working, another session merged the UNO Smart Robot Car Kit
+  sketches and committed (`4204e40`) — unrelated to this task, left untouched.
+- Not yet committed — awaiting the user's go-ahead to commit.

@@ -8,6 +8,22 @@
 
 ## Done
 
+### Documented Lab 4 — colour detection node (2026-09-23, commit: _pending_)
+
+- [x] kl mithunvel added `docs/color_detection_beetlebot` (own `rclpy` node: camera → HSV
+  threshold → `/cmd_vel_nav`, green/red/blue = forward/stop/backward) in commit `2db5c3f`.
+- [x] Wrote `learn/lab/05-lab4-color-detection.md` — deployment checklist (same shape as
+  Lab 3's), colour-decision logic explained, shutdown-safety difference vs. the
+  obstacle-avoidance node's `SIGINT` handler called out, viva checklist.
+- [x] Mapped it into `learn/lab/00-course-and-lab-map.md` (table + study path,
+  linked to syllabus Experiment 5) and `learn/README.md` (Track A table).
+- [x] Flagged in `.CLAUDE/CLAUDE.md` Known Technical Debt (#8): the source file sits in
+  `docs/`, which is otherwise read-only handouts — parked as-is per kl mithunvel
+  (a broader documentation-format reformat is planned that will likely move it into
+  `practice/` later, matching `practice/robot_calc/`'s shape).
+- [ ] *(future)* relocate `docs/color_detection_beetlebot` into `practice/` with its own
+  `.venv`/`requirements.txt`/`tests/`, as part of the planned reformat pass.
+
 ### UNO Smart Robot Car Kit — merged line-follow + obstacle-avoidance sketch (2026-09-23, commit: _pending_)
 
 - [x] Merged `Line_tracking_car.ino` + `Obstacle_Avoidance_Car.ino` into a new state-machine

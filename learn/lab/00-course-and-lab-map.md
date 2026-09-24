@@ -56,6 +56,7 @@ control architectures), not just "which command did what".
 | `VEEROBOT BEETLE BOT LYRA.txt` | Arm/disarm, the movement-command cookbook, keyboard teleop guide | **Lab 2** | `03-lab2-beetlebot-movement.md` |
 | `BEETLEBOT  Obstacle_avoid.txt` | Obstacle-avoidance node, **v1** (simple, single front window) | **Lab 3** | `04-lab3-obstacle-avoidance.md` |
 | `BEETLEBOT Updated _Obstacle_avoid.txt` | Obstacle-avoidance node, **v2 / "Updated"** (front+left+right windows, timed reverse state machine) | **Lab 3** | `04-lab3-obstacle-avoidance.md`, and the full line-by-line code read in `../foundations/02-ros2-concepts.md` §5 |
+| `color_detection_beetlebot` | Colour-based control node (own work, not a handout — camera → HSV threshold → `/cmd_vel_nav`); maps to syllabus Experiment 5 (§1) | **Lab 4** | `05-lab4-color-detection.md` |
 
 ## 3. Study path (Track A — the lab)
 
@@ -64,6 +65,7 @@ Do these in order; each is a **checklist you can run start-to-finish**:
 1. **`02-lab1-turtlesim-and-workspace.md`** — your own workspace, turtlesim publish/subscribe.
 2. **`03-lab2-beetlebot-movement.md`** — connect to the real robot, arm, drive, teleop.
 3. **`04-lab3-obstacle-avoidance.md`** — deploy and run the autonomous obstacle-avoidance node.
+4. **`05-lab4-color-detection.md`** — deploy and run the camera-based colour control node.
 
 Supporting references — read for the "why" behind any command:
 

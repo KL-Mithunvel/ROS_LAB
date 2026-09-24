@@ -39,8 +39,9 @@ obstacle-avoidance node. Each numbered file is a checklist you can run start to 
 | 02 | `lab/02-lab1-turtlesim-and-workspace.md` | Lab 1 — your workspace, turtlesim publish/subscribe |
 | 03 | `lab/03-lab2-beetlebot-movement.md` | Lab 2 — connect, arm, drive, teleop the real robot |
 | 04 | `lab/04-lab3-obstacle-avoidance.md` | Lab 3 — deploy/register/build/run the obstacle-avoidance node |
+| 05 | `lab/05-lab4-color-detection.md` | Lab 4 — deploy/register/build/run the camera-based colour control node |
 
-Future lab experiments slot in as `lab/05-…`, `lab/06-…`.
+Future lab experiments slot in as `lab/06-…`, `lab/07-…`.
 
 ---
 
