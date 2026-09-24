@@ -431,3 +431,45 @@ if nothing clears the 20% coverage threshold). Asked to "update the document acc
 - Noted in passing: while working, another session merged the UNO Smart Robot Car Kit
   sketches and committed (`4204e40`) — unrelated to this task, left untouched.
 - Not yet committed — awaiting the user's go-ahead to commit.
+
+## 2026-09-24 — UNO car: PID line following + hardware bring-up test sketch
+
+Follow-up to the 2026-09-23 merged sketch. User flashed it (after fixing a COM6 upload
+failure — port/driver/cable, the compile was fine) and reported on hardware: the bot drove
+in reverse on the line, then after an invert fix drove forward and turned right correctly
+but "didn't turn left" although the Serial log showed `L:1`, then concluded direction was
+fine but the bot "easily moves out of the line" given the small 3-sensor array. User
+suggested a PID loop + lower motor speed, and said the kit isn't in hand now — so code
+everything, and document tests in the TODO to run later. Then: "commit is now".
+
+- **Diagnosis (reasoned, not measured):** `left()`/`right()` are exact mirrors under the
+  invert flag, so a pin bug can't explain right-works/left-doesn't; the L sensor was firing.
+  Real cause of the overshoot: `loop()` pinged the ultrasonic every iteration and
+  `pulseIn(..., 30000)` blocks up to 30 ms on every no-echo ping (i.e. almost always), plus
+  an every-loop Serial print (~20 ms at 9600 baud) — a very slow sensor→motor loop, and
+  `left()/right()` were full-strength pivots. The earlier "reversed motors" fix
+  (`INVERT_MOTOR_DIRECTION`) stays, but is now a calibration constant to confirm on hardware.
+- **`Line_Follow_Obstacle_Avoid_Car.ino` rewritten:** PID over the 3 binary sensors
+  (error x2 scale: L=-2, L+M=-1, M=0, M+R=+1, R=+2; lost line → keep turning toward the
+  last-seen side, stop after 2 s, resume automatically when found), per-wheel PWM via
+  `setMotorA/B/setWheels`, `forward/back/left/right` reimplemented on top of it. New
+  constants `SWAP_SIDES` (assumes Motor A = right wheel, B = left — derived from the old
+  `left()`), `BASE_SPEED` 110, `carSpeed` 170→130, `KP` 40 / `KI` 0 / `KD` 20. Ultrasonic
+  every 100 ms with 6 ms timeout, 2 consecutive close pings to react, PID state reset after
+  each avoidance manoeuvre, diagnostics throttled to 200 ms (`L M R E SL SR D`). The
+  IDE had re-indented the whole file by 4 spaces since the last commit; the rewrite
+  normalises that.
+- **`Hardware_Test/Hardware_Test.ino` (new):** Serial-menu sketch — IR sensors raw/on-line,
+  ultrasonic, servo sweep (checks the 10=right/180=left assumption), Motor A/B alone, drive
+  sequence, PWM ramp (minimum moving PWM), runtime toggles `i` (invert) / `w` (swap) / `+ -`
+  (test speed) so the two calibration constants can be settled without reflashing.
+- **`TODO.md`:** new In Progress checklist "hardware bring-up tests" (steps 0-10: upload,
+  each sensor, ultrasonic, servo, each motor, drive sequence, min PWM, PID dry run, track
+  tuning order KP→KD→KI, obstacle avoidance) with a record-the-result blank per step, plus a
+  Done entry.
+- **Verification:** both sketches compile with zero warnings via the Arduino IDE's own
+  `avr-g++ -fsyntax-only` (ATmega328P, real 1.8.7 core, Servo lib). **No hardware run** —
+  every constant (`KP`, `KD`, speeds, avoid timings, A=right/B=left) is an untested estimate.
+- Left out of the commit: a pre-existing uncommitted `.gitignore` change (not from this task).
+- Known wrinkle left for later: `line_follow_obstacle_avoid/` holds several `.ino` files in
+  one folder, but the Arduino IDE wants one sketch per same-named folder (noted in TODO step 0).

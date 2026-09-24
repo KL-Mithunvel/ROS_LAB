@@ -6,7 +6,66 @@
 - [ ] Verify the Track B guides against a live ROS 2 Jazzy + Gazebo Harmonic environment
       (written against docs/source, not yet run end to end — no Linux box in this session)
 
+### UNO Smart Robot Car Kit — hardware bring-up tests (kit not in hand yet, 2026-09-24)
+
+The PID line-follower + obstacle-avoid sketch is **compiled but never run on hardware**. Do
+these in order; sketches are in `docs/UNO Smart Robot Car Kit/line_follow_obstacle_avoid/`.
+Tests 1-7 use `Hardware_Test/Hardware_Test.ino` (Serial Monitor 9600 baud, type the menu
+letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground**, for motor tests.
+
+- [ ] **0. Upload works.** Earlier upload failed (`unable to open port COM6`, `not in sync`) —
+      that was the port/driver/cable, not the code (compile was fine). Check Device Manager
+      for the port + CH340 driver, close any Serial Monitor, Tools → Board = Arduino Uno.
+      Note: the Arduino IDE wants each sketch in a folder of the same name — copy each
+      `.ino` into its own folder (e.g. `Line_Follow_Obstacle_Avoid_Car/`) if the IDE complains.
+- [ ] **1. IR sensors (menu `1`).** For each of L/M/R: black tape under it → `on-line=1`,
+      white floor → `on-line=0` (`raw` is the inverse). Confirm the *physically left* sensor
+      is the one labelled L (pin 2) and the right is R (pin 10). If a sensor flickers or never
+      triggers, turn the trim-pot on that module and re-test. Record: ________
+- [ ] **2. Ultrasonic (menu `2`).** Ruler at 10 / 20 / 50 cm — readings within about ±2 cm;
+      `0` means no echo. Record: ________
+- [ ] **3. Servo (menu `3`).** Which physical side does the sensor face at angle 10 and at 180?
+      The sketch assumes **10 = right, 180 = left** (if reversed, swap the two `myservo.write`
+      probe angles in `avoidObstacle()`). Record: ________
+- [ ] **4/5. Single motors (menu `4` then `5`).** Which wheel spins for Motor A, which for B,
+      and does "forward" turn it forward? Sketch assumes **Motor A = right wheel, Motor B =
+      left wheel**. Record: A = ________  B = ________
+- [ ] **6. Drive sequence (menu `6`).** Forward must go forward, back backward, "pivot left"
+      counter-clockwise, "pivot right" clockwise. Forward/back reversed → press `i`
+      (invert). Pivots mirrored but forward/back right → press `w` (swap sides). Repeat `6`
+      until all four are right, then copy the final values into `INVERT_MOTOR_DIRECTION` and
+      `SWAP_SIDES` in `Line_Follow_Obstacle_Avoid_Car.ino`. Record: invert=___ swap=___
+- [ ] **7. Minimum PWM (menu `7`).** First PWM value at which each wheel actually turns (repeat
+      once on the floor with the bot's weight). Set `BASE_SPEED` at least ~30 above the higher
+      of the two. Record: A=___ B=___
+- [ ] **8. PID dry run (main sketch, wheels off ground).** Slide black under one sensor at a
+      time and read `E:`/`SL:`/`SR:` in the Serial Monitor. Expect: L only → `E:-2`, `SL` < `SR`;
+      R only → `E:2`, `SL` > `SR`; M only → `E:0`, `SL` = `SR`; none → keeps last direction, then
+      stops after 2 s. If the signs are wrong, fix wiring/`SWAP_SIDES`, not the PID.
+- [ ] **9. Track test.** Gentle curve, then a tight left curve (the case that failed before).
+      Tune in this order: `BASE_SPEED` down until it holds the line → raise `KP` until it just
+      starts to weave → raise `KD` to damp it → only then touch `KI`. Record final KP/KD/BASE_SPEED.
+- [ ] **10. Obstacle avoidance.** Box ~15 cm ahead on the line: does it detect (`D:` in the
+      log), pick a side, get round, and re-find the line? Tune `AVOID_TURN_MS`,
+      `AVOID_FORWARD_MS` (these were written for speed 170, now 130), `LINE_SEARCH_TIMEOUT_MS`.
+      Also check the both-sides-blocked case (walls both sides → it should back off, not hit).
+
 ## Done
+
+### UNO Smart Robot Car Kit — PID line following + bring-up test sketch (2026-09-24, commit: _pending_)
+
+- [x] Rewrote line following as a PID loop over the 3 binary IR sensors (error -2..+2, x2
+  scale, lost-line = keep turning to last-seen side, stop after 2 s), with per-wheel PWM so
+  it curves instead of hard-pivoting. Motion helpers (`setWheels`, `forward/back/left/right`)
+  now share one implementation, with `INVERT_MOTOR_DIRECTION` and `SWAP_SIDES` constants.
+- [x] Lowered speeds (`BASE_SPEED` 110, `carSpeed` 170 → 130) for controllability.
+- [x] Fixed loop latency that made it overshoot: ultrasonic now pings every 100 ms (not every
+  loop) with a 6 ms `pulseIn` timeout (was 30 ms, blocking on every no-echo ping), needs 2
+  consecutive close pings to react, and the Serial diagnostics are rate-limited to 200 ms.
+- [x] Added `Hardware_Test/Hardware_Test.ino` — interactive Serial menu for sensors,
+  ultrasonic, servo, single motors, drive sequence, PWM ramp, and runtime toggles for the
+  invert/swap constants. Both sketches compile clean for the Uno (avr-g++, real core).
+- [ ] Run the bring-up checklist above once the kit is in hand.
 
 ### Documented Lab 4 — colour detection node (2026-09-23, commit: _pending_)
 
