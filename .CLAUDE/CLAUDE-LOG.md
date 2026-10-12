@@ -473,3 +473,37 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - Left out of the commit: a pre-existing uncommitted `.gitignore` change (not from this task).
 - Known wrinkle left for later: `line_follow_obstacle_avoid/` holds several `.ino` files in
   one folder, but the Arduino IDE wants one sketch per same-named folder (noted in TODO step 0).
+
+## 2026-10-12 — Acrux gift-greeter mission: plan + code
+
+- **Task (from user):** Acrux must carry gifts to 3 or 4 special guests standing at pre-decided
+  spots, wait at each for a live operator "yes", avoid unexpected obstacles/people, return home.
+  Count only known just before the event. Mission code runs on a laptop over Wi-Fi.
+- **Decisions agreed with user:** max 4 guests (run with N uses the first N spots); present
+  action = stop and wait only; live input = operator command; return home after the last
+  guest; no map exists yet (must be made); test the Intel RealSense; lights later; robot's
+  ROS distro unknown — check in the lab.
+- **Read in `bots/acrux`:** `nav2_params.yaml` (footprint ~0.76x0.80 m, inflation 0.55, DWB
+  0.3 m/s, `/scan` + `/camera/points`), `autobringup.launch.py`, `navigation.launch.py`,
+  `cartographer.launch.py`, `lidar.lua`. **Findings recorded in guide §8/§14:** with
+  `exploration:=False` nothing launches AMCL and Cartographer still runs in mapping mode, so
+  "navigate on a saved map" may not localize against the saved map; no collision-monitor layer
+  exists; the `cmd_vel` chain could not be confirmed from source.
+- **Files created:**
+  - `learn/build/09-acrux-greeter-mission.md` — full plan, safety layers, runbook, open items.
+  - `practice/acrux_greeter/` — `mission.py` (ROS-free state machine), `greeter_config.py`,
+    `mission_node.py` (Nav2 adapter, laptop side), `guests.yaml` (placeholders,
+    `surveyed: false`), `config/collision_monitor.yaml`, `launch/safety.launch.py`,
+    `requirements.txt`, `README.md`, `tests/` (60 pytest tests).
+- **Files changed:** `learn/README.md`, `.CLAUDE/CLAUDE.md` (file table, Key Modules, TODO
+  list), `TODO.md`.
+- **Design choices:** mission logic separated from ROS so it is testable on Windows; safety
+  (collision monitor) runs on the robot, not the laptop; `--count` has no default;
+  `mission_node.py` refuses placeholder coordinates unless `--allow-unsurveyed`; "n"/"no" are
+  deliberately not aliases for yes; stop polygon is front-only because a stop zone blocks all
+  motion including reversing.
+- **Verification:** `pytest` 60 passed; `mission_node.py` and `safety.launch.py` only
+  byte-compile checked. **Never run on Gazebo or the robot.** Nav2 collision-monitor
+  parameter names (`max_points`, polygon `points` format) are from memory of the Humble docs
+  and unverified.
+- **Left out of the commit:** pre-existing uncommitted `.gitignore` change and `AGENTS.md`.

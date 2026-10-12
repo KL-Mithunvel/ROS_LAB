@@ -1,0 +1,9 @@
+# Runtime (pure-Python parts: mission.py, greeter_config.py)
+PyYAML>=6.0
+
+# Development / tests
+pytest>=8.0
+
+# NOT installed by pip — mission_node.py needs ROS 2 on the laptop:
+#   sudo apt install ros-humble-nav2-simple-commander ros-humble-nav2-msgs
+# (and the matching ROS_DISTRO of the robot). See README.md.

@@ -1,0 +1,64 @@
+# collision_monitor.yaml — last-line safety stop for Acrux (runs ON THE ROBOT).
+#
+# What it does: sits between Nav2 and the wheels. If the LiDAR sees points inside
+# the "stop" box in front of the robot it forces velocity to zero; inside the
+# larger "slowdown" box it scales velocity down. This works even if the
+# planner/controller does something silly.
+#
+# Written for ROS 2 Humble's nav2_collision_monitor (what bots/acrux targets).
+# NOT yet run on the robot. Things to verify on the day are in
+# learn/build/09-acrux-greeter-mission.md section 7.
+#
+# Acrux footprint (from nav2_params.yaml) is roughly x +-0.38, y +-0.40 about
+# base_link, i.e. ~0.76 x 0.80 m. Polygons below are in the base_link frame:
+# x forward, y left, metres. Only the FRONT is covered: a stop polygon blocks
+# every motion (including reversing out of trouble), so we keep it forward-only.
+# Spinning in place near a person is handled by Nav2's costmap + the operator.
+
+collision_monitor:
+  ros__parameters:
+    base_frame_id: "base_link"
+    odom_frame_id: "odom"
+    # Topic names are overridden from safety.launch.py (cmd_vel_in / cmd_vel_out).
+    cmd_vel_in_topic: "cmd_vel_smoothed"
+    cmd_vel_out_topic: "cmd_vel"
+    transform_tolerance: 0.5
+    source_timeout: 2.0            # no scan for 2 s -> stop (fail safe)
+    base_shift_correction: True
+    stop_pub_timeout: 2.0
+    polygons: ["FootprintStop", "FrontSlowdown"]
+
+    FootprintStop:
+      type: "polygon"
+      # Footprint x +0.38 plus a 0.17 m margin; slightly wider than the body.
+      points: [0.55, 0.45, 0.55, -0.45, 0.38, -0.45, 0.38, 0.45]
+      action_type: "stop"
+      max_points: 3                # Humble name; renamed min_points in newer Nav2
+      visualize: True
+      polygon_pub_topic: "polygon_stop"
+
+    FrontSlowdown:
+      type: "polygon"
+      points: [1.0, 0.55, 1.0, -0.55, 0.38, -0.55, 0.38, 0.55]
+      action_type: "slowdown"
+      slowdown_ratio: 0.3          # drive at 30% speed inside this box
+      max_points: 3
+      visualize: True
+      polygon_pub_topic: "polygon_slowdown"
+
+    observation_sources: ["scan"]
+    scan:
+      type: "scan"
+      topic: "/scan"
+
+    # RealSense point cloud as a second safety source (sees what the 2D LiDAR
+    # plane misses: chair seats, table edges). Enable ONLY after the camera has
+    # been tested in the lab (see learn/build/09, section 9):
+    #   1. change observation_sources to ["scan", "realsense"]
+    #   2. uncomment the block below and tune min_height / max_height
+    # realsense:
+    #   type: "pointcloud"
+    #   topic: "/camera/points"
+    #   min_height: 0.10         # ignore the floor
+    #   max_height: 1.20         # ignore the ceiling / things above the robot
+    #   enabled: True
