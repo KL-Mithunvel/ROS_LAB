@@ -98,6 +98,7 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `build/06-control-and-ros2-control.md` | `ros2_control` architecture, diff-drive/ackermann controllers, hardware interfaces, PID, MCU boundary / micro-ROS |
 | `build/07-localization-and-slam.md` | Odometry, IMU, `robot_localization` EKF, AMCL, `slam_toolbox`/Cartographer — tuning, TF frames, failure modes |
 | `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners, controllers, behavior trees, recovery, tuning `nav2_params.yaml` |
+| `build/09-acrux-greeter-mission.md` | Worked project — Acrux gift-greeter: waypoint mission with live operator "next", obstacle-safety layers, localization pitfalls, event-day runbook (code in `practice/acrux_greeter/`) |
 | `docs/` (top level) | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
 | `docs/beetlebot/`, `docs/wolf/` | Third-party MIT reference docs — verbatim copy of SMARTS-LAB's mirror of VEEROBOT's BeetleBot (Jazzy) and Wolf (Foxy) tutorials; see each folder's `SOURCE.md`. Not instructor handouts. Each also has a `net/` subfolder (netplan examples, added — not part of the upstream mirror). |
 | `docs/ros-install/` | VEEROBOT's ROS 2 install scripts, vendored from `VEEROBOT/ros-scripts` `ROS2Install/` (see `SOURCE.md`; no upstream LICENSE). Not instructor handouts. |
@@ -170,6 +171,27 @@ Many `params.yaml` values (`wheel_radius_m`, `gear_ratio`, `motor_no_load_rpm`,
 `track_width_m`, `accel_time_s`, `climb_angle_deg`, the coefficients,
 `moment_of_inertia_kgm2`) are estimates flagged `confirm: true` — replace them with real
 BeetleBot / your-robot figures.
+
+### `practice/acrux_greeter/` — Acrux gift-greeter mission
+
+Drives **Acrux** (not the lab's BeetleBot) to up to 4 guests in turn via Nav2, **stops and
+waits at each until the operator says "yes"**, then returns home. Mission node runs on a
+laptop over Wi-Fi; the collision-monitor safety layer runs on the robot. The plan, safety
+reasoning and runbook live in `learn/build/09-acrux-greeter-mission.md`.
+
+| File | Role |
+|------|------|
+| `mission.py` | Pure-Python state machine (commands + Nav2 results → actions); no ROS, fully pytest-able |
+| `greeter_config.py` | Loads/validates `guests.yaml`; `MAX_GUESTS = 4` |
+| `mission_node.py` | ROS 2 adapter: `nav2_simple_commander` goals, stdin + `/greeter/command` input. Run directly, not via `ros2 launch` |
+| `guests.yaml` | Home + 4 guest poses (**placeholders**, `surveyed: false`) and settings |
+| `config/collision_monitor.yaml`, `launch/safety.launch.py` | Nav2 collision monitor stop/slow boxes, robot side |
+| `tests/` | pytest — state machine + config validation (60 tests) |
+
+Test: `cd practice/acrux_greeter && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && pytest`.
+**Unverified:** `mission_node.py`, the launch file and the collision-monitor config have never been
+run on Gazebo/the robot; open items are tracked in guide §14 (ROS distro, whether AMCL is
+launched, the real `cmd_vel` chain, RealSense behaviour).
 
 ---
 
@@ -304,6 +326,9 @@ Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not start
 - ✅ Add `learn/lab/05-lab4-color-detection.md` — Lab 4 checklist for the camera-based HSV
   colour control node (`docs/color_detection_beetlebot`); mapped into `learn/lab/00`,
   `learn/README.md`, and flagged in Known Technical Debt (own code parked in `docs/`)
+- ✅ Add `practice/acrux_greeter/` + `learn/build/09-acrux-greeter-mission.md` — Acrux
+  gift-greeter mission (state machine tested; ROS node + safety layer written, not yet run)
+- 🟡 Verify the Acrux greeter on Gazebo and the robot; close the guide §14 open items
 - 🟢 Add a hand-written minimal `rclpy` publisher/subscriber node under `practice/`
 - 🟡 Fill in real BeetleBot values for the `confirm: true` params in
   `practice/robot_calc/params.yaml`; add the rest of kl mithunvel's wanted calculations

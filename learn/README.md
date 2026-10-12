@@ -61,6 +61,7 @@ Start with the two worked-example files, then the deep dives.
 | 06 | `build/06-control-and-ros2-control.md` | `ros2_control` architecture, diff-drive/ackermann controllers, writing a hardware interface, PID, the MCU boundary / micro-ROS |
 | 07 | `build/07-localization-and-slam.md` | Odometry, IMU, the `robot_localization` EKF, AMCL, `slam_toolbox`/Cartographer — tuning, TF frames, common failure modes |
 | 08 | `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners (NavFn / Smac), controllers (DWB / RPP / MPPI), behavior trees, recovery, tuning `nav2_params.yaml` |
+| 09 | `build/09-acrux-greeter-mission.md` | **Worked project** — Acrux carries gifts to 3–4 guests, waits for a live "yes" at each, avoids obstacles, returns home; plan, safety layers, localization pitfalls, event-day runbook (code in `practice/acrux_greeter/`) |
 
 ---
 

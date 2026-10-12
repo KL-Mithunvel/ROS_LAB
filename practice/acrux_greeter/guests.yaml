@@ -1,0 +1,36 @@
+# guests.yaml — where Acrux goes. All poses are in the MAP frame (metres, radians).
+#
+# !! The numbers below are PLACEHOLDERS. They are not a real room. !!
+# Survey the real spots with RViz ("2D Goal Pose" then `ros2 topic echo /goal_pose`,
+# or read /amcl_pose with the robot standing on the spot), type them in, then
+# change `surveyed` to true. mission_node.py refuses to drive a real robot while
+# `surveyed` is false (override only with --allow-unsurveyed).
+#
+# yaw: 0 = facing +x of the map, 1.5708 = facing +y, 3.1416 = facing -x.
+# Point each guest slot's yaw so the robot FACES the guest.
+# Slots are served in the order listed. A run with --count 3 uses the first 3.
+#
+# STANDOFF: the x/y here is where the robot's CENTRE stops, not where the guest
+# stands. Put it >= 0.8 m from the guest's feet. Closer than ~0.55 m puts the
+# guest inside the collision monitor's stop box (config/collision_monitor.yaml),
+# which freezes the robot there. Acrux is ~0.76 x 0.80 m, so leave wide lanes
+# between guests (about 1.5 m or more) - Nav2 treats each guest as an obstacle
+# with a 0.55 m inflation halo.
+
+surveyed: false
+
+frame_id: map            # leave as `map`
+max_auto_retries: 1      # automatic retries of a failed goal before asking you
+goal_timeout_s: 120      # give up on one goal after this many seconds
+
+home:
+  label: Home
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+
+slots:
+  - {label: "Guest 1", x: 3.0, y: 1.0, yaw: 1.5708}
+  - {label: "Guest 2", x: 3.0, y: 2.5, yaw: 1.5708}
+  - {label: "Guest 3", x: 3.0, y: 4.0, yaw: 1.5708}
+  - {label: "Guest 4", x: 3.0, y: 5.5, yaw: 1.5708}
