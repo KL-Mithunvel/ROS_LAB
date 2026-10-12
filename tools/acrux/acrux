@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Remote control helper for the Acrux robot. Usage: ./acrux help
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"; REPO="$(cd "$HERE/../.." && pwd)"
+source "$HERE/acrux.env"; eval "KEY=$ACRUX_KEY"
+TARGET="$ACRUX_USER@$ACRUX_HOST"
+SSH_OPTS=(-i "$KEY" -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new
+          -o ControlMaster=auto -o ControlPersist=10m -o ControlPath="/tmp/acrux-ssh-%C")
+rsh() { ssh "${SSH_OPTS[@]}" "$@"; }
+# UDP-only FastDDS profile: robot stack runs as another Linux user, SHM transport silently drops data
+ROS_ENV="source /opt/ros/humble/setup.bash; source ~/$ACRUX_WS/install/setup.bash 2>/dev/null; export FASTRTPS_DEFAULT_PROFILES_FILE=\$HOME/fastdds_udp.xml"
+
+case "${1:-help}" in
+  run)    shift; rsh "$TARGET" "$*" ;;                         # run any shell command
+  ros)    shift; rsh "$TARGET" "bash -lc '$ROS_ENV; $*'" ;;    # run with ROS sourced
+  shell)  exec ssh -t "${SSH_OPTS[@]/BatchMode=yes/BatchMode=no}" "$TARGET" ;;
+  push)   shift; rsync -avz -e "ssh ${SSH_OPTS[*]}" "$1" "$TARGET:$2" ;;   # local -> robot
+  pull)   shift; rsync -avz -e "ssh ${SSH_OPTS[*]}" "$TARGET:$1" "$2" ;;   # robot -> local
+  sync)   # mirror bots/acrux into the robot's workspace (excludes .git, img)
+          rsync -avz --exclude .git --exclude img --exclude '__pycache__' \
+            -e "ssh ${SSH_OPTS[*]}" "$REPO/bots/acrux/" "$TARGET:$ACRUX_PKG_DIR/" ;;
+  build)  rsh "$TARGET" "bash -lc '$ROS_ENV; cd ~/$ACRUX_WS && colcon build --symlink-install'" ;;
+  nodes)  "$0" ros "ros2 node list; echo ---; ros2 topic list" ;;
+  status) rsh "$TARGET" "hostname; uname -sr; uptime -p; ls ~/$ACRUX_WS/src 2>/dev/null; \
+            bash -lc '$ROS_ENV; echo ROS_DISTRO=\$ROS_DISTRO; ros2 node list 2>/dev/null | head -30'" ;;
+  drive)  # ./acrux drive <linear m/s> <angular rad/s> <seconds>  (clamped; always ends with zero)
+          shift; LIN="${1:-0}"; ANG="${2:-0}"; SEC="${3:-1}"
+          python3 -c "import sys;l,a,s=map(float,sys.argv[1:]);assert abs(l)<=0.2 and abs(a)<=0.6 and s<=5,'limit: |lin|<=0.2 |ang|<=0.6 t<=5s'" "$LIN" "$ANG" "$SEC"
+          rsh "$TARGET" "bash -lc '$ROS_ENV; timeout $SEC ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist \"{linear: {x: $LIN}, angular: {z: $ANG}}\" >/dev/null; ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \"{}\" >/dev/null; echo done'" ;;
+  teleop) # WASD keyboard teleop, runs on the robot over an interactive ssh
+          rsync -az -e "ssh ${SSH_OPTS[*]}" "$HERE/wasd_teleop.py" "$TARGET:~/wasd_teleop.py"
+          exec ssh -t -i "$KEY" -o StrictHostKeyChecking=accept-new "$TARGET" "bash -lc '$ROS_ENV; exec python3 ~/wasd_teleop.py'" ;;
+  stop)   rsh "$TARGET" "pkill -f 'ros2 launch' || true" ;;
+  *) cat <<USAGE
+./acrux status            hostname, uptime, workspace, running ROS nodes
+./acrux run  <cmd>        run a shell command on the robot
+./acrux ros  <cmd>        run with ROS 2 + workspace sourced (e.g. ros 'ros2 topic list')
+./acrux shell             interactive shell
+./acrux push <src> <dst>  copy local -> robot      ./acrux pull <src> <dst>  robot -> local
+./acrux sync              rsync bots/acrux -> ~/$ACRUX_PKG_DIR
+./acrux build             colcon build on robot
+./acrux drive <lin> <ang> <sec>  clamped teleop pulse (<=0.2 m/s, <=0.6 rad/s, <=5 s), then zero
+./acrux teleop            WASD keyboard control (hold key; space = stop; +/- speed; p = quit)
+./acrux nodes | stop      list nodes/topics | kill ros2 launch processes
+First time: ./setup-key.sh
+USAGE
+  ;;
+esac
