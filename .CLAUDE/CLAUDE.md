@@ -192,11 +192,15 @@ reasoning and runbook live in `waypoint_mission/GUIDE.md`; the lab record is `LA
 | `mission_node.py` | ROS 2 adapter: `nav2_simple_commander` goals, stdin + `/waypoint/command` input. Run directly, not via `ros2 launch` |
 | `waypoints.yaml` | Home + 4 waypoint poses (**placeholders**, `surveyed: false`) and settings |
 | `config/collision_monitor.yaml`, `launch/safety.launch.py` | Nav2 collision monitor stop/slow boxes, robot side |
+| `survey_spots.py` | Records home + waypoint poses from `/amcl_pose` into `waypoints_surveyed.yaml` (maths/writer tested; ROS part unrun) |
+| `lab_preflight.py` | Read-only `ros2` CLI checks for the guide §14 open items |
+| `launch/localization.launch.py` | AMCL + map_server on a saved map, robot side (**unrun**; conflicts with Cartographer/`exploration:=False` — see its header) |
 | `tools/` | Remote access to Acrux: `acrux` SSH CLI, `vnc.sh`, `dev-mode.sh`, `wasd_teleop.py`, sensor probes (see `tools/README.md`) |
 | `GUIDE.md`, `LAB-RECORD.md` | Design/runbook and the lab record (observation tables blank until run) |
-| `tests/` | pytest — state machine + config validation (60 tests) |
+| `tests/` | pytest — state machine, config, survey, preflight parsers (87 tests) |
 
-Test: `cd waypoint_mission && py -m venv .venv && .venv/Scripts/activate && pip install -r requirements.txt && pytest`.
+Test: `cd waypoint_mission && py -m venv .venv && .venv/Scripts/activate && pip install -r requirements.txt && pytest`
+(on Linux with ROS sourced use `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest`, because ROS's pytest plugins fail to import in a bare venv).
 **Unverified:** `mission_node.py`, the launch file and the collision-monitor config have never been
 run on Gazebo/the robot; open items are tracked in guide §14 (ROS distro, whether AMCL is
 launched, the real `cmd_vel` chain, RealSense behaviour).
