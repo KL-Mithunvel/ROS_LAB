@@ -12,6 +12,9 @@ Plan: `learn/build/09-acrux-greeter-mission.md`; code: `practice/acrux_greeter/`
 machine is pytest-tested; **everything ROS-side is written but never run.** Open items are
 tracked with a result column in guide §14 — fill them in there as you go.
 
+- [x] Built the offline tooling (2026-10-13): `lab_preflight.py`, `survey_spots.py`,
+      `launch/localization.launch.py`; 87 pytest tests pass. Lab steps below now just *run* them.
+- [ ] Run `python3 lab_preflight.py` on the robot — answers the next four items in one go
 - [ ] **Check the robot's ROS distro** (`printenv ROS_DISTRO`) — not known yet; repo says Humble
 - [ ] Confirm what provides `map → odom` with `exploration:=False` (is AMCL launched at all?)
 - [ ] Confirm the real `cmd_vel` chain (`ros2 topic info /cmd_vel -v`) and wire the collision monitor

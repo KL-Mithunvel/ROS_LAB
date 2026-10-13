@@ -186,9 +186,13 @@ reasoning and runbook live in `learn/build/09-acrux-greeter-mission.md`.
 | `mission_node.py` | ROS 2 adapter: `nav2_simple_commander` goals, stdin + `/greeter/command` input. Run directly, not via `ros2 launch` |
 | `guests.yaml` | Home + 4 guest poses (**placeholders**, `surveyed: false`) and settings |
 | `config/collision_monitor.yaml`, `launch/safety.launch.py` | Nav2 collision monitor stop/slow boxes, robot side |
-| `tests/` | pytest — state machine + config validation (60 tests) |
+| `survey_spots.py` | Records home + guest poses from `/amcl_pose` into `guests_surveyed.yaml` (maths/writer tested; ROS part unrun) |
+| `lab_preflight.py` | Read-only `ros2` CLI checks for the guide §14 open items |
+| `launch/localization.launch.py` | AMCL + map_server on a saved map, robot side (**unrun**; conflicts with Cartographer/`exploration:=False` — see its header) |
+| `tests/` | pytest — state machine, config, survey, preflight parsers (87 tests) |
 
-Test: `cd practice/acrux_greeter && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && pytest`.
+Test (Linux with ROS sourced: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest`, because ROS's pytest
+plugins fail to import in a bare venv): `cd practice/acrux_greeter && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && pytest`.
 **Unverified:** `mission_node.py`, the launch file and the collision-monitor config have never been
 run on Gazebo/the robot; open items are tracked in guide §14 (ROS distro, whether AMCL is
 launched, the real `cmd_vel` chain, RealSense behaviour).
