@@ -19,6 +19,30 @@ between demo (autostart) and development mode. Run them from `waypoint_mission/t
 | `vnc.sh` | Start a VNC desktop on the robot and tunnel it to your PC |
 | `dev-mode.sh` | Switch between autostart (demo) and development mode |
 | `acrux.env` | Host, user and key path. Edit if the IP or user changes |
+| `acrux_gui.py` | Control panel GUI for all of the above (section 0) |
+
+---
+
+## 0. Control panel (GUI)
+
+```bash
+./acrux_gui.py        # runs on the laptop; needs ROS 2 Humble sourced (it re-launches itself with it)
+```
+
+One window for the whole gift-greeter project: **E-STOP** (button or Space), camera, LiDAR, map with
+robot pose (click-drag to set the initial pose or send a goal), drive pad (hold buttons or W A S D,
+capped 0.2 m/s / 0.6 rad/s), mission start/stop plus Next/Skip/Retry/Pause/Home/Quit, and the
+**Demo / Development switch, which reboots the robot and reconnects** when it is back. In development
+mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-test.sh`).
+
+- Everything robot-side reuses `acrux`, `dev-mode.sh` and `sensor-test.sh`; IP/key stay in `acrux.env`.
+- The robot's sudo password is asked once, kept in memory, never written to disk ("Forget sudo password" clears it).
+- **E-STOP is software**: it latches, streams zero `/cmd_vel`, cancels Nav2 goals and repeats a zero over SSH.
+  It depends on Wi-Fi and this laptop. Keep a person at the physical power switch.
+- The mission program and its safety layer are as described in `learn/build/09-acrux-greeter-mission.md`
+  (the collision monitor still runs on the robot).
+- Status: rendering, teleop and E-stop latching were tested offline with fake topics; the mode switch +
+  reboot + reconnect path has **not** been run against the robot yet.
 
 ---
 

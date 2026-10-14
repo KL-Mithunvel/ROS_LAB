@@ -35,4 +35,9 @@ if have_bus; then echo "service: enabled=$(usr is-enabled $UNIT 2>&1) active=$(u
 else echo "service: user manager down (development mode: nothing autostarts)"; fi
 echo "robot procs: $(pgrep -fc 'micro_ros_agent|nav2_|cartographer|ydlidar_ros2' || true)"
 RS
-ssh -t -i "$KEY" "$ACRUX_USER@$ACRUX_HOST" "sudo MODE=$MODE bash -c $(printf %q "$REMOTE")"
+if [ -n "${ACRUX_SUDO_PW:-}" ]; then   # automation (acrux_gui.py): password on stdin, no TTY
+  printf '%s\n' "$ACRUX_SUDO_PW" | ssh -i "$KEY" -o BatchMode=yes "$ACRUX_USER@$ACRUX_HOST" \
+    "sudo -S -p '' MODE=$MODE bash -c $(printf %q "$REMOTE")"
+else
+  ssh -t -i "$KEY" "$ACRUX_USER@$ACRUX_HOST" "sudo MODE=$MODE bash -c $(printf %q "$REMOTE")"
+fi
