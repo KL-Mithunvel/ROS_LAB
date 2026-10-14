@@ -68,6 +68,9 @@ NAV_CANCEL_SERVICES = ["/navigate_to_pose/_action/cancel_goal",
                        "/navigate_through_poses/_action/cancel_goal",
                        "/follow_waypoints/_action/cancel_goal"]
 BASE_FRAMES = ("base_link", "base_footprint")
+# The X2 LiDAR is mounted rotated 180 deg (its valid arc is the robot's FRONT but shows up at +-180 deg in
+# the scan). Display-only correction; editable in the LiDAR panel. Nav2/SLAM still see the raw scan.
+LIDAR_ROT_DEG = 180.0
 
 OWNER, OWS = "rigbetel-labs", "/home/rigbetel-labs/ros2_ws"   # same as sensor-test.sh
 JOBDIR = "/tmp/acrux_jobs"                                   # pid + log per job, on the robot
@@ -358,6 +361,7 @@ class App:
         self.lin = tk.DoubleVar(value=0.10)
         self.ang = tk.DoubleVar(value=0.40)
         self.lidar_range = tk.DoubleVar(value=4.0)
+        self.lidar_rot = tk.DoubleVar(value=LIDAR_ROT_DEG)
 
         self.style()
         self.build()
@@ -423,6 +427,8 @@ class App:
         row.pack(fill="x")
         ttk.Label(row, text="range m").pack(side="left", padx=4)
         ttk.Spinbox(row, from_=1, to=12, increment=1, width=4, textvariable=self.lidar_range).pack(side="left")
+        ttk.Label(row, text="  rotate °").pack(side="left")
+        ttk.Spinbox(row, from_=-180, to=180, increment=90, width=5, textvariable=self.lidar_rot).pack(side="left")
         self.lidar_info = ttk.Label(row, text="")
         self.lidar_info.pack(side="left", padx=10)
         self.lidar = tk.Canvas(lid, width=380, height=260, bg="#0d1117", highlightthickness=0)
@@ -736,8 +742,13 @@ class App:
             self.mode_label.configure(text="mode: unknown (robot unreachable)")
             self.set_ind("mode", "mode: ?", GREY)
             self.set_ind("stack", "nav stack: ?", GREY)
+        esp_up = self.ros.node.count_publishers("/wheel/ticks") > 0
         for key, n in (("base", st["agent"]), ("lidar", st["lidar"]), ("camera", st["cam"])):
-            self.drv_labels[key].configure(text="running" if n else "stopped" if ssh else "?")
+            if key == "base" and n:
+                text = "running" if esp_up else "no ESP!"
+            else:
+                text = "running" if n else "stopped" if ssh else "?"
+            self.drv_labels[key].configure(text=text)
         for name, lab in self.job_labels.items():
             try:
                 lab.configure(text="running" if name in st["jobs"] else "stopped" if ssh else "?")
@@ -796,6 +807,12 @@ class App:
         self._cam_photo = ImageTk.PhotoImage(img)
         self.cam_label.configure(image=self._cam_photo, text="", width=0, height=0)
 
+    def rot_rad(self):
+        try:
+            return math.radians(float(self.lidar_rot.get()))
+        except (tk.TclError, ValueError):
+            return 0.0
+
     def range_value(self):
         try:
             return min(12.0, max(1.0, float(self.lidar_range.get())))
@@ -821,10 +838,11 @@ class App:
             return
         a0, inc, ranges, rmax = sc
         near = (9e9, 0.0)
+        rot = self.rot_rad()
         for i, r in enumerate(ranges):
             if not (0.05 < r < rmax) or r != r:
                 continue
-            th = a0 + i * inc
+            th = math.atan2(math.sin(a0 + i * inc + rot), math.cos(a0 + i * inc + rot))
             if r < near[0]:
                 near = (r, th)
             if r > rng:
@@ -871,9 +889,10 @@ class App:
         sc = snap["scan"]
         if sc is not None and snap["scan_age"] is not None and snap["scan_age"] < 2.0:
             a0, inc, ranges, rmax = sc
+            rot = self.rot_rad()
             for i, r in enumerate(ranges):
                 if 0.05 < r < rmax:
-                    th = yaw + a0 + i * inc
+                    th = yaw + a0 + i * inc + rot
                     px, py = to_px(x + r * math.cos(th), y + r * math.sin(th))
                     c.create_rectangle(px - 1, py - 1, px + 1, py + 1, fill="#f85149", outline="", tags="scan")
         px, py = to_px(x, y)
@@ -981,7 +1000,7 @@ class App:
 
     def poll_robot(self):
         probe = ("echo LINGER=$(loginctl show-user rigbetel-labs -p Linger --value 2>/dev/null);"
-                 "echo AGENT=$(pgrep -fc '[m]icro_ros_agent');echo LIDAR=$(pgrep -fc '[y]dlidar_ros2_driver_node');"
+                 "echo AGENT=$(pgrep -fc '[l]ib/micro_ros_agent/micro_ros_agent');echo LIDAR=$(pgrep -fc '[y]dlidar_ros2_driver_node');"
                  "echo CAM=$(pgrep -fc '[r]ealsense2_camera_node');"
                  "echo NAV=$(pgrep -fc '[n]av2_|[b]t_navigator|[s]lam_toolbox|[c]artographer_node');"
                  f"for n in {' '.join(JOB_NAMES)}; do kill -0 $(cat {JOBDIR}/$n.pid 2>/dev/null) 2>/dev/null "
