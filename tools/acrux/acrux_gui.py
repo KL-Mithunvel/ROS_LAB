@@ -90,6 +90,9 @@ JOBS = [
      f"ros2 launch {GREETER_REMOTE}/launch/localization.launch.py map:=/home/rigbetel-labs/maps/lab.yaml", True, False),
     ("safety", "Safety: collision monitor",
      f"ros2 launch {GREETER_REMOTE}/launch/safety.launch.py cmd_vel_in:=cmd_vel_nav cmd_vel_out:=cmd_vel", True, False),
+    ("camthrottle", "Camera relay for GUI (5 Hz)",
+     "python3 /tmp/acrux_tools/image_throttle.py /camera/camera/color/image_raw/compressed "
+     "/gui/camera/compressed 5", "tools", False),
     ("custom", "Custom ROS command", "ros2 topic list", False, False),
 ]
 JOB_NAMES = [j[0] for j in JOBS]
@@ -778,7 +781,7 @@ class App:
     @staticmethod
     def pick_camera(names):
         names = [n for n in names if not n.endswith(("compressedDepth", "theora"))]
-        for pred in (lambda n: "color" in n and "compressed" in n, lambda n: "color" in n and "image_raw" in n,
+        for pred in (lambda n: n == "/gui/camera/compressed", lambda n: "color" in n and "compressed" in n, lambda n: "color" in n and "image_raw" in n,
                      lambda n: "compressed" in n and "depth" not in n, lambda n: "depth" not in n):
             for n in names:
                 if pred(n):
@@ -1104,7 +1107,16 @@ class App:
 
         def work():
             try:
-                if job[3]:
+                if job[3] == "tools":
+                    rc = subprocess.run([ACRUX, "push", str(HERE / "image_throttle.py"), "/tmp/acrux_tools/image_throttle.py"],
+                                        capture_output=True, text=True, timeout=60, cwd=HERE)
+                    if rc.returncode:   # directory may not exist yet
+                        subprocess.run([ACRUX, "run", "mkdir -p /tmp/acrux_tools"], timeout=20, cwd=HERE)
+                        rc = subprocess.run([ACRUX, "push", str(HERE / "image_throttle.py"),
+                                             "/tmp/acrux_tools/image_throttle.py"], capture_output=True, text=True,
+                                            timeout=60, cwd=HERE)
+                    self.log(f"job {name}: pushed image_throttle.py (rc={rc.returncode})")
+                elif job[3]:
                     rc = subprocess.run([ACRUX, "push", f"{GREETER}/", f"{GREETER_REMOTE}/"],
                                         capture_output=True, text=True, timeout=60, cwd=HERE)
                     self.log(f"job {name}: pushed greeter files (rc={rc.returncode})")
