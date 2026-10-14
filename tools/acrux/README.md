@@ -46,6 +46,17 @@ mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-
   `base_link -> lidar_link` with the URDF's 180 deg yaw) and publishes `/map` at 1 Hz. Drive with the pad,
   then Robot jobs → *Save current map*. Do not run it in demo mode (the autostart stack already does SLAM).
   Cartographer logs `Dropped N earlier points` with the X2 LiDAR; the map still builds.
+- **Mapping workflow (development mode):** start at the home spot facing the way you want "home" to face.
+  Start SLAM (and Start Nav) in the Map panel, scan the area with the drive pad, then **Go HOME**: Nav2
+  drives back and turns to the saved heading (heading error is logged; if it is over ~9 deg the goal is
+  re-issued once). **HOME = here** or the *HOME* map mode (click-drag sets position + heading) sets home;
+  the *guest* mode with the spinner 1-4 places guest spots (drag = the way the robot should FACE). Spots are
+  saved to `spots.json` and `guests_gui.yaml` (mission format, `surveyed: true`) and used by the mission
+  panel. **Reset map...** stops SLAM/Nav, clears the map and the spots, and restarts SLAM at the robot's
+  current pose (use it in a new place). Spots are valid only for the SLAM session they were set in (or one
+  started from the same home pose).
+- Nav2 here (`nav_dev.launch.py`, `nav2_dev_params.yaml`) uses only `/scan`; the LiDAR sees the front arc
+  only, so reversing/backup behaviours are blind. Speeds are capped at 0.2 m/s and 0.6 rad/s.
 - Everything robot-side reuses `acrux`, `dev-mode.sh` and `sensor-test.sh`; IP/key stay in `acrux.env`.
 - The robot's sudo password is asked once, kept in memory, never written to disk ("Forget sudo password" clears it).
 - **E-STOP is software**: it latches, streams zero `/cmd_vel`, cancels Nav2 goals and repeats a zero over SSH.
