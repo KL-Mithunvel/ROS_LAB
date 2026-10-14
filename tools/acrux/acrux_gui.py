@@ -523,7 +523,7 @@ class App:
         ttk.Button(drv, text="RViz2", width=6, command=self.toggle_rviz).grid(row=3, column=3, padx=2)
 
         # bottom: log
-        self.logbox = ScrolledText(r, height=5, bg="#0d1117", fg="#c9d1d9", font=("monospace", 9), state="disabled")
+        self.logbox = ScrolledText(r, height=3, bg="#0d1117", fg="#c9d1d9", font=("monospace", 9), state="disabled")
         self.logbox.grid(row=2, column=0, columnspan=3, sticky="ew", padx=6, pady=(0, 6))
 
     # ---- logging / thread plumbing
@@ -711,6 +711,7 @@ class App:
 
     @staticmethod
     def pick_camera(names):
+        names = [n for n in names if not n.endswith(("compressedDepth", "theora"))]
         for pred in (lambda n: "color" in n and "compressed" in n, lambda n: "color" in n and "image_raw" in n,
                      lambda n: "compressed" in n and "depth" not in n, lambda n: "depth" not in n):
             for n in names:
@@ -735,6 +736,8 @@ class App:
                                      if img is None else f"stream stalled ({age:.0f} s)")
             self._cam_photo = None
             return
+        if img.width > 400:
+            img = img.resize((400, int(img.height * 400 / img.width)))
         self._cam_photo = ImageTk.PhotoImage(img)
         self.cam_label.configure(image=self._cam_photo, text="", width=0, height=0)
 
