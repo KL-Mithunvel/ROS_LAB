@@ -478,7 +478,7 @@ class App:
         left.grid(row=1, column=0, sticky="ns", padx=6, pady=6)
         cam = ttk.LabelFrame(left, text="Camera")
         cam.pack(fill="x")
-        self.cam_box = ttk.Combobox(cam, textvariable=self.cam_choice, state="readonly", width=30)
+        self.cam_box = ttk.Combobox(cam, textvariable=self.cam_choice, state="readonly", width=22)
         self.cam_box.pack(fill="x", padx=4, pady=4)
         self.cam_box.bind("<<ComboboxSelected>>", self.on_cam_select)
         self.cam_label = tk.Label(cam, bg="black", fg=GREY, text="no camera stream\n"
@@ -492,31 +492,52 @@ class App:
         ttk.Spinbox(row, from_=1, to=12, increment=1, width=4, textvariable=self.lidar_range).pack(side="left")
         ttk.Label(row, text="  rotate °").pack(side="left")
         ttk.Spinbox(row, from_=-180, to=180, increment=90, width=5, textvariable=self.lidar_rot).pack(side="left")
-        self.lidar_info = ttk.Label(row, text="")
-        self.lidar_info.pack(side="left", padx=10)
-        self.lidar = tk.Canvas(lid, width=280, height=240, bg="#0d1117", highlightthickness=0)
+        self.lidar_info = ttk.Label(lid, text="")
+        self.lidar_info.pack(anchor="w", padx=6)
+        self.lidar = tk.Canvas(lid, width=240, height=240, bg="#0d1117", highlightthickness=0)
         self.lidar.pack(padx=4, pady=4, fill="both", expand=True)
 
         # centre: map
         mid = ttk.LabelFrame(r, text="Map")
         mid.grid(row=1, column=1, sticky="nsew", pady=6)
-        bar = ttk.Frame(mid)
-        bar.pack(fill="x")
-        for text, val in (("view", "view"), ("HOME", "home"), ("guest", "guest"),
-                          ("pose", "initpose"), ("goal", "goal")):
-            ttk.Radiobutton(bar, text=text, value=val, variable=self.map_mode).pack(side="left", padx=2)
-        ttk.Spinbox(bar, from_=1, to=4, width=3, textvariable=self.guest_n).pack(side="left")
-        self.pose_label = ttk.Label(bar, text="")
-        self.pose_label.pack(side="right", padx=6)
-        for row in ((("Start SLAM", lambda: self.job_start("slamdev")),
-                      ("Start Nav", lambda: self.job_start("navdev")),
-                      ("Reset map...", self.reset_map)),
-                     (("HOME = here", self.set_home_here), ("Go HOME", self.go_home),
-                      ("Go guest", self.go_guest), ("Cancel nav", self.cancel_nav))):
-            br = ttk.Frame(mid)
-            br.pack(fill="x", pady=1)
-            for text, cmd in row:
-                ttk.Button(br, text=text, command=cmd).pack(side="left", padx=2)
+        top = ttk.Frame(mid)
+        top.pack(fill="x", pady=1)
+        for text, cmd in (("Start SLAM", lambda: self.job_start("slamdev")),
+                          ("Start Nav", lambda: self.job_start("navdev")),
+                          ("Reset map...", self.reset_map),
+                          ("Cancel nav", self.cancel_nav)):
+            ttk.Button(top, text=text, command=cmd).pack(side="left", padx=2)
+        self.pose_label = ttk.Label(mid, text="")
+        self.pose_label.pack(anchor="w", padx=6)
+
+        sp = ttk.LabelFrame(mid, text="Home & guest spots")
+        sp.pack(fill="x", padx=2, pady=2)
+        self.spot_status = {}
+        ttk.Label(sp, text="Place = click-drag on the map (drag toward where the robot should FACE)  |  "
+                           "Here = use the robot's current pose",
+                  wraplength=380, justify="left").grid(row=0, column=0, columnspan=6, sticky="w", padx=4)
+        names = [("home", "HOME")] + [(f"g{i}", f"Guest {i}") for i in range(1, 5)]
+        for i, (key, label) in enumerate(names, start=1):
+            ttk.Label(sp, text=label, width=8).grid(row=i, column=0, padx=4, pady=1, sticky="w")
+            st = ttk.Label(sp, text="not set", width=21)
+            st.grid(row=i, column=1, sticky="w")
+            self.spot_status[key] = st
+            for col, (text, cmd) in enumerate((("Place", lambda k=key: self.arm(k)),
+                                               ("Here", lambda k=key: self.spot_here(k)),
+                                               ("Go", lambda k=key, l=label: self.go_spot(k, l)),
+                                               ("Clear", lambda k=key: self.clear_spot(k))), start=2):
+                ttk.Button(sp, text=text, width=4, command=cmd).grid(row=i, column=col, padx=1, pady=1)
+        adv = ttk.Frame(sp)
+        adv.grid(row=6, column=0, columnspan=6, sticky="w", pady=2)
+        ttk.Label(adv, text="Advanced:").pack(side="left", padx=4)
+        ttk.Button(adv, text="Set initial pose (AMCL only)", command=lambda: self.arm("initpose")).pack(side="left", padx=2)
+        ttk.Button(adv, text="Click-to-go", command=lambda: self.arm("goal")).pack(side="left", padx=2)
+
+        bn = ttk.Frame(mid)
+        bn.pack(fill="x")
+        self.banner = tk.Label(bn, text="", bg=BG, fg=AMBER, anchor="w", wraplength=380, justify="left")
+        self.banner.pack(side="left", padx=6)
+        self.banner_cancel = ttk.Button(bn, text="Cancel", width=7, command=self.disarm)
         ttk.Label(mid, textvariable=self.nav_text).pack(anchor="w", padx=6)
         self.map_canvas = tk.Canvas(mid, bg="#0d1117", highlightthickness=0)
         self.map_canvas.pack(fill="both", expand=True, padx=4, pady=4)
@@ -711,7 +732,9 @@ class App:
         if isinstance(e.widget, (tk.Entry, ttk.Entry, ttk.Spinbox)):
             return
         k = e.keysym.lower()
-        if k == "space":
+        if k == "escape":
+            self.disarm()
+        elif k == "space":
             self.do_estop()
         elif k == "x":
             self.stop_motion()
@@ -832,6 +855,10 @@ class App:
             ready = "ready" if r.nav_ready() else "Nav2 not running"
             self.nav_text.set(f"nav: {r.nav_state}  ({ready})")
         self.check_nav_done()
+        for key, lab in self.spot_status.items():
+            sp = self.spots.get(key)
+            lab.configure(text="not set" if sp is None else
+                          f"x {sp[0]:+.2f}  y {sp[1]:+.2f}  facing {math.degrees(sp[2]):+.0f}°")
         for name, lab in self.job_labels.items():
             try:
                 lab.configure(text="running" if name in st["jobs"] else "stopped" if ssh else "?")
@@ -1023,22 +1050,57 @@ class App:
         if math.hypot(e.x - x0, e.y - y0) > 8:
             yaw = math.atan2(-(e.y - y0), e.x - x0)
         mode = self.map_mode.get()
-        if mode == "home":
-            self.set_spot("home", w0[0], w0[1], yaw)
-            return
-        if mode == "guest":
-            self.set_spot(f"g{self.guest_n.get()}", w0[0], w0[1], yaw)
-            return
-        goal = mode == "goal"
-        if goal:
+        self.disarm()
+        if mode == "home" or (mode.startswith("g") and mode[1:].isdigit()):
+            self.set_spot(mode, w0[0], w0[1], yaw)
+        elif mode == "goal":
             if self.ros.estopped:
                 self.log("goal not sent: E-STOP is engaged")
                 return
-            if not messagebox.askyesno("Send goal", f"Drive to x={w0[0]:.2f} y={w0[1]:.2f} "
-                                       f"yaw={math.degrees(yaw):.0f}° ?"):
+            if not messagebox.askyesno("Drive here", f"Drive to x={w0[0]:.2f} y={w0[1]:.2f} "
+                                       f"facing {math.degrees(yaw):.0f}° ?"):
                 return
-        self.ros.publish_pose(w0[0], w0[1], yaw, as_goal=goal)
-        self.log(f"{'goal' if goal else 'initial pose'} sent: x={w0[0]:.2f} y={w0[1]:.2f} yaw={math.degrees(yaw):.0f}°")
+            if self.ros.go_to(w0[0], w0[1], yaw, "map point"):
+                self.home_retry = 0
+                self.log(f"navigating to map point x={w0[0]:.2f} y={w0[1]:.2f}")
+            else:
+                self.log("Nav2 is not running. Press 'Start Nav' first.")
+        elif mode == "initpose":
+            self.ros.publish_pose(w0[0], w0[1], yaw, as_goal=False)
+            self.log(f"initial pose sent: x={w0[0]:.2f} y={w0[1]:.2f} yaw={math.degrees(yaw):.0f}°")
+
+    PROMPTS = {"home": "Click-drag on the map to place HOME (drag toward where the robot should face).",
+               "initpose": "Click-drag where the robot REALLY is (AMCL initial pose; not needed with SLAM).",
+               "goal": "Click-drag where the robot should DRIVE now (drag = final heading)."}
+
+    def arm(self, name):
+        if self.map_xform is None:
+            self.log("no map yet: start SLAM first")
+            return
+        self.map_mode.set(name)
+        text = self.PROMPTS.get(name) or (f"Click-drag on the map to place Guest {name[1:]}: press where the robot "
+                                          "should STOP, drag toward where it should FACE (toward the guest).")
+        self.banner.configure(text=text)
+        self.banner_cancel.pack(side="right", padx=4)
+        self.map_canvas.configure(cursor="crosshair")
+
+    def disarm(self):
+        self.map_mode.set("view")
+        self.banner.configure(text="")
+        self.banner_cancel.pack_forget()
+        self.map_canvas.configure(cursor="")
+
+    def spot_here(self, name):
+        pose = self.robot_pose()
+        if pose is None:
+            self.log("robot pose unknown: is SLAM running?")
+            return
+        self.set_spot(name, *pose)
+
+    def clear_spot(self, name):
+        if self.spots.pop(name, None) is not None:
+            self.save_spots()
+            self.log(f"{'HOME' if name == 'home' else 'guest ' + name[1:]} cleared")
 
     # ---- spots (home + guests) and navigation
     def load_spots(self):
