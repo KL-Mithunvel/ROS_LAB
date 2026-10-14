@@ -35,6 +35,12 @@ capped 0.2 m/s / 0.6 rad/s), mission start/stop plus Next/Skip/Retry/Pause/Home/
 **Demo / Development switch, which reboots the robot and reconnects** when it is back. In development
 mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-test.sh`).
 
+- **Robot jobs (ROS stacks)...** opens a window that runs background ROS commands on the robot as
+  `rigbetel-labs` (detached, pid + log in `/tmp/acrux_jobs/`, survives closing the GUI): SLAM stack,
+  navigation on a saved map, save map, AMCL localization, collision monitor, and a custom command.
+  Commands are editable; status is polled; **Log** prints the tail. AMCL/safety presets push
+  `practice/acrux_greeter/` to `/tmp/acrux_greeter` first. These presets are unverified on the robot
+  (guide sections 7-8: check the `cmd_vel` chain and who owns `map -> odom`). **RViz2** starts on the laptop.
 - Everything robot-side reuses `acrux`, `dev-mode.sh` and `sensor-test.sh`; IP/key stay in `acrux.env`.
 - The robot's sudo password is asked once, kept in memory, never written to disk ("Forget sudo password" clears it).
 - **E-STOP is software**: it latches, streams zero `/cmd_vel`, cancels Nav2 goals and repeats a zero over SSH.

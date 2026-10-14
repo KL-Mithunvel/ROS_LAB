@@ -34,6 +34,7 @@ except ImportError:   # started from a venv / shell without ROS: re-exec on the 
 import math
 import queue
 import re
+import shlex
 import signal
 import subprocess
 import threading
@@ -67,6 +68,28 @@ NAV_CANCEL_SERVICES = ["/navigate_to_pose/_action/cancel_goal",
                        "/navigate_through_poses/_action/cancel_goal",
                        "/follow_waypoints/_action/cancel_goal"]
 BASE_FRAMES = ("base_link", "base_footprint")
+
+OWNER, OWS = "rigbetel-labs", "/home/rigbetel-labs/ros2_ws"   # same as sensor-test.sh
+JOBDIR = "/tmp/acrux_jobs"                                   # pid + log per job, on the robot
+GREETER_REMOTE = "/tmp/acrux_greeter"                        # where the greeter launch files are pushed
+# Background ROS jobs run on the robot as OWNER (via sudo), detached, with pid + log files.
+# name, label, command (editable in the window), needs greeter files pushed first, is a "stack"
+JOBS = [
+    ("slam", "SLAM mapping stack",
+     "ros2 launch acrux_bringup autobringup.launch.py exploration:=True realsense:=False joy:=False", False, True),
+    ("nav", "Navigation on saved map",
+     "ros2 launch acrux_bringup autobringup.launch.py exploration:=False "
+     "map_file:=/home/rigbetel-labs/maps/lab.yaml realsense:=False joy:=False", False, True),
+    ("mapsave", "Save current map (one-shot)",
+     "mkdir -p /home/rigbetel-labs/maps && ros2 run nav2_map_server map_saver_cli -f /home/rigbetel-labs/maps/lab",
+     False, False),
+    ("amcl", "Localization (AMCL + map_server)",
+     f"ros2 launch {GREETER_REMOTE}/launch/localization.launch.py map:=/home/rigbetel-labs/maps/lab.yaml", True, False),
+    ("safety", "Safety: collision monitor",
+     f"ros2 launch {GREETER_REMOTE}/launch/safety.launch.py cmd_vel_in:=cmd_vel_nav cmd_vel_out:=cmd_vel", True, False),
+    ("custom", "Custom ROS command", "ros2 topic list", False, False),
+]
+JOB_NAMES = [j[0] for j in JOBS]
 
 BG, FG, PANEL = "#1e2127", "#e6e6e6", "#2a2f38"
 RED, GREEN, AMBER, GREY = "#d9342b", "#3fb950", "#e3a008", "#7d8590"
@@ -314,7 +337,11 @@ class App:
         self.uiq = queue.Queue()
         self.sudo_pw = None
         self.busy = False                  # a mode switch / driver operation is running
-        self.status = dict(ssh=None, linger=None, agent=0, lidar=0, cam=0, nav=0)
+        self.status = dict(ssh=None, linger=None, agent=0, lidar=0, cam=0, nav=0, jobs=set())
+        self.job_cmd = {j[0]: tk.StringVar(value=j[2]) for j in JOBS}
+        self.job_win = None
+        self.job_labels = {}
+        self.rviz = None
         self.keys = set()
         self.pad = (0, 0)                  # direction from on-screen buttons
         self.pad_active = False
@@ -491,6 +518,10 @@ class App:
             ttk.Button(drv, text="Start", width=6, command=lambda k=key: self.driver("start", k)).grid(row=i, column=2)
             ttk.Button(drv, text="Stop", width=6, command=lambda k=key: self.driver("stop", k)).grid(row=i, column=3)
 
+        ttk.Button(drv, text="Robot jobs (ROS stacks)...", command=self.open_jobs).grid(
+            row=3, column=0, columnspan=3, sticky="ew", padx=4, pady=3)
+        ttk.Button(drv, text="RViz2", width=6, command=self.toggle_rviz).grid(row=3, column=3, padx=2)
+
         # bottom: log
         self.logbox = ScrolledText(r, height=5, bg="#0d1117", fg="#c9d1d9", font=("monospace", 9), state="disabled")
         self.logbox.grid(row=2, column=0, columnspan=3, sticky="ew", padx=6, pady=(0, 6))
@@ -651,6 +682,11 @@ class App:
             self.set_ind("stack", "nav stack: ?", GREY)
         for key, n in (("base", st["agent"]), ("lidar", st["lidar"]), ("camera", st["cam"])):
             self.drv_labels[key].configure(text="running" if n else "stopped" if ssh else "?")
+        for name, lab in self.job_labels.items():
+            try:
+                lab.configure(text="running" if name in st["jobs"] else "stopped" if ssh else "?")
+            except tk.TclError:
+                pass
         state = "disabled" if self.busy else "normal"
         for b in (self.btn_demo, self.btn_dev):
             b.configure(state=state)
@@ -883,7 +919,9 @@ class App:
         probe = ("echo LINGER=$(loginctl show-user rigbetel-labs -p Linger --value 2>/dev/null);"
                  "echo AGENT=$(pgrep -fc '[m]icro_ros_agent');echo LIDAR=$(pgrep -fc '[y]dlidar_ros2_driver_node');"
                  "echo CAM=$(pgrep -fc '[r]ealsense2_camera_node');"
-                 "echo NAV=$(pgrep -fc '[n]av2_|[b]t_navigator|[s]lam_toolbox|[c]artographer_node')")
+                 "echo NAV=$(pgrep -fc '[n]av2_|[b]t_navigator|[s]lam_toolbox|[c]artographer_node');"
+                 f"for n in {' '.join(JOB_NAMES)}; do kill -0 $(cat {JOBDIR}/$n.pid 2>/dev/null) 2>/dev/null "
+                 "&& echo JOB_$n=1; done; true")
         while True:
             try:
                 p = subprocess.run([ACRUX, "run", probe], capture_output=True, text=True, timeout=12, cwd=HERE)
@@ -891,11 +929,12 @@ class App:
                 if p.returncode == 0 and vals:
                     self.status = dict(ssh=True, linger=vals.get("LINGER", "").strip(),
                                        agent=int(vals.get("AGENT", "0") or 0), lidar=int(vals.get("LIDAR", "0") or 0),
-                                       cam=int(vals.get("CAM", "0") or 0), nav=int(vals.get("NAV", "0") or 0))
+                                       cam=int(vals.get("CAM", "0") or 0), nav=int(vals.get("NAV", "0") or 0),
+                                       jobs={k[4:] for k, v in vals.items() if k.startswith("JOB_") and v.strip() == "1"})
                 else:
-                    self.status = dict(ssh=False, linger=None, agent=0, lidar=0, cam=0, nav=0)
+                    self.status = dict(ssh=False, linger=None, agent=0, lidar=0, cam=0, nav=0, jobs=set())
             except Exception:
-                self.status = dict(ssh=False, linger=None, agent=0, lidar=0, cam=0, nav=0)
+                self.status = dict(ssh=False, linger=None, agent=0, lidar=0, cam=0, nav=0, jobs=set())
             time.sleep(4)
 
     def need_pw(self):
@@ -931,6 +970,115 @@ class App:
             finally:
                 self.busy = False
         threading.Thread(target=work, daemon=True).start()
+
+    # ---- background ROS jobs on the robot
+    def root_run(self, script, timeout=60):
+        """Run a bash snippet as root on the robot (password on stdin, no TTY)."""
+        p = subprocess.run([ACRUX, "run", f"sudo -S -p '' bash -c {shlex.quote(script)}"],
+                           input=self.sudo_pw + "\n", capture_output=True, text=True, timeout=timeout, cwd=HERE)
+        out = (p.stdout + p.stderr).strip()
+        if "incorrect password" in out.lower() or "sorry" in out.lower():
+            self.sudo_pw = None
+        return p.returncode, out
+
+    def open_jobs(self):
+        if self.job_win is not None and self.job_win.winfo_exists():
+            self.job_win.lift()
+            return
+        w = self.job_win = tk.Toplevel(self.root)
+        w.title("Acrux robot jobs")
+        w.configure(bg=BG)
+        w.columnconfigure(2, weight=1)
+        ttk.Label(w, text="Run on the robot as rigbetel-labs, detached; logs in /tmp/acrux_jobs/. "
+                          "Commands are editable. Presets are UNVERIFIED on the robot: read the guide §7-8.",
+                  wraplength=900).grid(row=0, column=0, columnspan=6, padx=6, pady=6, sticky="w")
+        for i, (name, label, _cmd, push, stack) in enumerate(JOBS, start=1):
+            ttk.Label(w, text=label, width=30).grid(row=i, column=0, padx=6, pady=2, sticky="w")
+            lab = ttk.Label(w, text="?", width=9)
+            lab.grid(row=i, column=1)
+            self.job_labels[name] = lab
+            ttk.Entry(w, textvariable=self.job_cmd[name], width=90).grid(row=i, column=2, sticky="ew", padx=4)
+            ttk.Button(w, text="Start", width=6, command=lambda n=name: self.job_start(n)).grid(row=i, column=3)
+            ttk.Button(w, text="Stop", width=6, command=lambda n=name: self.job_stop(n)).grid(row=i, column=4)
+            ttk.Button(w, text="Log", width=6, command=lambda n=name: self.job_log(n)).grid(row=i, column=5, padx=4)
+
+    def job_start(self, name):
+        job = next(j for j in JOBS if j[0] == name)
+        cmd = self.job_cmd[name].get().strip()
+        if not cmd or self.busy:
+            return
+        if job[4] and self.status.get("linger") == "yes" and not messagebox.askyesno(
+                "Demo mode", "The robot is in DEMO mode: its autostart stack is already running.\n"
+                             "Starting another stack on top will conflict. Start anyway?"):
+            return
+        if self.ros.estopped and job[4]:
+            self.log("stack not started: E-STOP is engaged")
+            return
+        if not self.need_pw():
+            return
+        self.busy = True
+        self.log(f"job {name}: starting ...")
+
+        def work():
+            try:
+                if job[3]:
+                    rc = subprocess.run([ACRUX, "push", f"{GREETER}/", f"{GREETER_REMOTE}/"],
+                                        capture_output=True, text=True, timeout=60, cwd=HERE)
+                    self.log(f"job {name}: pushed greeter files (rc={rc.returncode})")
+                inner = (f"echo $$ > {JOBDIR}/{name}.pid; source /opt/ros/humble/setup.bash; "
+                         f"source {OWS}/install/setup.bash 2>/dev/null; exec bash -c {shlex.quote(cmd)}")
+                f = f"{JOBDIR}/{name}"
+                script = (f"mkdir -p {JOBDIR}; chmod 777 {JOBDIR}; "
+                          f"if [ -f {f}.pid ] && kill -0 $(cat {f}.pid) 2>/dev/null; then echo 'already running'; exit 0; fi; "
+                          f"rm -f {f}.pid; : > {f}.log; chmod 666 {f}.log; "
+                          f"setsid -f runuser -u {OWNER} -- bash -lc {shlex.quote(inner)} > {f}.log 2>&1; sleep 3; "
+                          f"if kill -0 $(cat {f}.pid 2>/dev/null) 2>/dev/null; then echo started; "
+                          f"else echo 'exited already (one-shot or failed):'; tail -n 15 {f}.log; fi")
+                rc, out = self.root_run(script, timeout=60)
+                self.log(f"job {name}: {out or 'rc=' + str(rc)}")
+            except Exception as exc:
+                self.log(f"job {name} failed: {exc}")
+            finally:
+                self.busy = False
+        threading.Thread(target=work, daemon=True).start()
+
+    def job_stop(self, name):
+        if self.busy or not self.need_pw():
+            return
+        self.busy = True
+        self.log(f"job {name}: stopping ...")
+
+        def work():
+            try:
+                f = f"{JOBDIR}/{name}"
+                script = (f"[ -f {f}.pid ] || {{ echo 'not running'; exit 0; }}; p=$(cat {f}.pid); "
+                          f"s=$(ps -o sid= -p $p 2>/dev/null | tr -d ' '); "
+                          f"if [ -n \"$s\" ] && [ \"$s\" != 1 ]; then pkill -INT -s $s; sleep 3; pkill -KILL -s $s; fi; "
+                          f"rm -f {f}.pid; echo stopped")
+                rc, out = self.root_run(script, timeout=40)
+                self.log(f"job {name}: {out or 'rc=' + str(rc)}")
+            except Exception as exc:
+                self.log(f"job {name} stop failed: {exc}")
+            finally:
+                self.busy = False
+        threading.Thread(target=work, daemon=True).start()
+
+    def job_log(self, name):
+        def work():
+            p = subprocess.run([ACRUX, "run", f"tail -n 40 {JOBDIR}/{name}.log 2>&1"], capture_output=True,
+                               text=True, timeout=20, cwd=HERE)
+            self.log(f"--- job {name} log ---\n{p.stdout.strip() or p.stderr.strip() or '(empty)'}")
+        threading.Thread(target=work, daemon=True).start()
+
+    def toggle_rviz(self):
+        if self.rviz is not None and self.rviz.poll() is None:
+            self.rviz.terminate()
+            return
+        try:
+            self.rviz = subprocess.Popen(["rviz2"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self.log("rviz2 started on the laptop")
+        except OSError as exc:
+            self.log(f"cannot start rviz2: {exc}")
 
     # ---- mode switch + reboot + reconnect
     def switch_mode(self, which):
