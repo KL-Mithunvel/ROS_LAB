@@ -78,7 +78,9 @@ GREETER_REMOTE = "/tmp/acrux_greeter"                        # where the greeter
 # Background ROS jobs run on the robot as OWNER (via sudo), detached, with pid + log files.
 # name, label, command (editable in the window), needs greeter files pushed first, is a "stack"
 JOBS = [
-    ("slam", "SLAM mapping stack",
+    ("slamdev", "SLAM (development mode: LiDAR only)",
+     "ros2 launch /tmp/acrux_tools/slam_dev.launch.py", "tools", False),
+    ("slam", "SLAM mapping stack (full autobringup)",
      "ros2 launch acrux_bringup autobringup.launch.py exploration:=True realsense:=False joy:=False", False, True),
     ("nav", "Navigation on saved map",
      "ros2 launch acrux_bringup autobringup.launch.py exploration:=False "
@@ -1108,14 +1110,13 @@ class App:
         def work():
             try:
                 if job[3] == "tools":
-                    rc = subprocess.run([ACRUX, "push", str(HERE / "image_throttle.py"), "/tmp/acrux_tools/image_throttle.py"],
-                                        capture_output=True, text=True, timeout=60, cwd=HERE)
-                    if rc.returncode:   # directory may not exist yet
-                        subprocess.run([ACRUX, "run", "mkdir -p /tmp/acrux_tools"], timeout=20, cwd=HERE)
-                        rc = subprocess.run([ACRUX, "push", str(HERE / "image_throttle.py"),
-                                             "/tmp/acrux_tools/image_throttle.py"], capture_output=True, text=True,
-                                            timeout=60, cwd=HERE)
-                    self.log(f"job {name}: pushed image_throttle.py (rc={rc.returncode})")
+                    subprocess.run([ACRUX, "run", "mkdir -p /tmp/acrux_tools/slam_config"], timeout=20, cwd=HERE)
+                    bad = 0
+                    for rel in ("image_throttle.py", "slam_dev.launch.py", "slam_config/lidar.lua"):
+                        r = subprocess.run([ACRUX, "push", str(HERE / rel), f"/tmp/acrux_tools/{rel}"],
+                                           capture_output=True, text=True, timeout=60, cwd=HERE)
+                        bad += r.returncode != 0
+                    self.log(f"job {name}: pushed tool files ({'ok' if not bad else str(bad) + ' failed'})")
                 elif job[3]:
                     rc = subprocess.run([ACRUX, "push", f"{GREETER}/", f"{GREETER_REMOTE}/"],
                                         capture_output=True, text=True, timeout=60, cwd=HERE)
