@@ -1235,8 +1235,8 @@ class App:
                  "echo AGENT=$(pgrep -fc '[l]ib/micro_ros_agent/micro_ros_agent');echo LIDAR=$(pgrep -fc '[y]dlidar_ros2_driver_node');"
                  "echo CAM=$(pgrep -fc '[r]ealsense2_camera_node');"
                  "echo NAV=$(pgrep -fc '[n]av2_|[b]t_navigator|[s]lam_toolbox|[c]artographer_node');"
-                 f"for n in {' '.join(JOB_NAMES)}; do kill -0 $(cat {JOBDIR}/$n.pid 2>/dev/null) 2>/dev/null "
-                 "&& echo JOB_$n=1; done; true")
+                 f"for n in {' '.join(JOB_NAMES)}; do p=$(cat {JOBDIR}/$n.pid 2>/dev/null); "
+                 "[ -n \"$p\" ] && [ -d /proc/$p ] && echo JOB_$n=1; done; true")
         while True:
             try:
                 p = subprocess.run([ACRUX, "run", probe], capture_output=True, text=True, timeout=12, cwd=HERE)
