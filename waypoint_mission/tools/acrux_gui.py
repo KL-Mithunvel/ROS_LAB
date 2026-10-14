@@ -448,7 +448,7 @@ class App:
         right = ttk.Frame(r)
         right.grid(row=1, column=2, sticky="ns", padx=6, pady=6)
 
-        drive = ttk.LabelFrame(right, text="Drive (hold button or W A S D)")
+        drive = ttk.LabelFrame(right, text="Drive (hold button or W A S D, +/- speed, X stop)")
         drive.pack(fill="x")
         pad = ttk.Frame(drive)
         pad.pack(pady=4)
@@ -459,11 +459,20 @@ class App:
             b.bind("<ButtonPress-1>", lambda e, d=d: self.pad_press(d))
             b.bind("<ButtonRelease-1>", lambda e: self.pad_release())
         ttk.Button(pad, text="■", width=4, command=self.stop_motion).grid(row=1, column=1, padx=2, pady=2)
-        for label, var, mx in (("linear m/s", self.lin, LIN_MAX), ("angular rad/s", self.ang, ANG_MAX)):
+        self.speed_txt = {}
+        for key, label, var, mx, unit in (("lin", "linear", self.lin, LIN_MAX, "m/s"),
+                                          ("ang", "angular", self.ang, ANG_MAX, "rad/s")):
             f = ttk.Frame(drive)
             f.pack(fill="x", padx=4)
-            ttk.Label(f, text=label, width=12).pack(side="left")
+            ttk.Label(f, text=label, width=8).pack(side="left")
             ttk.Scale(f, from_=0.02, to=mx, variable=var, orient="horizontal").pack(side="left", fill="x", expand=True)
+            txt = tk.StringVar()
+            self.speed_txt[key] = (txt, var, unit, mx)
+            ttk.Label(f, textvariable=txt, width=16).pack(side="left")
+            var.trace_add("write", lambda *_a, k=key: self.show_speed(k))
+            self.show_speed(key)
+        self.cmd_txt = tk.StringVar(value="sending: -")
+        ttk.Label(drive, textvariable=self.cmd_txt).pack(anchor="w", padx=4)
 
         mis = ttk.LabelFrame(right, text="Gift mission")
         mis.pack(fill="x", pady=(6, 0))
@@ -606,6 +615,17 @@ class App:
         r.bind("<FocusOut>", lambda e: (self.keys.clear(), setattr(self, "pad_active", False)))
         self._release_jobs = {}
 
+    def show_speed(self, key):
+        txt, var, unit, mx = self.speed_txt[key]
+        try:
+            txt.set(f"{var.get():.2f} {unit} (max {mx:.2f})")
+        except tk.TclError:
+            pass
+
+    def bump_speed(self, sign):
+        for var, mx in ((self.lin, LIN_MAX), (self.ang, ANG_MAX)):
+            var.set(round(min(mx, max(0.02, var.get() + sign * mx / 10)), 3))
+
     def key_press(self, e):
         if isinstance(e.widget, (tk.Entry, ttk.Entry, ttk.Spinbox)):
             return
@@ -614,6 +634,10 @@ class App:
             self.do_estop()
         elif k == "x":
             self.stop_motion()
+        elif k in ("plus", "equal", "kp_add"):
+            self.bump_speed(+1)
+        elif k in ("minus", "underscore", "kp_subtract"):
+            self.bump_speed(-1)
         elif k in self.KEYMAP:
             job = self._release_jobs.pop(k, None)
             if job:
@@ -655,10 +679,14 @@ class App:
         lin_s, ang_s = max(-1, min(1, lin_s)), max(-1, min(1, ang_s))
         moving = (lin_s or ang_s) and not self.ros.estopped
         if moving:
-            self.ros.send_cmd(lin_s * min(self.lin.get(), LIN_MAX), ang_s * min(self.ang.get(), ANG_MAX))
+            lin_v = lin_s * min(self.lin.get(), LIN_MAX)
+            ang_v = ang_s * min(self.ang.get(), ANG_MAX)
+            self.ros.send_cmd(lin_v, ang_v)
+            self.cmd_txt.set(f"sending: {lin_v:+.2f} m/s  {ang_v:+.2f} rad/s")
             self.was_moving = True
         elif self.was_moving:                    # one zero on release, then stay silent (don't fight Nav2)
             self.ros.send_cmd(0, 0)
+            self.cmd_txt.set("sending: stopped")
             self.was_moving = False
 
     # ---- periodic UI refresh
