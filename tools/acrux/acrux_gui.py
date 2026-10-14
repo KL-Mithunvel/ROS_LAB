@@ -530,6 +530,11 @@ class App:
     def log(self, text):
         self.logq.put(time.strftime("%H:%M:%S ") + text)
 
+    def log_once(self, text):
+        if text != getattr(self, "_last_err", None):
+            self._last_err = text
+            self.log(text)
+
     def post(self, fn):
         self.uiq.put(fn)
 
@@ -596,6 +601,8 @@ class App:
         r = self.root
         r.bind_all("<KeyPress>", self.key_press)
         r.bind_all("<KeyRelease>", self.key_release)
+        r.bind_all("<Button-1>", lambda e: e.widget.focus_set() if e.widget.winfo_class() not in
+                   ("Entry", "TEntry", "TSpinbox", "Spinbox", "TCombobox") else None, add="+")
         r.bind("<FocusOut>", lambda e: (self.keys.clear(), setattr(self, "pad_active", False)))
         self._release_jobs = {}
 
@@ -630,6 +637,14 @@ class App:
         self.ros.send_cmd(0, 0)
 
     def tick_cmd(self):
+        try:
+            self._tick_cmd()
+        except Exception as exc:
+            self.log_once(f"drive loop error: {type(exc).__name__}: {exc}")
+        finally:
+            self.root.after(int(1000 / CMD_RATE_HZ), self.tick_cmd)
+
+    def _tick_cmd(self):
         lin_s = ang_s = 0
         if self.pad_active:
             lin_s, ang_s = self.pad
@@ -645,18 +660,31 @@ class App:
         elif self.was_moving:                    # one zero on release, then stay silent (don't fight Nav2)
             self.ros.send_cmd(0, 0)
             self.was_moving = False
-        self.root.after(int(1000 / CMD_RATE_HZ), self.tick_cmd)
 
     # ---- periodic UI refresh
     def tick_ui(self):
-        self.drain()
-        snap = self.ros.snapshot()
-        self.draw_lidar(snap)
-        self.draw_map(snap)
-        self.draw_camera(snap)
-        self.root.after(120, self.tick_ui)
+        try:
+            self.drain()
+            snap = self.ros.snapshot()
+            for draw in (self.draw_lidar, self.draw_map, self.draw_camera):
+                try:
+                    draw(snap)
+                except Exception as exc:
+                    self.log_once(f"{draw.__name__} error: {type(exc).__name__}: {exc}")
+        except Exception as exc:
+            self.log_once(f"UI refresh error: {type(exc).__name__}: {exc}")
+        finally:
+            self.root.after(120, self.tick_ui)
 
     def tick_slow(self):
+        try:
+            self._tick_slow()
+        except Exception as exc:
+            self.log_once(f"status refresh error: {type(exc).__name__}: {exc}")
+        finally:
+            self.root.after(1500, self.tick_slow)
+
+    def _tick_slow(self):
         snap = self.ros.snapshot()
         age = snap["scan_age"]
         ros_ok = age is not None and age < 2.0
@@ -707,7 +735,6 @@ class App:
             self.mission_state.configure(text="not running")
         elif self.mission is not None:
             self.ros.greeter("?")
-        self.root.after(1500, self.tick_slow)
 
     @staticmethod
     def pick_camera(names):
@@ -741,12 +768,18 @@ class App:
         self._cam_photo = ImageTk.PhotoImage(img)
         self.cam_label.configure(image=self._cam_photo, text="", width=0, height=0)
 
+    def range_value(self):
+        try:
+            return min(12.0, max(1.0, float(self.lidar_range.get())))
+        except (tk.TclError, ValueError):
+            return 4.0
+
     def draw_lidar(self, snap):
         c = self.lidar
         w, h = max(c.winfo_width(), 100), max(c.winfo_height(), 100)
         c.delete("all")
         cx, cy = w / 2, h / 2
-        rng = max(1.0, float(self.lidar_range.get() or 4.0))
+        rng = self.range_value()
         scale = (min(w, h) / 2 - 12) / rng
         for m in range(1, int(rng) + 1):
             c.create_oval(cx - m * scale, cy - m * scale, cx + m * scale, cy + m * scale, outline="#30363d")
