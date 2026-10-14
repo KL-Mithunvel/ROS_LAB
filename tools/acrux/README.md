@@ -41,6 +41,11 @@ mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-
   Commands are editable; status is polled; **Log** prints the tail. AMCL/safety presets push
   `practice/acrux_greeter/` to `/tmp/acrux_greeter` first. These presets are unverified on the robot
   (guide sections 7-8: check the `cmd_vel` chain and who owns `map -> odom`). **RViz2** starts on the laptop.
+- **SLAM in development mode:** Drivers → LiDAR + Motor bridge (to drive), then Robot jobs → *SLAM
+  (development mode: LiDAR only)*. It runs `slam_dev.launch.py` (Cartographer, `lidar.lua`, static
+  `base_link -> lidar_link` with the URDF's 180 deg yaw) and publishes `/map` at 1 Hz. Drive with the pad,
+  then Robot jobs → *Save current map*. Do not run it in demo mode (the autostart stack already does SLAM).
+  Cartographer logs `Dropped N earlier points` with the X2 LiDAR; the map still builds.
 - Everything robot-side reuses `acrux`, `dev-mode.sh` and `sensor-test.sh`; IP/key stay in `acrux.env`.
 - The robot's sudo password is asked once, kept in memory, never written to disk ("Forget sudo password" clears it).
 - **E-STOP is software**: it latches, streams zero `/cmd_vel`, cancels Nav2 goals and repeats a zero over SSH.
