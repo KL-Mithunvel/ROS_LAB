@@ -2,6 +2,8 @@
 
 ## In Progress
 
+- [ ] Run `setup/install.sh` on a clean Ubuntu 22.04 and 24.04 VM/container; fix whatever breaks (only syntax + `--dry-run` checked so far)
+
 - [ ] Work through `learn/foundations/01-linux-and-shell.md` and practice each command in a real terminal
 - [ ] Verify the Track B guides against a live ROS 2 Jazzy + Gazebo Harmonic environment
       (written against docs/source, not yet run end to end — no Linux box in this session)
@@ -66,6 +68,10 @@ letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground
       Also check the both-sides-blocked case (walls both sides → it should back off, not hit).
 
 ## Done
+
+### Install script + setup docs (2026-10-18, commit: _pending_)
+
+- [x] Added `setup/INSTALL.md` and `setup/install.sh` — bare-machine install (distro auto-pick, component flags, `--dry-run`, re-runnable)
 
 ### Acrux experiment reorganised, lab record and lab manual (2026-10-18, commit: _pending_)
 

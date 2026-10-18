@@ -98,6 +98,7 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `build/06-control-and-ros2-control.md` | `ros2_control` architecture, diff-drive/ackermann controllers, hardware interfaces, PID, MCU boundary / micro-ROS |
 | `build/07-localization-and-slam.md` | Odometry, IMU, `robot_localization` EKF, AMCL, `slam_toolbox`/Cartographer — tuning, TF frames, failure modes |
 | `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners, controllers, behavior trees, recovery, tuning `nav2_params.yaml` |
+| `setup/` (repo root) | Standalone install docs + `install.sh` for a bare Ubuntu machine: ROS 2 (Humble on 22.04 / Jazzy on 24.04), optional Nav2 / lab tools / Gazebo / `bots/`, repo clone, venvs, pytest. Written + dry-run checked; **not yet run on a clean Ubuntu** |
 | `waypoint_mission/` (repo root) | **Lab experiment 5** — Acrux waypoint mission: `GUIDE.md` (plan, safety, runbook), `LAB-RECORD.md`, code, tests, remote-access `tools/` (see Key Modules) |
 | `lab-manual/` (repo root) | **Lab manual** for the whole course — front matter + one file per experiment (1–5): aim, theory, procedure, observations, viva |
 | `docs/` (top level) | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |

@@ -18,6 +18,7 @@ The guides are split into two tracks accordingly — see `learn/README.md`.
 | Path | What it is |
 |------|-----------|
 | `learn/` | Study guides — start at `learn/README.md`. Split into `foundations/` (shared), `lab/` (Track A — the graded lab), `build/` (Track B — building ROS 2 systems) |
+| `setup/` | **Install on a bare machine** — `INSTALL.md` + `install.sh` (ROS 2, Nav2, lab tools, repo clone, venvs, tests) |
 | `waypoint_mission/` | **Lab experiment 5** — Acrux waypoint navigation mission: code, tests, `GUIDE.md`, `LAB-RECORD.md`, remote-access `tools/` |
 | `lab-manual/` | **Lab manual** for the whole course (experiments 1–5: aim, theory, procedure, observations, viva) |
 | `docs/` | The raw instructor handouts (BeetleBot manual + obstacle-avoidance scripts). Plus `docs/beetlebot/` and `docs/wolf/` — MIT-licensed VEEROBOT tutorial docs mirrored from [SMARTS-LAB/Documention](https://github.com/SMARTS-LAB/Documention) (see each folder's `SOURCE.md`) |

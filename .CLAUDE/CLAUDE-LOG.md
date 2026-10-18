@@ -527,3 +527,11 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
   `waypoint_mission/`. `AGENTS.md` (untracked mirror of CLAUDE.md) not synced. Past log entries keep the old names.
   Nothing committed.
 
+## 2026-10-18 — Standalone install script and setup docs
+
+- **Task (from user):** an install script so someone with no ROS/libraries can install ROS, clone the repo and recreate the work; user clarified it is repo-wide documentation, not lab-specific.
+- **Files created:** `setup/install.sh` (Ubuntu 22.04→Humble, 24.04→Jazzy; flags `--with/--without-nav2|lab|practice`, `--with-gazebo`, `--with-bots`, `--no-ros`, `--all`, `--distro`, `--dir`, `-y`, `--dry-run`), `setup/INSTALL.md` (needs, one-command + manual steps, verify, troubleshooting, uninstall).
+- **Files changed:** `README.md`, `.CLAUDE/CLAUDE.md`, `TODO.md`. Deliberately not touched: `waypoint_mission/README.md`, `lab-manual/`, `docs/ros-install/`.
+- **Verification:** `bash -n` and `--dry-run --all` on Windows Git Bash only. **Never run on a real Ubuntu**; apt package names (e.g. `nav2-collision-monitor`, `slam-toolbox`, `ros-gz`) not checked against the live repos.
+- Added `slam-toolbox` to the Nav2 set (needed for mapping) beyond the agreed list.
+
