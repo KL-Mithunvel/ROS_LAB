@@ -41,7 +41,7 @@ obstacle-avoidance node. Each numbered file is a checklist you can run start to 
 | 04 | `lab/04-lab3-obstacle-avoidance.md` | Lab 3 — deploy/register/build/run the obstacle-avoidance node |
 | 05 | `lab/05-lab4-color-detection.md` | Lab 4 — deploy/register/build/run the camera-based colour control node |
 
-Experiment 5 (Acrux waypoint mission) lives at the repo root: [`../../waypoint_mission/`](../../waypoint_mission/README.md). The print-ready manual for all experiments is [`../../lab-manual/`](../../lab-manual/00-front-matter.md).
+Experiments 5–7 live at the repo root — Acrux waypoint mission [`../../waypoint_mission/`](../../waypoint_mission/README.md), calculator `../../robot_calc/`, UNO car `../../uno_car/`. Experiment 5 detail: [`../../waypoint_mission/`](../../waypoint_mission/README.md). The print-ready manual for all experiments is [`../../lab-manual/`](../../lab-manual/00-front-matter.md).
 
 ---
 

@@ -535,3 +535,12 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - **Verification:** `bash -n` and `--dry-run --all` on Windows Git Bash only. **Never run on a real Ubuntu**; apt package names (e.g. `nav2-collision-monitor`, `slam-toolbox`, `ros-gz`) not checked against the live repos.
 - Added `slam-toolbox` to the Nav2 set (needed for mapping) beyond the agreed list.
 
+## 2026-10-18 — robot_calc and uno_car moved to root as lab experiments 6 and 7
+
+- **Task (from user):** the numerical-calculation program and the UNO Smart Robot Car Kit are lab experiments too. Defaults agreed: move the whole UNO folder (vendor files included, unedited); do not restructure the sketches for the Arduino IDE.
+- **Moves (`git mv`):** `practice/robot_calc/` -> `robot_calc/`; `docs/UNO Smart Robot Car Kit/` -> `uno_car/`; `practice/` removed. `robot_calc/.venv` recreated (a moved venv has stale paths); `pytest` 14 passed.
+- **References fixed:** `setup/install.sh`, `setup/INSTALL.md`, `README.md`, `learn/index.md`, `learn/README.md`, `learn/lab/05-...`, `lab-manual/02-...`, `robot_calc/README.md`, test docstring, `.CLAUDE/CLAUDE.md`, `TODO.md`. Old paths remain only in historical log/Done entries.
+- **New files:** `robot_calc/LAB-RECORD.md`, `uno_car/LAB-RECORD.md`, `lab-manual/06-robot-calculations.md`, `lab-manual/07-uno-car-line-follow-obstacle.md`; `lab-manual/00-front-matter.md` extended to experiments 1-7.
+- **Accuracy note:** the UNO merged sketch WAS flashed once (2026-09-24 user report: reversed, right turn OK, left not turning, drifted off line); the later PID rewrite and `Hardware_Test` were compile-checked only. The record says so. All result tables are blank by design.
+- **Caveats:** the `docs/` read-only rule was bent for the UNO move (vendor files moved, not edited). `AGENTS.md` not synced. Nothing committed.
+

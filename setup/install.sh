@@ -247,9 +247,9 @@ if [ "$WITH_PRACTICE" -eq 1 ]; then
   say "Creating Python environments"
   # --system-site-packages lets the mission venv see ROS's rclpy when ROS is installed
   make_venv "$REPO_DIR/waypoint_mission" --system-site-packages
-  make_venv "$REPO_DIR/practice/robot_calc"
+  make_venv "$REPO_DIR/robot_calc"
   run_tests "$REPO_DIR/waypoint_mission" "waypoint_mission (expect 60 passed)"
-  run_tests "$REPO_DIR/practice/robot_calc" "robot_calc"
+  run_tests "$REPO_DIR/robot_calc" "robot_calc"
 fi
 
 # ---- 7. Verify ROS imports --------------------------------------------------

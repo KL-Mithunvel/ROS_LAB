@@ -1,7 +1,7 @@
 # Autonomous Mobile Robots — Lab Manual
 
 **Course:** BMHA314E Autonomous Mobile Robots (practical component)
-**Platforms:** VEEROBOT BeetleBot "Lyra" (Labs 2–4, ROS 2 Jazzy, Raspberry Pi 5) and VEEROBOT Acrux (Experiment 5, Nav2)
+**Platforms:** VEEROBOT BeetleBot "Lyra" (Experiments 2–4, ROS 2 Jazzy, Raspberry Pi 5), VEEROBOT Acrux (Experiment 5, Nav2), a plain computer (Experiment 6, Python) and the UNO Smart Robot Car Kit (Experiment 7, Arduino — no ROS)
 **Author:** kl mithunvel
 
 ---
@@ -26,6 +26,8 @@ to them instead of repeating them. Commands are marked **[PC]** (lab computer) o
 | 3 | [LiDAR obstacle avoidance](03-obstacle-avoidance.md) | BeetleBot | 3–4 (perception → control loop) | `learn/lab/04-…` |
 | 4 | [Colour-based control with the camera](04-color-detection.md) | BeetleBot | 5 — Object detection (OpenCV) | `learn/lab/05-…` |
 | 5 | [Waypoint navigation mission](05-waypoint-mission.md) | Acrux | 3–4 — SLAM and path planning (Nav2) | `waypoint_mission/` |
+| 6 | [Mobile-robot mechatronics calculations](06-robot-calculations.md) | PC (Python) | Locomotion, kinematics and dynamics (course Module 2) | `robot_calc/` |
+| 7 | [UNO car: PID line following + obstacle avoidance](07-uno-car-line-follow-obstacle.md) | UNO Smart Robot Car | Reactive control and sensing (non-ROS contrast to 3–5) | `uno_car/` |
 
 \*The syllabus lists six indicative experiments in ROS 1 vocabulary (`move_base`, `actionlib`).
 Map them to ROS 2 as: `move_base` → **Nav2**, `actionlib` → **ROS 2 actions**, `catkin` →
@@ -71,7 +73,7 @@ For each experiment submit: aim, apparatus, a short theory paragraph in your own
 procedure you actually followed (past tense), your observation tables, any plots/screenshots
 (`rqt_graph`, RViz, terminal output), the result, and answers to the viva questions.
 **Record observations, not expectations**: if something failed, write what failed and what you
-changed. A worked example of a record is [`waypoint_mission/LAB-RECORD.md`](../waypoint_mission/LAB-RECORD.md).
+changed. Worked lab records (with blank result tables to fill from the bench) are in [`waypoint_mission/LAB-RECORD.md`](../waypoint_mission/LAB-RECORD.md), [`robot_calc/LAB-RECORD.md`](../robot_calc/LAB-RECORD.md) and [`uno_car/LAB-RECORD.md`](../uno_car/LAB-RECORD.md).
 
 ## Appendix A — Command quick reference
 

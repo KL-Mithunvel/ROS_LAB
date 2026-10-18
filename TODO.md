@@ -26,7 +26,7 @@ tracked with a result column in guide §14 — fill them in there as you go.
 ### UNO Smart Robot Car Kit — hardware bring-up tests (kit not in hand yet, 2026-09-24)
 
 The PID line-follower + obstacle-avoid sketch is **compiled but never run on hardware**. Do
-these in order; sketches are in `docs/UNO Smart Robot Car Kit/line_follow_obstacle_avoid/`.
+these in order; sketches are in `uno_car/line_follow_obstacle_avoid/` (moved from `docs/` 2026-10-18).
 Tests 1-7 use `Hardware_Test/Hardware_Test.ino` (Serial Monitor 9600 baud, type the menu
 letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground**, for motor tests.
 
@@ -68,6 +68,12 @@ letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground
       Also check the both-sides-blocked case (walls both sides → it should back off, not hit).
 
 ## Done
+
+### robot_calc and uno_car moved to root as experiments 6–7 (2026-10-18, commit: _pending_)
+
+- [x] `practice/robot_calc/` → `robot_calc/`; `docs/UNO Smart Robot Car Kit/` → `uno_car/` (whole folder, unedited); `practice/` removed
+- [x] Fixed references (setup scripts/docs, README, learn/, CLAUDE.md, TODO); recreated `robot_calc/.venv`, `pytest` 14 passed
+- [x] Wrote `robot_calc/LAB-RECORD.md`, `uno_car/LAB-RECORD.md`, `lab-manual/06-…`, `lab-manual/07-…`; front matter updated
 
 ### Install script + setup docs (2026-10-18, commit: _pending_)
 
@@ -116,8 +122,8 @@ letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground
 - [x] Flagged in `.CLAUDE/CLAUDE.md` Known Technical Debt (#8): the source file sits in
   `docs/`, which is otherwise read-only handouts — parked as-is per kl mithunvel
   (a broader documentation-format reformat is planned that will likely move it into
-  `practice/` later, matching `practice/robot_calc/`'s shape).
-- [ ] *(future)* relocate `docs/color_detection_beetlebot` into `practice/` with its own
+  its own root experiment folder later, matching `robot_calc/`'s shape).
+- [ ] *(future)* relocate `docs/color_detection_beetlebot` into a root experiment folder with its own
   `.venv`/`requirements.txt`/`tests/`, as part of the planned reformat pass.
 
 ### UNO Smart Robot Car Kit — merged line-follow + obstacle-avoidance sketch (2026-09-23, commit: _pending_)
@@ -227,7 +233,7 @@ control, localization, SLAM, path planning, navigation. All 11 phases complete:
 
 ## Not Started
 
-- [ ] `practice/robot_calc/`: confirm the `confirm: true` params with the instructor /
+- [ ] `robot_calc/`: confirm the `confirm: true` params with the instructor /
       BeetleBot datasheet; add the remaining wanted calculations to `calculations.py` + `CALCS`
 - [ ] Read `learn/foundations/02-ros2-concepts.md`; run the turtlesim publisher/subscriber tutorial on a Linux machine
 - [ ] Read `learn/lab/01-lab-day-runbook.md`; memorise the connect → bringup → arm → drive → disarm sequence

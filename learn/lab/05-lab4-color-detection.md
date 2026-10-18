@@ -165,9 +165,9 @@ ros2 service call /lyra/disarm std_srvs/srv/Trigger
 
 `docs/color_detection_beetlebot` is kl mithunvel's own node, not an instructor handout —
 unlike the rest of `docs/`, it isn't read-only source material, and it currently has no file
-extension. It's parked there for now rather than moved into `practice/` (see
+extension. It's parked there for now rather than moved to its own root experiment folder (see
 `.CLAUDE/CLAUDE.md`'s Known Technical Debt table); a broader documentation-format reformat is
-planned for later and will likely relocate it alongside `practice/robot_calc/`'s pattern (own
+planned for later and will likely relocate it alongside `robot_calc/`'s pattern (own
 `.venv`/`requirements.txt`/`tests/`).
 
 ---

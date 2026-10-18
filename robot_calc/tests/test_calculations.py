@@ -1,7 +1,7 @@
 """
 pytest suite for the mechatronics calculator.
 
-Run from practice/robot_calc/ :   pytest
+Run from robot_calc/ :   pytest
 """
 
 import math

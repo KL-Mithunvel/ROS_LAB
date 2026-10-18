@@ -55,7 +55,7 @@ When it finishes, **open a new terminal** (so `~/.bashrc` loads ROS) and run the
 | ROS 2 | `--no-ros` to skip | on | official apt repo, `ros-<distro>-desktop` (RViz, rqt, demos), `colcon`, `rosdep`, `vcstool`; `source` line in `~/.bashrc` |
 | Nav2 (waypoint mission) | `--without-nav2` | on | `nav2-bringup`, `nav2-simple-commander`, `nav2-msgs`, `nav2-collision-monitor`, `nav2-map-server`, `slam-toolbox` |
 | Lab tools | `--without-lab` | on | `turtlesim`, `teleop-twist-keyboard`, `rqt`, `rqt-graph`, `cv-bridge`, `python3-opencv`, `numpy` |
-| Python projects | `--without-practice` | on | `.venv` + `pip install -r requirements.txt` + `pytest` for `waypoint_mission/` and `practice/robot_calc/` |
+| Python projects | `--without-practice` | on | `.venv` + `pip install -r requirements.txt` + `pytest` for `waypoint_mission/` and `robot_calc/` |
 | Gazebo | `--with-gazebo` | off | `ros-<distro>-ros-gz` (needed for the mission's `--sim`) |
 | Robot sources | `--with-bots` | off | git submodules in `bots/` (BeetleBot, Acrux, …; large). Needed only for `./acrux sync` and reading the vendored source |
 
@@ -72,7 +72,7 @@ an existing `.venv`, and does `git pull --ff-only` on an existing clone.
 | Goal | Command |
 |---|---|
 | Practise ROS without a robot | `ros2 run turtlesim turtlesim_node` and `ros2 run turtlesim turtle_teleop_key` (lab-manual experiment 1) |
-| Run the calculator | `cd practice/robot_calc && .venv/bin/python main.py` |
+| Run the calculator | `cd robot_calc && .venv/bin/python main.py` |
 | Test the waypoint mission logic | `cd waypoint_mission && .venv/bin/python -m pytest` → 60 passed |
 | Run the mission against a robot | follow `waypoint_mission/README.md` and `GUIDE.md` (survey `waypoints.yaml` first) |
 | Operate the BeetleBot labs | `lab-manual/` and `learn/lab/01-lab-day-runbook.md` |
@@ -115,7 +115,7 @@ sudo apt-get install -y ros-<distro>-nav2-bringup ros-<distro>-nav2-simple-comma
 git clone https://github.com/KL-Mithunvel/ROS_LAB.git ~/ROS_LAB
 cd ~/ROS_LAB/waypoint_mission && python3 -m venv --system-site-packages .venv \
      && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m pytest
-cd ~/ROS_LAB/practice/robot_calc && python3 -m venv .venv \
+cd ~/ROS_LAB/robot_calc && python3 -m venv .venv \
      && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m pytest
 ```
 

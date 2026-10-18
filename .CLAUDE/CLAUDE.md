@@ -100,7 +100,9 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners, controllers, behavior trees, recovery, tuning `nav2_params.yaml` |
 | `setup/` (repo root) | Standalone install docs + `install.sh` for a bare Ubuntu machine: ROS 2 (Humble on 22.04 / Jazzy on 24.04), optional Nav2 / lab tools / Gazebo / `bots/`, repo clone, venvs, pytest. Written + dry-run checked; **not yet run on a clean Ubuntu** |
 | `waypoint_mission/` (repo root) | **Lab experiment 5** — Acrux waypoint mission: `GUIDE.md` (plan, safety, runbook), `LAB-RECORD.md`, code, tests, remote-access `tools/` (see Key Modules) |
-| `lab-manual/` (repo root) | **Lab manual** for the whole course — front matter + one file per experiment (1–5): aim, theory, procedure, observations, viva |
+| `robot_calc/` (repo root) | **Lab experiment 6** — mechatronics calculator (see Key Modules); has `LAB-RECORD.md` |
+| `uno_car/` (repo root) | **Lab experiment 7** — UNO Smart Robot Car Kit Arduino sketches + `LAB-RECORD.md` (see Key Modules) |
+| `lab-manual/` (repo root) | **Lab manual** for the whole course — front matter + one file per experiment (1–7): aim, theory, procedure, observations, viva |
 | `docs/` (top level) | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
 | `docs/beetlebot/`, `docs/wolf/` | Third-party MIT reference docs — verbatim copy of SMARTS-LAB's mirror of VEEROBOT's BeetleBot (Jazzy) and Wolf (Foxy) tutorials; see each folder's `SOURCE.md`. Not instructor handouts. Each also has a `net/` subfolder (netplan examples, added — not part of the upstream mirror). |
 | `docs/ros-install/` | VEEROBOT's ROS 2 install scripts, vendored from `VEEROBOT/ros-scripts` `ROS2Install/` (see `SOURCE.md`; no upstream LICENSE). Not instructor handouts. |
@@ -134,10 +136,11 @@ The study guides in `learn/` are the main content — no code modules there. Whe
 to them, keep one concern per file (per `CLAUDE-COMMON.md` Documentation Discipline) and
 cross-link rather than duplicate.
 
-Practice code lives under `practice/`, one self-contained project per subfolder, each
-with its own `.venv` / `requirements.txt` / `tests/` and a note in this section.
+Code experiments each live in their own self-contained root folder (`robot_calc/`,
+`waypoint_mission/`, `uno_car/`), with its own `.venv` / `requirements.txt` / `tests/` (where
+Python) and a note in this section.
 
-### `practice/robot_calc/` — mobile-robot mechatronics calculator
+### `robot_calc/` — mobile-robot mechatronics calculator (lab experiment 6)
 
 A standalone menu-driven CLI study tool (lab exercise), built on the `klm_menu` engine
 (github.com/KL-Mithunvel/menu). Given ~28 robot parameters it runs any of **5 calculation
@@ -165,7 +168,7 @@ Parameters are edited in-app (all, or just the ones a set uses) and saved back t
 | `SAMPLE_OUTPUT.md` | Every set run on the default params — full working + results table |
 | `tests/test_calculations.py` | pytest — per-set numeric checks, PDF-handout fidelity, error paths |
 
-Run: `cd practice/robot_calc && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && python main.py`
+Run: `cd robot_calc && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && python main.py`
 Test: `pytest` from that folder.
 
 Sets 4–5 reproduce the worked problems in `docs/Kinematics and Dynamics_AMR_Problems.pdf`.
@@ -176,7 +179,7 @@ BeetleBot / your-robot figures.
 
 ### `waypoint_mission/` — Acrux waypoint mission (lab experiment 5)
 
-Lives at the repo root (not under `practice/`) because it is a lab experiment in its own right.
+Lives at the repo root because it is a lab experiment in its own right.
 Drives **Acrux** (not the lab's BeetleBot) through up to 4 waypoints in turn via Nav2, **stops and
 waits at each until the operator says "yes"**, then returns home. Mission node runs on a
 laptop over Wi-Fi; the collision-monitor safety layer runs on the robot. The plan, safety
@@ -198,11 +201,20 @@ Test: `cd waypoint_mission && py -m venv .venv && .venv/Scripts/activate && pip 
 run on Gazebo/the robot; open items are tracked in guide §14 (ROS distro, whether AMCL is
 launched, the real `cmd_vel` chain, RealSense behaviour).
 
+### `uno_car/` — UNO Smart Robot Car Kit (lab experiment 7, Arduino C++, no ROS)
+
+Moved from `docs/UNO Smart Robot Car Kit/` on 2026-10-18 (whole folder, unedited). In
+`line_follow_obstacle_avoid/`: vendor examples `Line_tracking_car.ino`, `Obstacle_Avoidance_Car.ino`
+(**do not mix their pin sets**); own sketches `Line_Follow_Obstacle_Avoid_Car.ino` (PID line follow +
+avoidance state machine) and `Hardware_Test/Hardware_Test.ino` (serial-menu bring-up). The PID
+version is compiled but **not run on hardware**; the checklist is in `TODO.md`. The Arduino IDE
+wants one same-named folder per sketch — not restructured. Record: `uno_car/LAB-RECORD.md`.
+
 ### `lab-manual/` — course lab manual
 
-`00-front-matter.md` (course info, safety rules, appendices) plus `01`–`05`, one file per
+`00-front-matter.md` (course info, safety rules, appendices) plus `01`–`07`, one file per
 experiment: Turtlesim, BeetleBot movement, obstacle avoidance, colour detection, waypoint
-mission. Condensed from `learn/lab/` and `waypoint_mission/`; observation tables are blank.
+mission, robot calculations, UNO car. Condensed from `learn/lab/` and `waypoint_mission/`; observation tables are blank.
 
 ---
 
@@ -279,7 +291,7 @@ real values with the lab instructor on the day. Do not assume; the safe move is 
 | 5 | Wi-Fi password | `15619xxx` (docx, truncated) | n/a | Get the full password from the instructor |
 | 6 | Workspace name | `~/lyra_ws` (robot's own) vs `~/ros2_ws` / `~/<registerno>_ws` (your workspace, docx) | `~/lyra_ws` | The robot's stack is `~/lyra_ws`; you build *your* code in your own `~/<registerno>_ws` |
 | 7 | Serial port | `/dev/ttyAMA0` (quick ref) vs `/dev/ttyACM0` (common example text) | `/dev/ttyAMA0` | Robot-side detail; only matters for bridge debugging |
-| 8 | `docs/color_detection_beetlebot` isn't a handout | Sits in `docs/`, which is otherwise read-only instructor material | n/a | It's kl mithunvel's own node (own code, no file extension) — documented in `learn/lab/05-lab4-color-detection.md`. Parked as-is for now; a broader documentation-format reformat is planned that will likely relocate it into `practice/` (own `.venv`/`requirements.txt`/`tests/`, matching `practice/robot_calc/`) |
+| 8 | `docs/color_detection_beetlebot` isn't a handout | Sits in `docs/`, which is otherwise read-only instructor material | n/a | It's kl mithunvel's own node (own code, no file extension) — documented in `learn/lab/05-lab4-color-detection.md`. Parked as-is for now; a broader documentation-format reformat is planned that will likely relocate it into its own root experiment folder (own `.venv`/`requirements.txt`/`tests/`, matching `robot_calc/`) |
 
 Also: the two `docs/*Obstacle_avoid*.txt` files are two versions of the same task — the
 **"Updated"** one is the fuller implementation (left/front/right windowing + reverse state
@@ -331,7 +343,7 @@ Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not start
   wrote `foundations/04-ros1-vs-ros2` and `build/03`–`build/08`
 - 🟡 Verify the guides (esp. the new `build/` files) against a live ROS 2 Jazzy + Gazebo
   Harmonic environment — written against docs/source, not yet run end to end
-- ✅ Add `practice/robot_calc/` — menu-driven mobile-robot mechatronics calculator
+- ✅ Add `robot_calc/` (was `practice/robot_calc/`) — menu-driven mobile-robot mechatronics calculator
   (5 grouped calculation sets, incl. the `Kinematics and Dynamics_AMR_Problems.pdf`
   cases; ~28 params in `params.yaml`; pytest suite)
 - ✅ Add `learn/lab/05-lab4-color-detection.md` — Lab 4 checklist for the camera-based HSV
@@ -339,12 +351,13 @@ Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not start
   `learn/README.md`, and flagged in Known Technical Debt (own code parked in `docs/`)
 - ✅ Add `waypoint_mission/` (was `practice/acrux_greeter/` + `learn/build/09-…`) — Acrux
   waypoint mission (state machine tested; ROS node + safety layer written, not yet run)
+- ✅ Move `robot_calc/` and `uno_car/` to the repo root as experiments 6–7 with lab records and manual entries (2026-10-18)
 - ✅ Move the Acrux experiment to the repo root, rename guest→waypoint, add `LAB-RECORD.md`
   and the course `lab-manual/` (2026-10-18)
 - 🟡 Verify the Acrux waypoint mission on Gazebo and the robot; close the guide §14 open items
-- 🟢 Add a hand-written minimal `rclpy` publisher/subscriber node under `practice/`
+- 🟢 Add a hand-written minimal `rclpy` publisher/subscriber node in its own root experiment folder
 - 🟡 Fill in real BeetleBot values for the `confirm: true` params in
-  `practice/robot_calc/params.yaml`; add the rest of kl mithunvel's wanted calculations
+  `robot_calc/params.yaml`; add the rest of kl mithunvel's wanted calculations
 - 🟢 Confirm the technical-debt table values with the instructor and update it
 
 See `TODO.md` for the live tracker.
@@ -373,8 +386,8 @@ The binding rules for this repo are:
 
 - **The `learn/` guides carry no code.** "Lint and test before commit" for guide changes
   means: proof-read the guide and sanity-check every command.
-- **`practice/` holds real Python** (as of 2026-09-08, `practice/robot_calc/`). Each
-  `practice/` subproject has its own `.venv` + `requirements.txt` + `tests/`; the
+- **Code experiments hold real Python** (`robot_calc/`, `waypoint_mission/`; `uno_car/` is Arduino C++). Each
+  Python experiment folder has its own `.venv` + `requirements.txt` + `tests/`; the
   `CLAUDE-COMMON.md` venv / `pip freeze` / `pytest` / lint-before-commit rules apply to it
   in full. Activate that subproject's `.venv` before running its `python` / `pip` /
   `pytest`.

@@ -12,7 +12,7 @@ pattern as [`Furnace_simulation`](https://github.com/KL-Mithunvel/Furnace_simula
 ## Run it
 
 ```powershell
-cd practice\robot_calc
+cd robot_calc
 py -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt

@@ -19,7 +19,7 @@ motor timing.
 **Skid-steer kinematics.** Wheels on a side turn together; turning is done by a speed
 difference, so the robot is non-holonomic: only `linear.x` (m/s, forward +) and `angular.z`
 (rad/s, left +) are meaningful. For a differential model with track width *b*:
-v_left = v − ω·b/2, v_right = v + ω·b/2 (see `practice/robot_calc`, set `dd_kinematics`).
+v_left = v − ω·b/2, v_right = v + ω·b/2 (see `robot_calc/`, set `dd_kinematics`).
 
 **Safety interlocks.** The controller boots **disarmed**; `/lyra/arm` (`std_srvs/srv/Trigger`)
 enables motion. The bridge also has a `cmd_vel` **timeout**: if no fresh command arrives soon,

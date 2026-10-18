@@ -65,7 +65,7 @@ go in [`lab/01-lab-day-runbook.md`](lab/01-lab-day-runbook.md).
 | `docs/BEETLEBOT Updated _Obstacle_avoid.txt` | Lab 3 obstacle-avoidance node (fuller version — study this one). |
 | `docs/BMHA314L_AUTONOMOUS-MOBILE-ROBOTS_TH_1.0_0_BMHA314L.pdf` | Theory syllabus. |
 | `docs/BMHA314E_AUTONOMOUS-MOBILE-ROBOTS_ETH_1.1_0_BMHA314E.pdf` | Lab / practical syllabus. |
-| `docs/Kinematics and Dynamics_AMR_Problems.pdf` | Worked diff-drive kinematics + dynamics problems (basis for `practice/robot_calc/` sets 4–5). |
+| `docs/Kinematics and Dynamics_AMR_Problems.pdf` | Worked diff-drive kinematics + dynamics problems (basis for `robot_calc/` sets 4–5). |
 
 ---
 
@@ -92,4 +92,5 @@ Curated, with *why each page matters*, in
 |------|------|
 | [`learn/README.md`](README.md) | The two-track study route (Foundations → Track A lab / Track B build). |
 | `learn/foundations/` · `learn/lab/` · `learn/build/` | The guides. |
-| `practice/robot_calc/` | Menu-driven mobile-robot mechatronics calculator (5 calculation sets). |
+| `robot_calc/` | Menu-driven mobile-robot mechatronics calculator (5 calculation sets) — lab experiment 6. |
+| `uno_car/` | UNO Smart Robot Car Kit sketches (line following + obstacle avoidance, hardware test) — lab experiment 7, non-ROS. |
