@@ -98,7 +98,8 @@ For local ROS 2 practice without the robot, use turtlesim on any Linux machine (
 | `build/06-control-and-ros2-control.md` | `ros2_control` architecture, diff-drive/ackermann controllers, hardware interfaces, PID, MCU boundary / micro-ROS |
 | `build/07-localization-and-slam.md` | Odometry, IMU, `robot_localization` EKF, AMCL, `slam_toolbox`/Cartographer — tuning, TF frames, failure modes |
 | `build/08-navigation-and-path-planning.md` | Nav2 internals — costmap layers, global planners, controllers, behavior trees, recovery, tuning `nav2_params.yaml` |
-| `build/09-acrux-greeter-mission.md` | Worked project — Acrux gift-greeter: waypoint mission with live operator "next", obstacle-safety layers, localization pitfalls, event-day runbook (code in `practice/acrux_greeter/`) |
+| `waypoint_mission/` (repo root) | **Lab experiment 5** — Acrux waypoint mission: `GUIDE.md` (plan, safety, runbook), `LAB-RECORD.md`, code, tests, remote-access `tools/` (see Key Modules) |
+| `lab-manual/` (repo root) | **Lab manual** for the whole course — front matter + one file per experiment (1–5): aim, theory, procedure, observations, viva |
 | `docs/` (top level) | Original instructor handouts + course syllabus PDFs (read-only source material — do not edit) |
 | `docs/beetlebot/`, `docs/wolf/` | Third-party MIT reference docs — verbatim copy of SMARTS-LAB's mirror of VEEROBOT's BeetleBot (Jazzy) and Wolf (Foxy) tutorials; see each folder's `SOURCE.md`. Not instructor handouts. Each also has a `net/` subfolder (netplan examples, added — not part of the upstream mirror). |
 | `docs/ros-install/` | VEEROBOT's ROS 2 install scripts, vendored from `VEEROBOT/ros-scripts` `ROS2Install/` (see `SOURCE.md`; no upstream LICENSE). Not instructor handouts. |
@@ -172,26 +173,35 @@ Many `params.yaml` values (`wheel_radius_m`, `gear_ratio`, `motor_no_load_rpm`,
 `moment_of_inertia_kgm2`) are estimates flagged `confirm: true` — replace them with real
 BeetleBot / your-robot figures.
 
-### `practice/acrux_greeter/` — Acrux gift-greeter mission
+### `waypoint_mission/` — Acrux waypoint mission (lab experiment 5)
 
-Drives **Acrux** (not the lab's BeetleBot) to up to 4 guests in turn via Nav2, **stops and
+Lives at the repo root (not under `practice/`) because it is a lab experiment in its own right.
+Drives **Acrux** (not the lab's BeetleBot) through up to 4 waypoints in turn via Nav2, **stops and
 waits at each until the operator says "yes"**, then returns home. Mission node runs on a
 laptop over Wi-Fi; the collision-monitor safety layer runs on the robot. The plan, safety
-reasoning and runbook live in `learn/build/09-acrux-greeter-mission.md`.
+reasoning and runbook live in `waypoint_mission/GUIDE.md`; the lab record is `LAB-RECORD.md`.
 
 | File | Role |
 |------|------|
 | `mission.py` | Pure-Python state machine (commands + Nav2 results → actions); no ROS, fully pytest-able |
-| `greeter_config.py` | Loads/validates `guests.yaml`; `MAX_GUESTS = 4` |
-| `mission_node.py` | ROS 2 adapter: `nav2_simple_commander` goals, stdin + `/greeter/command` input. Run directly, not via `ros2 launch` |
-| `guests.yaml` | Home + 4 guest poses (**placeholders**, `surveyed: false`) and settings |
+| `waypoint_config.py` | Loads/validates `waypoints.yaml`; `MAX_WAYPOINTS = 4` |
+| `mission_node.py` | ROS 2 adapter: `nav2_simple_commander` goals, stdin + `/waypoint/command` input. Run directly, not via `ros2 launch` |
+| `waypoints.yaml` | Home + 4 waypoint poses (**placeholders**, `surveyed: false`) and settings |
 | `config/collision_monitor.yaml`, `launch/safety.launch.py` | Nav2 collision monitor stop/slow boxes, robot side |
+| `tools/` | Remote access to Acrux: `acrux` SSH CLI, `vnc.sh`, `dev-mode.sh`, `wasd_teleop.py`, sensor probes (see `tools/README.md`) |
+| `GUIDE.md`, `LAB-RECORD.md` | Design/runbook and the lab record (observation tables blank until run) |
 | `tests/` | pytest — state machine + config validation (60 tests) |
 
-Test: `cd practice/acrux_greeter && py -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && pytest`.
+Test: `cd waypoint_mission && py -m venv .venv && .venv/Scripts/activate && pip install -r requirements.txt && pytest`.
 **Unverified:** `mission_node.py`, the launch file and the collision-monitor config have never been
 run on Gazebo/the robot; open items are tracked in guide §14 (ROS distro, whether AMCL is
 launched, the real `cmd_vel` chain, RealSense behaviour).
+
+### `lab-manual/` — course lab manual
+
+`00-front-matter.md` (course info, safety rules, appendices) plus `01`–`05`, one file per
+experiment: Turtlesim, BeetleBot movement, obstacle avoidance, colour detection, waypoint
+mission. Condensed from `learn/lab/` and `waypoint_mission/`; observation tables are blank.
 
 ---
 
@@ -326,9 +336,11 @@ Legend: 🔴 Bug / rule violation  |  🟡 Incomplete feature  |  🟢 Not start
 - ✅ Add `learn/lab/05-lab4-color-detection.md` — Lab 4 checklist for the camera-based HSV
   colour control node (`docs/color_detection_beetlebot`); mapped into `learn/lab/00`,
   `learn/README.md`, and flagged in Known Technical Debt (own code parked in `docs/`)
-- ✅ Add `practice/acrux_greeter/` + `learn/build/09-acrux-greeter-mission.md` — Acrux
-  gift-greeter mission (state machine tested; ROS node + safety layer written, not yet run)
-- 🟡 Verify the Acrux greeter on Gazebo and the robot; close the guide §14 open items
+- ✅ Add `waypoint_mission/` (was `practice/acrux_greeter/` + `learn/build/09-…`) — Acrux
+  waypoint mission (state machine tested; ROS node + safety layer written, not yet run)
+- ✅ Move the Acrux experiment to the repo root, rename guest→waypoint, add `LAB-RECORD.md`
+  and the course `lab-manual/` (2026-10-18)
+- 🟡 Verify the Acrux waypoint mission on Gazebo and the robot; close the guide §14 open items
 - 🟢 Add a hand-written minimal `rclpy` publisher/subscriber node under `practice/`
 - 🟡 Fill in real BeetleBot values for the `confirm: true` params in
   `practice/robot_calc/params.yaml`; add the rest of kl mithunvel's wanted calculations

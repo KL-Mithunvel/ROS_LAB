@@ -1,8 +1,8 @@
 """
-mission.py — the "brain" of the Acrux gift-greeter mission. Pure Python, no ROS.
+mission.py — the "brain" of the Acrux waypoint mission. Pure Python, no ROS.
 
-The robot visits up to MAX guests one at a time. At each guest it STOPS and waits
-until the operator says "yes" (next). After the last guest it drives home.
+The robot visits up to MAX waypoints one at a time. At each waypoint it STOPS and waits
+until the operator says "yes" (next). After the last waypoint it drives home.
 
 This file only decides *what should happen next*. It never talks to ROS: it
 receives events (operator commands, navigation results) and returns a list of
@@ -13,11 +13,11 @@ every path on a plain Windows PC.
 States
 ------
     IDLE            waiting for the first "yes"
-    NAVIGATING      driving to a guest
-    AT_GUEST        arrived, waiting for "yes" (gift taken) before moving on
+    NAVIGATING      driving to a waypoint
+    AT_WAYPOINT     arrived, waiting for "yes" (task done) before moving on
     PAUSED          operator paused; goal cancelled, will resume to same target
     BLOCKED         navigation failed (after auto-retries); waiting for operator
-    RETURNING_HOME  driving home after the last guest (or after "home")
+    RETURNING_HOME  driving home after the last waypoint (or after "home")
     DONE            back home, mission complete
     ABORTED         operator quit
 """
@@ -48,7 +48,7 @@ _COMMAND_ALIASES = {
 }
 
 HELP_TEXT = (
-    "Commands:  y/Enter = next guest   s = skip   r = retry   "
+    "Commands:  y/Enter = next waypoint   s = skip   r = retry   "
     "p = pause/resume   h = go home   q = quit   ? = status"
 )
 
@@ -71,7 +71,7 @@ class Pose:
 class State(Enum):
     IDLE = "IDLE"
     NAVIGATING = "NAVIGATING"
-    AT_GUEST = "AT_GUEST"
+    AT_WAYPOINT = "AT_WAYPOINT"
     PAUSED = "PAUSED"
     BLOCKED = "BLOCKED"
     RETURNING_HOME = "RETURNING_HOME"
@@ -116,23 +116,23 @@ def yaw_to_quaternion(yaw):
 class Mission:
     """Decides what the robot does next. See the module docstring."""
 
-    def __init__(self, home, slots, guest_count, max_auto_retries=1):
-        if isinstance(guest_count, bool) or not isinstance(guest_count, int):
-            raise ValueError(f"guest_count must be a whole number, got {guest_count!r}")
-        if not 1 <= guest_count <= len(slots):
+    def __init__(self, home, waypoints, waypoint_count, max_auto_retries=1):
+        if isinstance(waypoint_count, bool) or not isinstance(waypoint_count, int):
+            raise ValueError(f"waypoint_count must be a whole number, got {waypoint_count!r}")
+        if not 1 <= waypoint_count <= len(waypoints):
             raise ValueError(
-                f"guest_count must be between 1 and {len(slots)}, got {guest_count}")
+                f"waypoint_count must be between 1 and {len(waypoints)}, got {waypoint_count}")
         if max_auto_retries < 0:
             raise ValueError("max_auto_retries cannot be negative")
 
         self.home = home
-        self.guest_count = guest_count
+        self.waypoint_count = waypoint_count
         self.state = State.IDLE
-        self.visited = []     # guests whose slot was reached
-        self.skipped = []     # guests dropped by the operator
+        self.visited = []     # waypoints whose waypoint was reached
+        self.skipped = []     # waypoints dropped by the operator
 
         self._max_auto_retries = max_auto_retries
-        self._queue = deque(slots[:guest_count])   # guests not yet driven to
+        self._queue = deque(waypoints[:waypoint_count])   # waypoints not yet driven to
         self._target = None            # pose being driven to / waited at
         self._driving_state = None     # NAVIGATING or RETURNING_HOME (for resume/retry)
         self._retries_left = 0
@@ -183,9 +183,9 @@ class Mission:
                 self.state = State.DONE
                 return [Message("Home. Mission complete. " + self.status_text())]
             self.visited.append(self._target)
-            self.state = State.AT_GUEST
+            self.state = State.AT_WAYPOINT
             return [Message(f"Arrived at {self._target.label}. "
-                            "Waiting - press y/Enter once the gift is taken.")]
+                            "Waiting - press y/Enter once the waypoint task is done.")]
 
         # FAILED or CANCELED that we did not ask for -> treat as a failure.
         if self._retries_left > 0:
@@ -195,12 +195,12 @@ class Mission:
                     NavigateTo(self._target)]
         self.state = State.BLOCKED
         return [Message(f"BLOCKED on the way to {self._target.label}. "
-                        "r = retry, s = skip this guest, h = go home.")]
+                        "r = retry, s = skip this waypoint, h = go home.")]
 
     # -- command handlers -----------------------------------------------------
     def _cmd_next(self):
-        if self.state in (State.IDLE, State.AT_GUEST):
-            return self._go_to_next_guest()
+        if self.state in (State.IDLE, State.AT_WAYPOINT):
+            return self._go_to_next_waypoint()
         if self.state is State.PAUSED:
             return [Message("Paused - press p to resume.")]
         if self.state is State.BLOCKED:
@@ -220,7 +220,7 @@ class Mission:
             return self._skip_current_target(cancel=False)
         if self.state is State.RETURNING_HOME:
             return [Message("Already heading home.")]
-        # IDLE or AT_GUEST: drop the next guest in the queue without visiting.
+        # IDLE or AT_WAYPOINT: drop the next waypoint in the queue without visiting.
         if not self._queue:
             return [Message("Nobody left to skip - press y/Enter to go home.")]
         dropped = self._queue.popleft()
@@ -251,7 +251,7 @@ class Mission:
             self.skipped.append(self._target)
         self.skipped.extend(self._queue)
         self._queue.clear()
-        return actions + self._go_home("Going home; remaining guests dropped.")
+        return actions + self._go_home("Going home; remaining waypoints dropped.")
 
     def _cmd_quit(self):
         actions = []
@@ -268,9 +268,9 @@ class Mission:
         self._retries_left = self._max_auto_retries
         return [Message(text), NavigateTo(target)]
 
-    def _go_to_next_guest(self):
+    def _go_to_next_waypoint(self):
         if not self._queue:
-            return self._go_home("All guests served. Heading home.")
+            return self._go_home("All waypoints served. Heading home.")
         target = self._queue.popleft()
         return self._drive_to(target, State.NAVIGATING, f"Heading to {target.label}.")
 
@@ -281,4 +281,4 @@ class Mission:
         self.skipped.append(self._target)
         actions = [CancelNavigation()] if cancel else []
         return actions + [Message(f"Skipped {self._target.label}.")] + \
-            self._go_to_next_guest()
+            self._go_to_next_waypoint()

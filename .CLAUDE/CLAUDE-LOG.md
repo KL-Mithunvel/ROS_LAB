@@ -507,3 +507,23 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
   parameter names (`max_points`, polygon `points` format) are from memory of the Humble docs
   and unverified.
 - **Left out of the commit:** pre-existing uncommitted `.gitignore` change and `AGENTS.md`.
+
+## 2026-10-18 — Acrux experiment moved to root, renamed to "waypoint", lab record + lab manual
+
+- **Task (from user):** the Acrux guest work is a lab experiment: move it to the repo root, write a
+  lab record from the start to now, rename the project to waypoint terms (no "guest"), and write a
+  full lab manual for the class. Scope/format agreed: whole course, Markdown, folder `waypoint_mission/`.
+- **Moves (`git mv`, history kept):** `practice/acrux_greeter/*` → `waypoint_mission/`;
+  `tools/acrux/*` → `waypoint_mission/tools/` (the `acrux` script's `../..` still resolves to the repo
+  root); `learn/build/09-acrux-greeter-mission.md` → `waypoint_mission/GUIDE.md`.
+- **Rename:** `guests.yaml`→`waypoints.yaml`, `greeter_config.py`→`waypoint_config.py`, `slots`→`waypoints`,
+  `guest_count`→`waypoint_count`, `MAX_GUESTS`→`MAX_WAYPOINTS`, `AT_GUEST`→`AT_WAYPOINT`,
+  `/greeter/command`→`/waypoint/command`, `--guests`→`--waypoints`; "gift" wording became "payload / task
+  done". Cross-links fixed. `pytest` 60 passed after the rename.
+- **New files:** `waypoint_mission/LAB-RECORD.md`, `lab-manual/00-front-matter.md`, `lab-manual/01`–`05`.
+- **Updated:** `learn/README.md`, `README.md`, `.CLAUDE/CLAUDE.md`, `TODO.md`.
+- **Not done / caveats:** result and observation tables are deliberately blank — nothing ran on hardware.
+  Old `practice/acrux_greeter/.venv` (untracked) was deleted with the folder; new `.venv` in
+  `waypoint_mission/`. `AGENTS.md` (untracked mirror of CLAUDE.md) not synced. Past log entries keep the old names.
+  Nothing committed.
+

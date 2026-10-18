@@ -1,7 +1,7 @@
 """
-pytest suite for the greeter state machine (mission.py). No ROS needed.
+pytest suite for the waypoint state machine (mission.py). No ROS needed.
 
-Run from practice/acrux_greeter/ :   pytest
+Run from waypoint_mission/ :   pytest
 """
 
 import math
@@ -18,11 +18,11 @@ from mission import (  # noqa: E402
 )
 
 HOME = Pose(0.0, 0.0, 0.0, "Home")
-SLOTS = [Pose(3.0, float(i), 1.5, f"Guest {i + 1}") for i in range(4)]
+WAYPOINTS = [Pose(3.0, float(i), 1.5, f"Waypoint {i + 1}") for i in range(4)]
 
 
 def make(count=3, retries=1):
-    return Mission(HOME, SLOTS, count, max_auto_retries=retries)
+    return Mission(HOME, WAYPOINTS, count, max_auto_retries=retries)
 
 
 def navigates(actions):
@@ -40,33 +40,33 @@ def arrive(m):
 
 # --- construction ------------------------------------------------------------
 @pytest.mark.parametrize("bad", [0, -1, 5, 3.0, "3", None, True])
-def test_guest_count_must_be_whole_number_in_range(bad):
+def test_waypoint_count_must_be_whole_number_in_range(bad):
     with pytest.raises(ValueError):
-        Mission(HOME, SLOTS, bad)
+        Mission(HOME, WAYPOINTS, bad)
 
 
 def test_negative_retries_rejected():
     with pytest.raises(ValueError):
-        Mission(HOME, SLOTS, 3, max_auto_retries=-1)
+        Mission(HOME, WAYPOINTS, 3, max_auto_retries=-1)
 
 
 # --- happy path --------------------------------------------------------------
 @pytest.mark.parametrize("count", [1, 3, 4])
-def test_full_run_visits_exactly_count_guests_then_home(count):
+def test_full_run_visits_exactly_count_waypoints_then_home(count):
     m = make(count)
     assert m.state is State.IDLE
     goals = []
-    goals += navigates(m.on_command(mission.CMD_NEXT))      # start -> guest 1
+    goals += navigates(m.on_command(mission.CMD_NEXT))      # start -> waypoint 1
     for _ in range(count):
         assert m.state is State.NAVIGATING
         arrive(m)
-        assert m.state is State.AT_GUEST
-        goals += navigates(m.on_command(mission.CMD_NEXT))  # gift taken -> next/home
+        assert m.state is State.AT_WAYPOINT
+        goals += navigates(m.on_command(mission.CMD_NEXT))  # task done -> next/home
     assert m.state is State.RETURNING_HOME
     arrive(m)
     assert m.state is State.DONE and m.is_finished
-    assert goals == SLOTS[:count] + [HOME]
-    assert m.visited == SLOTS[:count]
+    assert goals == WAYPOINTS[:count] + [HOME]
+    assert m.visited == WAYPOINTS[:count]
     assert m.skipped == []
 
 
@@ -85,13 +85,13 @@ def test_next_while_driving_does_not_send_another_goal():
     assert m.state is State.NAVIGATING
 
 
-def test_robot_waits_at_guest_until_told():
+def test_robot_waits_at_waypoint_until_told():
     m = make(3)
     m.on_command(mission.CMD_NEXT)
     arrive(m)
-    assert m.state is State.AT_GUEST
+    assert m.state is State.AT_WAYPOINT
     assert m.on_nav_result(NavResult.SUCCEEDED) == []   # nothing new happens by itself
-    assert m.state is State.AT_GUEST
+    assert m.state is State.AT_WAYPOINT
 
 
 # --- failures and obstacles --------------------------------------------------
@@ -99,7 +99,7 @@ def test_failure_auto_retries_once_then_blocks():
     m = make(3, retries=1)
     m.on_command(mission.CMD_NEXT)
     first = m.on_nav_result(NavResult.FAILED)
-    assert navigates(first) == [SLOTS[0]] and m.state is State.NAVIGATING
+    assert navigates(first) == [WAYPOINTS[0]] and m.state is State.NAVIGATING
     second = m.on_nav_result(NavResult.FAILED)
     assert navigates(second) == [] and m.state is State.BLOCKED
 
@@ -118,19 +118,19 @@ def test_blocked_retry_resends_same_goal_and_resets_retries():
     m.on_nav_result(NavResult.FAILED)
     assert m.state is State.BLOCKED
     actions = m.on_command(mission.CMD_RETRY)
-    assert navigates(actions) == [SLOTS[0]] and m.state is State.NAVIGATING
+    assert navigates(actions) == [WAYPOINTS[0]] and m.state is State.NAVIGATING
     # the auto-retry budget is fresh again
-    assert navigates(m.on_nav_result(NavResult.FAILED)) == [SLOTS[0]]
+    assert navigates(m.on_nav_result(NavResult.FAILED)) == [WAYPOINTS[0]]
 
 
-def test_blocked_skip_moves_to_next_guest():
+def test_blocked_skip_moves_to_next_waypoint():
     m = make(3, retries=0)
     m.on_command(mission.CMD_NEXT)
     m.on_nav_result(NavResult.FAILED)
     actions = m.on_command(mission.CMD_SKIP)
-    assert navigates(actions) == [SLOTS[1]]
+    assert navigates(actions) == [WAYPOINTS[1]]
     assert not has(actions, CancelNavigation)   # goal already ended
-    assert m.skipped == [SLOTS[0]]
+    assert m.skipped == [WAYPOINTS[0]]
 
 
 def test_blocked_going_home_cannot_be_skipped():
@@ -162,18 +162,18 @@ def test_skip_while_navigating_cancels_and_goes_to_next():
     m.on_command(mission.CMD_NEXT)
     actions = m.on_command(mission.CMD_SKIP)
     assert isinstance(actions[0], CancelNavigation)
-    assert navigates(actions) == [SLOTS[1]]
-    assert m.skipped == [SLOTS[0]]
+    assert navigates(actions) == [WAYPOINTS[1]]
+    assert m.skipped == [WAYPOINTS[0]]
 
 
-def test_skip_at_guest_drops_the_next_guest_without_moving():
+def test_skip_at_waypoint_drops_the_next_waypoint_without_moving():
     m = make(3)
     m.on_command(mission.CMD_NEXT)
     arrive(m)
     actions = m.on_command(mission.CMD_SKIP)
-    assert navigates(actions) == [] and m.state is State.AT_GUEST
-    assert m.skipped == [SLOTS[1]]
-    assert navigates(m.on_command(mission.CMD_NEXT)) == [SLOTS[2]]
+    assert navigates(actions) == [] and m.state is State.AT_WAYPOINT
+    assert m.skipped == [WAYPOINTS[1]]
+    assert navigates(m.on_command(mission.CMD_NEXT)) == [WAYPOINTS[2]]
 
 
 def test_skip_with_nobody_left_just_explains():
@@ -188,15 +188,15 @@ def test_home_cancels_drops_remaining_and_returns():
     m = make(4)
     m.on_command(mission.CMD_NEXT)
     arrive(m)
-    m.on_command(mission.CMD_NEXT)                # driving to guest 2
+    m.on_command(mission.CMD_NEXT)                # driving to waypoint 2
     actions = m.on_command(mission.CMD_HOME)
     assert isinstance(actions[0], CancelNavigation)
     assert navigates(actions) == [HOME]
     assert m.state is State.RETURNING_HOME
-    assert m.skipped == SLOTS[1:]                 # 2 (in flight) + 3, 4 (queued)
+    assert m.skipped == WAYPOINTS[1:]                 # 2 (in flight) + 3, 4 (queued)
 
 
-def test_home_from_at_guest_needs_no_cancel():
+def test_home_from_at_waypoint_needs_no_cancel():
     m = make(3)
     m.on_command(mission.CMD_NEXT)
     arrive(m)
@@ -212,7 +212,7 @@ def test_pause_cancels_and_resume_goes_to_same_target():
     assert has(paused, CancelNavigation) and m.state is State.PAUSED
     assert m.on_command(mission.CMD_NEXT)[0].text.startswith("Paused")
     resumed = m.on_command(mission.CMD_PAUSE)
-    assert navigates(resumed) == [SLOTS[0]] and m.state is State.NAVIGATING
+    assert navigates(resumed) == [WAYPOINTS[0]] and m.state is State.NAVIGATING
 
 
 def test_pause_when_not_driving_does_nothing():
@@ -247,7 +247,7 @@ def test_status_reports_progress():
     m.on_command(mission.CMD_NEXT)
     arrive(m)
     text = m.on_command(mission.CMD_STATUS)[0].text
-    assert "AT_GUEST" in text and "Guest 1" in text and "Guest 2" in text
+    assert "AT_WAYPOINT" in text and "Waypoint 1" in text and "Waypoint 2" in text
 
 
 # --- parsing and geometry ----------------------------------------------------

@@ -1,7 +1,7 @@
 """
-pytest suite for guests.yaml loading/validation (greeter_config.py).
+pytest suite for waypoints.yaml loading/validation (waypoint_config.py).
 
-Run from practice/acrux_greeter/ :   pytest
+Run from waypoint_mission/ :   pytest
 """
 
 import os
@@ -12,13 +12,13 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import greeter_config  # noqa: E402
-from greeter_config import ConfigError, load_config  # noqa: E402
+import waypoint_config  # noqa: E402
+from waypoint_config import ConfigError, load_config  # noqa: E402
 
 GOOD = {
     "surveyed": True,
     "home": {"x": 0.0, "y": 0.0, "yaw": 0.0},
-    "slots": [
+    "waypoints": [
         {"label": "A", "x": 1.0, "y": 2.0, "yaw": 1.5},
         {"x": 2.0, "y": 2.0, "yaw": 1.5},
     ],
@@ -26,7 +26,7 @@ GOOD = {
 
 
 def write(tmp_path, data):
-    path = tmp_path / "guests.yaml"
+    path = tmp_path / "waypoints.yaml"
     path.write_text(yaml.safe_dump(data), encoding="utf-8")
     return str(path)
 
@@ -44,13 +44,13 @@ def test_good_file_loads_with_defaults(tmp_path):
     assert cfg.frame_id == "map"
     assert cfg.max_auto_retries == 1
     assert cfg.goal_timeout_s == 120.0
-    assert [p.label for p in cfg.slots] == ["A", "Guest 2"]   # default label by position
+    assert [p.label for p in cfg.waypoints] == ["A", "Waypoint 2"]   # default label by position
     assert cfg.home.label == "Home"
 
 
-def test_shipped_guests_yaml_is_valid_but_marked_unsurveyed():
+def test_shipped_waypoints_yaml_is_valid_but_marked_unsurveyed():
     cfg = load_config()
-    assert len(cfg.slots) == greeter_config.MAX_GUESTS
+    assert len(cfg.waypoints) == waypoint_config.MAX_WAYPOINTS
     assert cfg.surveyed is False, "placeholders must stay marked unsurveyed"
 
 
@@ -74,9 +74,9 @@ def test_invalid_yaml_raises_config_error(tmp_path):
 
 @pytest.mark.parametrize("data, fragment", [
     (mutated(home=None), "home"),
-    (mutated(slots=[]), "non-empty"),
-    (mutated(slots="x"), "non-empty"),
-    (mutated(slots=[GOOD["slots"][0]] * 5), "maximum"),
+    (mutated(waypoints=[]), "non-empty"),
+    (mutated(waypoints="x"), "non-empty"),
+    (mutated(waypoints=[GOOD["waypoints"][0]] * 5), "maximum"),
     (mutated(home={"x": 0.0, "y": 0.0}), "yaw"),
     (mutated(home={"x": "left", "y": 0.0, "yaw": 0.0}), "number"),
     (mutated(home={"x": float("nan"), "y": 0.0, "yaw": 0.0}), "finite"),

@@ -1,7 +1,7 @@
 """
-greeter_config.py — load and validate guests.yaml.
+waypoint_config.py — load and validate waypoints.yaml.
 
-guests.yaml holds the surveyed map coordinates of the home pose and the guest
+waypoints.yaml holds the surveyed map coordinates of the home pose and the waypoint
 stand positions, plus a few mission settings. Everything is validated up front
 so a typo is caught at your desk, not when the robot is already driving.
 """
@@ -14,22 +14,22 @@ import yaml
 
 from mission import Pose
 
-DEFAULT_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guests.yaml")
-MAX_GUESTS = 4   # hard upper limit agreed for this event
+DEFAULT_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "waypoints.yaml")
+MAX_WAYPOINTS = 4   # hard upper limit agreed for this event
 
 
 class ConfigError(ValueError):
-    """guests.yaml is missing something or contains an invalid value."""
+    """waypoints.yaml is missing something or contains an invalid value."""
 
 
 @dataclass(frozen=True)
-class GreeterConfig:
+class WaypointConfig:
     frame_id: str
     surveyed: bool            # False = placeholder coordinates, do not drive hardware
     max_auto_retries: int
     goal_timeout_s: float
     home: Pose
-    slots: tuple
+    waypoints: tuple
 
 
 def _number(value, where):
@@ -66,11 +66,11 @@ def load_config(path=DEFAULT_CONFIG_FILE):
         raise ConfigError(f"{path} must contain a mapping at the top level")
     if "home" not in raw:
         raise ConfigError("'home' is required")
-    slots_raw = raw.get("slots")
-    if not isinstance(slots_raw, list) or not slots_raw:
-        raise ConfigError("'slots' must be a non-empty list")
-    if len(slots_raw) > MAX_GUESTS:
-        raise ConfigError(f"'slots' has {len(slots_raw)} entries, the maximum is {MAX_GUESTS}")
+    waypoints_raw = raw.get("waypoints")
+    if not isinstance(waypoints_raw, list) or not waypoints_raw:
+        raise ConfigError("'waypoints' must be a non-empty list")
+    if len(waypoints_raw) > MAX_WAYPOINTS:
+        raise ConfigError(f"'waypoints' has {len(waypoints_raw)} entries, the maximum is {MAX_WAYPOINTS}")
 
     retries = raw.get("max_auto_retries", 1)
     if isinstance(retries, bool) or not isinstance(retries, int) or retries < 0:
@@ -79,12 +79,12 @@ def load_config(path=DEFAULT_CONFIG_FILE):
     if timeout <= 0:
         raise ConfigError("goal_timeout_s must be positive")
 
-    return GreeterConfig(
+    return WaypointConfig(
         frame_id=str(raw.get("frame_id", "map")),
         surveyed=bool(raw.get("surveyed", False)),
         max_auto_retries=retries,
         goal_timeout_s=timeout,
         home=_pose(raw["home"], "home", "Home"),
-        slots=tuple(_pose(s, f"slots[{i}]", f"Guest {i + 1}")
-                    for i, s in enumerate(slots_raw)),
+        waypoints=tuple(_pose(s, f"waypoints[{i}]", f"Waypoint {i + 1}")
+                    for i, s in enumerate(waypoints_raw)),
     )

@@ -1,23 +1,23 @@
-# `practice/acrux_greeter/` — Acrux gift-greeter mission
+# `waypoint_mission/` — Acrux waypoint mission
 
-Drives Acrux to up to 4 guests one after another, **stops and waits at each until you say
+Drives Acrux to up to 4 waypoints one after another, **stops and waits at each until you say
 "yes"**, then goes home. The full plan, safety reasoning and event-day runbook are in
-[`learn/build/09-acrux-greeter-mission.md`](../../learn/build/09-acrux-greeter-mission.md) —
+[`GUIDE.md`](GUIDE.md) —
 read that first.
 
-> **Status:** `mission.py` and `greeter_config.py` are unit-tested (`pytest`, runs anywhere).
+> **Status:** `mission.py` and `waypoint_config.py` are unit-tested (`pytest`, runs anywhere).
 > `mission_node.py`, `launch/safety.launch.py` and `config/collision_monitor.yaml` are
 > **written but have never been run** on Gazebo or on the robot. The coordinates in
-> `guests.yaml` are **placeholders**.
+> `waypoints.yaml` are **placeholders**.
 
 ## Files
 
 | File | Role |
 |------|------|
 | `mission.py` | Pure-Python state machine: commands + Nav2 results in, actions out. No ROS |
-| `greeter_config.py` | Loads and validates `guests.yaml` |
+| `waypoint_config.py` | Loads and validates `waypoints.yaml` |
 | `mission_node.py` | ROS 2 adapter (laptop): Nav2 goals via `nav2_simple_commander`, live commands |
-| `guests.yaml` | Home + 4 guest spots (placeholders until surveyed) and mission settings |
+| `waypoints.yaml` | Home + 4 waypoint spots (placeholders until surveyed) and mission settings |
 | `config/collision_monitor.yaml` | Stop/slow boxes for Nav2's collision monitor (robot side) |
 | `launch/safety.launch.py` | Starts the collision monitor + its lifecycle manager on the robot |
 | `tests/` | pytest: state machine (`test_mission.py`), config (`test_config.py`) |
@@ -25,7 +25,7 @@ read that first.
 ## Run the tests (any OS, no ROS)
 
 ```powershell
-cd practice\acrux_greeter
+cd waypoint_mission
 py -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
@@ -40,19 +40,19 @@ pip install pyyaml                                        # or: sudo apt install
 source /opt/ros/<distro>/setup.bash
 export ROS_DOMAIN_ID=<n>                                  # same as the robot
 
-python3 mission_node.py --count 3                         # today's guest count (1-4)
+python3 mission_node.py --count 3                         # today's waypoint count (1-4)
 ```
 
 | Flag | Meaning |
 |------|---------|
-| `--count N` | **Required.** Number of guests. No default on purpose |
-| `--guests PATH` | Alternative `guests.yaml` |
+| `--count N` | **Required.** Number of waypoints. No default on purpose |
+| `--waypoints PATH` | Alternative `waypoints.yaml` |
 | `--sim` | Gazebo run (`use_sim_time`) |
 | `--set-initial-pose` | Publish `home` as the AMCL initial pose (robot must really be at home) |
 | `--no-wait` | Don't wait for Nav2/AMCL lifecycle nodes (use if Acrux has no `amcl`) |
 | `--allow-unsurveyed` | Drive even though `surveyed: false` (simulation only) |
 
-Live commands (type in the terminal, or publish `std_msgs/String` to `/greeter/command`):
+Live commands (type in the terminal, or publish `std_msgs/String` to `/waypoint/command`):
 `y`/Enter next · `s` skip · `r` retry · `p` pause/resume · `h` home · `q` quit · `?` status.
 
 Do **not** start it with `ros2 launch` — launch does not forward the keyboard.
@@ -60,7 +60,7 @@ Do **not** start it with `ros2 launch` — launch does not forward the keyboard.
 ## Run the safety layer (on the robot)
 
 ```bash
-ros2 launch ~/acrux_greeter/launch/safety.launch.py cmd_vel_in:=<nav2 output> cmd_vel_out:=cmd_vel
+ros2 launch ~/waypoint_mission/launch/safety.launch.py cmd_vel_in:=<nav2 output> cmd_vel_out:=cmd_vel
 ```
 
 Find the real topic names first (`ros2 topic info /cmd_vel -v`) — see §7 of the guide.

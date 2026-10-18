@@ -1,4 +1,4 @@
-# Runtime (pure-Python parts: mission.py, greeter_config.py)
+# Runtime (pure-Python parts: mission.py, waypoint_config.py)
 PyYAML>=6.0
 
 # Development / tests

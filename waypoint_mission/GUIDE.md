@@ -1,30 +1,30 @@
-# 09 — Acrux gift-greeter mission: plan, design and runbook
+# Acrux waypoint mission: plan, design and runbook
 
-> **What this file is:** the full plan for a real task — *Acrux carries gifts to 3 or 4 guests
-> standing at pre-decided spots, waits at each until the operator says "yes", avoids anything
+> **What this file is:** the full plan for a real task — *Acrux carries a payload to 3 or 4 waypoints
+> at pre-decided spots, waits at each until the operator says "yes", avoids anything
 > unexpected, and drives home.* It is written in plain language on purpose.
-> **Code:** [`practice/acrux_greeter/`](../../practice/acrux_greeter/README.md).
+> **Code:** [`README.md`](README.md) (this folder).
 > **Status:** designed, state machine unit-tested (pytest), ROS parts **written but never run
 > on Gazebo or the robot** — see §14 for everything still unverified.
 
-Background reading: [`01-three-bots-architecture.md`](01-three-bots-architecture.md) §3 (Acrux
-packages), [`07-localization-and-slam.md`](07-localization-and-slam.md),
-[`08-navigation-and-path-planning.md`](08-navigation-and-path-planning.md).
+Background reading: [`01-three-bots-architecture.md`](../learn/build/01-three-bots-architecture.md) §3 (Acrux
+packages), [`07-localization-and-slam.md`](../learn/build/07-localization-and-slam.md),
+[`08-navigation-and-path-planning.md`](../learn/build/08-navigation-and-path-planning.md).
 
 ---
 
 ## 1. The task and what was decided
 
-Special guests will stand at fixed, pre-decided spots in the lab. Acrux (already in the lab)
-has to drive to each guest and present a gift, then go home. We only learn the real guest
+Waypoints are marked at fixed, pre-decided spots in the lab. Acrux (already in the lab)
+has to drive to each waypoint and stop and wait for the operator, then go home. We only learn the real waypoint
 count (3 or 4) just before the event.
 
 | Decision | Choice | Why |
 |---|---|---|
-| Max guests | **4** (a run with 3 uses the first 3 spots) | Spots are prepared in advance; the count is just a number |
-| Present action | **Stop and wait.** Nothing else (no speech, no lights) for now | Gifts ride on top of the robot; guests take them |
-| Moving on | **Live operator command** ("yes" = next) | A human confirms the gift was taken before the robot leaves |
-| After the last guest | **Return home** (after the operator confirms the last gift) | Robot ends in a known, safe place |
+| Max waypoints | **4** (a run with 3 uses the first 3 spots) | Spots are prepared in advance; the count is just a number |
+| Present action | **Stop and wait.** Nothing else (no speech, no lights) for now | Payload rides on top of the robot; someone at the waypoint unloads it |
+| Moving on | **Live operator command** ("yes" = next) | A human confirms the task at the waypoint is done before the robot leaves |
+| After the last waypoint | **Return home** (after the operator confirms the last waypoint) | Robot ends in a known, safe place |
 | Unexpected obstacle | **Avoid, never hit anything or anyone** | Safety first; layered (§7) |
 | Where the code runs | **Laptop over Wi-Fi**; safety layer **on the robot** | Safety must not depend on Wi-Fi |
 | Map | **Does not exist yet** — must be made (§10) | Nothing to navigate on without it |
@@ -40,9 +40,9 @@ Think of a waiter with a list of tables. The waiter already knows how to walk ar
 without bumping into people (that is **Nav2**, which Acrux already has). We only write the
 **list of tables and the rules for moving on** — a small "mission" program.
 
-- The robot is never asked to *guess* how many guests there are. You tell it: `--count 3`.
-- We always survey **4 spots**. With 3 guests the robot just ignores the 4th.
-- At every guest the robot **stops and waits**. It only moves when you say so.
+- The robot is never asked to *guess* how many waypoints there are. You tell it: `--count 3`.
+- We always survey **4 spots**. With 3 waypoints the robot just ignores the 4th.
+- At every waypoint the robot **stops and waits**. It only moves when you say so.
 
 ---
 
@@ -52,7 +52,7 @@ without bumping into people (that is **Nav2**, which Acrux already has). We only
  LAPTOP (Wi-Fi, same ROS_DOMAIN_ID)              ACRUX (on-board computer)
  ┌───────────────────────────────────┐          ┌─────────────────────────────────────────┐
  │ mission_node.py                    │  Nav2    │ Nav2: planner, controller, costmaps      │
- │  - reads guests.yaml               │  action  │ AMCL / localization (see §8)             │
+ │  - reads waypoints.yaml               │  action  │ AMCL / localization (see §8)             │
  │  - you type y / s / r / p / h / q  │ ───────► │ LiDAR /scan   RealSense /camera/points   │
  │  - sends "go to pose" goals        │ NavigateTo│                                          │
  │ RViz (watch the map + robot)       │  Pose    │ collision_monitor  ◄── last-line safety  │
@@ -78,30 +78,30 @@ Why split it this way:
 ### Stage A — before the event (once)
 
 1. Bring Acrux up and **make a map** of the lab (§10).
-2. **Survey** the home position and the 4 guest spots as map coordinates (§10).
-3. Put them in `guests.yaml`, set `surveyed: true`.
+2. **Survey** the home position and the 4 waypoint spots as map coordinates (§10).
+3. Put them in `waypoints.yaml`, set `surveyed: true`.
 4. Test the camera (§9) and the safety layer (§7).
-5. Rehearse with cardboard "guests" (§12).
+5. Rehearse with cardboard "waypoints" (§12).
 
 ### Stage B — just before the event
 
 1. Power on Acrux, bring up the stack, confirm localization (§8, §11).
-2. Count the guests. Start the mission with that number:
+2. Count the waypoints. Start the mission with that number:
    `python3 mission_node.py --count 3`.
 
 ### Stage C — during the event (what the program does)
 
 ```
-IDLE ─ you press y ─► NAVIGATING (guest 1) ─ arrived ─► AT_GUEST  (STOPS, waits)
-                         ▲                                   │ you press y (gift taken)
-                         └───────── more guests? ◄───────────┘
+IDLE ─ you press y ─► NAVIGATING (waypoint 1) ─ arrived ─► AT_WAYPOINT  (STOPS, waits)
+                         ▲                                   │ you press y (task done)
+                         └───────── more waypoints? ◄───────────┘
                                           │ no
                                           ▼
                                    RETURNING_HOME ─ arrived ─► DONE
 ```
 
 Nothing moves by itself: **first `y` starts the run, every later `y` releases the robot from
-a guest.**
+a waypoint.**
 
 ---
 
@@ -110,8 +110,8 @@ a guest.**
 | State | Meaning | Leaves when |
 |---|---|---|
 | `IDLE` | Ready, not moving | `y` → `NAVIGATING` |
-| `NAVIGATING` | Driving to a guest | Arrives → `AT_GUEST`; fails → retry, then `BLOCKED` |
-| `AT_GUEST` | Stopped in front of guest, waiting | `y` → next guest (or `RETURNING_HOME` if none left) |
+| `NAVIGATING` | Driving to a waypoint | Arrives → `AT_WAYPOINT`; fails → retry, then `BLOCKED` |
+| `AT_WAYPOINT` | Stopped in front of waypoint, waiting | `y` → next waypoint (or `RETURNING_HOME` if none left) |
 | `PAUSED` | Operator paused; goal cancelled | `p` → resumes same target |
 | `BLOCKED` | Navigation failed after auto-retry | `r` retry / `s` skip / `h` home |
 | `RETURNING_HOME` | Driving to the home pose | Arrives → `DONE` |
@@ -132,20 +132,20 @@ Design choices worth knowing (all covered by `tests/test_mission.py`):
 ## 6. Live commands
 
 Type in the terminal running `mission_node.py` (Enter alone = yes), **or** publish to
-`/greeter/command` (`std_msgs/String`) from anywhere — handy for a joystick button or a tiny
+`/waypoint/command` (`std_msgs/String`) from anywhere — handy for a joystick button or a tiny
 GUI later:
 
 ```bash
-ros2 topic pub --once /greeter/command std_msgs/msg/String "{data: 'y'}"
+ros2 topic pub --once /waypoint/command std_msgs/msg/String "{data: 'y'}"
 ```
 
 | Type | Command | Effect |
 |---|---|---|
-| `y` / Enter | next | Start, or release the robot from the current guest |
-| `s` | skip | Driving/blocked: give up this guest, go to the next. Waiting at a guest: drop the *next* guest without visiting |
+| `y` / Enter | next | Start, or release the robot from the current waypoint |
+| `s` | skip | Driving/blocked: give up this waypoint, go to the next. Waiting at a waypoint: drop the *next* waypoint without visiting |
 | `r` | retry | Blocked/paused: send the same goal again |
 | `p` | pause / resume | Cancel the goal and stand still; press again to continue to the same target |
-| `h` | home | Cancel, drop all remaining guests, drive home |
+| `h` | home | Cancel, drop all remaining waypoints, drive home |
 | `q` | quit | Cancel the goal and exit |
 | `?` | status | State, target, who is left, visited, skipped |
 
@@ -183,7 +183,7 @@ and asks you** (`r`, `s` or `h`).
    Then launch with the real names, and make sure **Nav2 no longer publishes straight to the
    topic the monitor writes**, or two nodes will fight over the wheels:
    ```bash
-   ros2 launch ~/acrux_greeter/launch/safety.launch.py cmd_vel_in:=<nav2 output> cmd_vel_out:=cmd_vel
+   ros2 launch ~/waypoint_mission/launch/safety.launch.py cmd_vel_in:=<nav2 output> cmd_vel_out:=cmd_vel
    ```
    Passing test: wave a cardboard box in front while teleoperating — the robot must stop even
    though you keep commanding forward.
@@ -198,14 +198,14 @@ and asks you** (`r`, `s` or `h`).
 - A 2D LiDAR sees **one horizontal slice**. Table edges, chair seats, handbags and legs below
   or above that slice are invisible → that is why the RealSense test (§9) matters.
 - The stop box is **front only.** A "stop" zone blocks *all* motion including reversing, so a
-  full ring would trap the robot beside a guest. Rotating in place beside someone is covered by
+  full ring would trap the robot beside a waypoint. Rotating in place beside someone is covered by
   the costmap and by the operator, not the monitor.
-- **Gifts/tray on top of the robot must not sit in the LiDAR plane or the camera view**, or the
+- **Payload/tray on top of the robot must not sit in the LiDAR plane or the camera view**, or the
   robot will treat its own cargo as an obstacle (or the monitor will freeze it). Check the
-  scan in RViz with the gifts loaded.
-- The guest standoff must be **≥ 0.8 m (robot centre to guest)** or the guest is inside the
-  stop box at the goal. See the comment block in `guests.yaml`.
-- Acrux is **~0.76 × 0.80 m**: leave wide lanes between guests (≈1.5 m or more); each guest is
+  scan in RViz with the payload loaded.
+- The waypoint standoff must be **≥ 0.8 m (robot centre to waypoint)** or the waypoint is inside the
+  stop box at the goal. See the comment block in `waypoints.yaml`.
+- Acrux is **~0.76 × 0.80 m**: leave wide lanes between waypoints (≈1.5 m or more); each waypoint is
   an obstacle with a 0.55 m inflation halo, and a goal inside that halo can be unreachable.
 
 ---
@@ -284,7 +284,7 @@ Record your results in the §14 table.
 ```bash
 # robot — SLAM mode
 ros2 launch acrux_bringup autobringup.launch.py exploration:=True
-# laptop — drive slowly around the whole area, including along the guest spots
+# laptop — drive slowly around the whole area, including along the waypoint spots
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 # save when the map looks complete (robot)
 ros2 run nav2_map_server map_saver_cli -f ~/maps/lab
@@ -297,22 +297,22 @@ off the robot with `scp` — do **not** commit them (they're gitignored).
 
 **Survey the spots** (map must be loaded and localized):
 
-1. Mark the 4 guest spots and the home spot on the floor with tape.
-2. For each: drive the robot there by hand, facing the guest direction, and read the pose:
+1. Mark the 4 waypoint spots and the home spot on the floor with tape.
+2. For each: drive the robot there by hand, facing the waypoint direction, and read the pose:
    ```bash
    ros2 topic echo /amcl_pose --once        # x, y, and orientation quaternion
    ```
    Or, in RViz, click **2D Goal Pose** on the spot and `ros2 topic echo /goal_pose --once`.
 3. Convert the quaternion to yaw (`yaw = 2·atan2(z, w)` for a flat robot) or just read the
    heading you set in RViz.
-4. Type the numbers into `guests.yaml` (**centre of robot**, ≥ 0.8 m from the guest's feet).
+4. Type the numbers into `waypoints.yaml` (**centre of robot**, ≥ 0.8 m from whatever stands at the waypoint).
 5. Set `surveyed: true`. Re-survey if the map is ever rebuilt.
 
 ---
 
 ## 11. Event-day runbook
 
-**Before guests arrive**
+**Before waypoints arrive**
 
 | # | Step | Where | Check |
 |---|---|---|---|
@@ -320,9 +320,9 @@ off the robot with `scp` — do **not** commit them (they're gitignored).
 | 2 | Bring up Acrux on the **saved map** (§8 option A or B) | robot | RViz shows the map |
 | 3 | Check who owns `map → odom`; robot parked on **home marker**; set initial pose | robot/laptop | Scan lines up with the walls |
 | 4 | Start safety layer: `ros2 launch …/safety.launch.py cmd_vel_in:=… cmd_vel_out:=…` | robot | Box-in-front test stops the robot (§7) |
-| 5 | Load the gifts; confirm they are **not** in the scan/camera view | robot | RViz scan is clean |
+| 5 | Load the payload; confirm they are **not** in the scan/camera view | robot | RViz scan is clean |
 | 6 | Speed capped ≤ 0.3 m/s; **someone within reach of the power/e-stop** | — | — |
-| 7 | One dry run with cardboard guests | — | Visits every spot and returns |
+| 7 | One dry run with cardboard waypoints | — | Visits every spot and returns |
 
 **Go time**
 
@@ -330,10 +330,10 @@ off the robot with `scp` — do **not** commit them (they're gitignored).
 # laptop, in the folder with mission_node.py
 source /opt/ros/<distro>/setup.bash
 export ROS_DOMAIN_ID=<n>
-python3 mission_node.py --count 3      # the number of guests TODAY
+python3 mission_node.py --count 3      # the number of waypoints TODAY
 ```
 
-Then: `y` → robot goes to guest 1 → it stops → guest takes the gift → you press `y` → next…
+Then: `y` → robot goes to waypoint 1 → it stops → the payload is unloaded → you press `y` → next…
 After the last `y` it drives home and the program reports `DONE`.
 
 **If it goes wrong:** `p` (pause) → think → `p` (resume) or `h` (home). Anything alarming:
@@ -345,12 +345,12 @@ After the last `y` it drives home and the program reports `DONE`.
 
 | Rung | What | Proves |
 |---|---|---|
-| 0 | `pytest` in `practice/acrux_greeter/` (done — 60 tests) | State machine and config logic |
+| 0 | `pytest` in `waypoint_mission/` (done — 60 tests) | State machine and config logic |
 | 1 | Gazebo: `ros2 launch acrux_gazebo spawn_robot.launch.py` + Nav2, run with `--sim --allow-unsurveyed` and sim-map coordinates | Node ↔ Nav2 wiring, command handling |
 | 2 | Real robot, wheels **lifted**, command a goal | Messages flow, nothing crashes |
 | 3 | Real robot, empty room, 1 spot | Localization + arrival accuracy |
-| 4 | Cardboard guests at all 4 spots; throw a box into the path | Avoidance + collision monitor + `BLOCKED` flow |
-| 5 | Full dress rehearsal with real people who know it's a test, 3 and 4 guests | Timing, standoff, operator handover |
+| 4 | Cardboard waypoints at all 4 spots; throw a box into the path | Avoidance + collision monitor + `BLOCKED` flow |
+| 5 | Full dress rehearsal with real people who know it's a test, 3 and 4 waypoints | Timing, standoff, operator handover |
 
 ---
 
@@ -360,9 +360,9 @@ After the last `y` it drives home and the program reports `DONE`.
 |---|---|---|
 | Localization wrong (§8) | Drives to the wrong place / into walls | Verify scan-vs-map before `y`; re-set initial pose |
 | Monitor wired wrong | Robot ignores it, or two nodes fight → jerky | `ros2 topic info -v`; test with a box |
-| Guest inside stop box at goal | Robot stops short and won't move | Standoff ≥ 0.8 m; re-survey |
+| Waypoint inside stop box at goal | Robot stops short and won't move | Standoff ≥ 0.8 m; re-survey |
 | Goal inside inflation halo | "Goal failed"/`BLOCKED` at a spot | Move the spot back / widen lane; check `inflation_radius` |
-| Gifts seen as obstacles | Robot refuses to move, phantom obstacle in front | Re-position tray; check scan/costmap |
+| Payload seen as obstacles | Robot refuses to move, phantom obstacle in front | Re-position tray; check scan/costmap |
 | Wi-Fi dropout | Laptop loses robot | Robot's Nav2 + monitor still protect; reconnect; `?` for status |
 | Wrong `ROS_DOMAIN_ID` / WSL2 NAT | Empty `ros2 topic list` | Same ID in every terminal; mirrored networking / native Linux |
 | Map out of date (furniture moved) | AMCL jumps, plans fail | Re-map the day before; same furniture on the day |
@@ -382,8 +382,8 @@ Fill the right-hand column in and keep this section honest; it is the real statu
 | 4 | `nav2_collision_monitor` installed on the robot? Humble param names correct (`max_points`)? | `ros2 pkg list \| grep collision`; node log on start | |
 | 5 | RealSense usable? Stable cloud? CPU cost? (§9) | §9 steps | |
 | 6 | Laptop OS / ROS install (native Ubuntu? WSL2?) and `nav2_simple_commander` present | `python3 -c "import nav2_simple_commander"` | |
-| 7 | Real guest spots, home, lane widths, floor markers | §10 | |
-| 8 | Is the LiDAR mounted so the gifts don't intrude on its plane? | RViz scan with gifts loaded | |
+| 7 | Real waypoint spots, home, lane widths, floor markers | §10 | |
+| 8 | Is the LiDAR mounted so the payload don't intrude on its plane? | RViz scan with the payload loaded | |
 | 9 | Does `nav2_simple_commander`'s `goToPose`/`cancelTask` behave as `mission_node.py` assumes on this version? | Gazebo rung 1 | |
 
 ---
@@ -393,10 +393,10 @@ Fill the right-hand column in and keep this section honest; it is the real statu
 - **Lights**: status LEDs via the existing firmware/`hubble_scripts` path (idle / driving /
   arrived / blocked). Natural hook: `Driver.execute()` already sees every `Message` and state
   change.
-- **Auto guest detection** (camera/LiDAR leg clustering) to *suggest* the count or skip empty
+- **Auto waypoint detection** (camera/LiDAR leg clustering) to *suggest* the count or skip empty
   spots. Optional; the manual `--count` stays the reliable path.
-- **Joystick "next" button** publishing to `/greeter/command` — no node changes needed.
-- **Gift-taken sensing** (weight / button) instead of the operator's `y`.
+- **Joystick "next" button** publishing to `/waypoint/command` — no node changes needed.
+- **Task-done sensing** (weight / button) instead of the operator's `y`.
 
 ---
 
@@ -404,10 +404,10 @@ Fill the right-hand column in and keep this section honest; it is the real statu
 
 1. *Why is the mission logic separate from the ROS node?* Testable without a robot; the node
    is a thin adapter. (§5)
-2. *How does the robot handle 3 vs 4 guests?* Always 4 surveyed slots; `--count N` uses the
+2. *How does the robot handle 3 vs 4 waypoints?* Always 4 surveyed waypoints; `--count N` uses the
    first N. (§2)
-3. *Why stop and wait for a command instead of a timer?* A human confirms the gift was taken;
-   a timer would drive off while the guest is mid-pickup. (§1, §6)
+3. *Why stop and wait for a command instead of a timer?* A human confirms the task at the waypoint is done;
+   a timer would drive off while the waypoint is mid-pickup. (§1, §6)
 4. *What stops it hitting a person?* Four layers: costmap re-planning, speed cap, the
    collision monitor on the robot, and the operator/e-stop — and which layer covers which
    failure. (§7)

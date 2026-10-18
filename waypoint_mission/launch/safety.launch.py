@@ -9,7 +9,7 @@ topic the base listens on. The default names assume Nav2's velocity smoother
 publishes `cmd_vel_smoothed` and the Acrux base listens on `/cmd_vel`. Acrux's
 wiring has NOT been confirmed on the robot - find the real names with
 `ros2 topic info /cmd_vel -v` and pass them as arguments. See
-learn/build/09-acrux-greeter-mission.md section 7.
+waypoint_mission/GUIDE.md section 7.
 
 Run with `ros2 launch <full path to this file>`; it needs no colcon package.
 """

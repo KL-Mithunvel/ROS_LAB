@@ -18,6 +18,8 @@ The guides are split into two tracks accordingly — see `learn/README.md`.
 | Path | What it is |
 |------|-----------|
 | `learn/` | Study guides — start at `learn/README.md`. Split into `foundations/` (shared), `lab/` (Track A — the graded lab), `build/` (Track B — building ROS 2 systems) |
+| `waypoint_mission/` | **Lab experiment 5** — Acrux waypoint navigation mission: code, tests, `GUIDE.md`, `LAB-RECORD.md`, remote-access `tools/` |
+| `lab-manual/` | **Lab manual** for the whole course (experiments 1–5: aim, theory, procedure, observations, viva) |
 | `docs/` | The raw instructor handouts (BeetleBot manual + obstacle-avoidance scripts). Plus `docs/beetlebot/` and `docs/wolf/` — MIT-licensed VEEROBOT tutorial docs mirrored from [SMARTS-LAB/Documention](https://github.com/SMARTS-LAB/Documention) (see each folder's `SOURCE.md`) |
 | `bots/` | Robot upstream sources, each a **git submodule** (pinned pointer only): `BeetleBot/` (the lab robot, [VEEROBOT/BeetleBot](https://github.com/VEEROBOT/BeetleBot)), plus comparison platforms `jetbot/` ([NVIDIA-AI-IOT/jetbot](https://github.com/NVIDIA-AI-IOT/jetbot)), `acrux/`, `wolf/`, `rhino/` (all VEEROBOT). See [`learn/index.md`](learn/index.md) |
 | `docs/ros-install/` | VEEROBOT's ROS 2 install scripts, vendored from [VEEROBOT/ros-scripts](https://github.com/VEEROBOT/ros-scripts) (see its `SOURCE.md`) |

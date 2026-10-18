@@ -1,7 +1,7 @@
 # Acrux Bot: SSH, VNC and Demo/Development Mode Runbook
 
 Scripts in this folder give you SSH control of the Acrux bot, a remote desktop, and a safe switch
-between demo (autostart) and development mode. Run them from `tools/acrux/`.
+between demo (autostart) and development mode. Run them from `waypoint_mission/tools/`.
 
 | Item | Value |
 | --- | --- |

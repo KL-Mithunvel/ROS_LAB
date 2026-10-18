@@ -7,7 +7,7 @@
 #
 # Written for ROS 2 Humble's nav2_collision_monitor (what bots/acrux targets).
 # NOT yet run on the robot. Things to verify on the day are in
-# learn/build/09-acrux-greeter-mission.md section 7.
+# waypoint_mission/GUIDE.md section 7.
 #
 # Acrux footprint (from nav2_params.yaml) is roughly x +-0.38, y +-0.40 about
 # base_link, i.e. ~0.76 x 0.80 m. Polygons below are in the base_link frame:

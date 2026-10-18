@@ -6,9 +6,9 @@
 - [ ] Verify the Track B guides against a live ROS 2 Jazzy + Gazebo Harmonic environment
       (written against docs/source, not yet run end to end — no Linux box in this session)
 
-### Acrux gift-greeter mission — verify in the lab (planned 2026-10-12)
+### Waypoint mission (Acrux) — verify in the lab (planned 2026-10-12)
 
-Plan: `learn/build/09-acrux-greeter-mission.md`; code: `practice/acrux_greeter/`. The state
+Plan: `waypoint_mission/GUIDE.md`; code: `waypoint_mission/`; record: `waypoint_mission/LAB-RECORD.md`. The state
 machine is pytest-tested; **everything ROS-side is written but never run.** Open items are
 tracked with a result column in guide §14 — fill them in there as you go.
 
@@ -16,10 +16,10 @@ tracked with a result column in guide §14 — fill them in there as you go.
 - [ ] Confirm what provides `map → odom` with `exploration:=False` (is AMCL launched at all?)
 - [ ] Confirm the real `cmd_vel` chain (`ros2 topic info /cmd_vel -v`) and wire the collision monitor
 - [ ] Test the Intel RealSense (`/camera/points`): stable? sees what LiDAR misses? CPU cost? (guide §9)
-- [ ] Make the lab map; survey home + 4 guest spots; set `surveyed: true` in `guests.yaml`
-- [ ] Gazebo run (`--sim`), then robot with wheels lifted, then cardboard guests, then rehearsal
+- [ ] Make the lab map; survey home + 4 waypoints; set `surveyed: true` in `waypoints.yaml`
+- [ ] Gazebo run (`--sim`), then robot with wheels lifted, then cardboard obstacles, then rehearsal
 - [ ] Decide laptop setup (native Ubuntu vs WSL2 mirrored networking) and install `nav2_simple_commander`
-- [ ] Later: status lights; optional camera-based guest detection (guide §15)
+- [ ] Later: status lights; optional camera-based target detection (guide §15)
 
 ### UNO Smart Robot Car Kit — hardware bring-up tests (kit not in hand yet, 2026-09-24)
 
@@ -67,13 +67,20 @@ letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground
 
 ## Done
 
-### Acrux gift-greeter mission — plan + code (2026-10-12, commit: _pending_)
+### Acrux experiment reorganised, lab record and lab manual (2026-10-18, commit: _pending_)
 
-- [x] Wrote `learn/build/09-acrux-greeter-mission.md` — requirements, architecture (laptop brain,
+- [x] Moved `practice/acrux_greeter/`, `tools/acrux/`, `learn/build/09-…` into root `waypoint_mission/`
+- [x] Renamed guest/greeter/gift vocabulary to waypoint terms (files, identifiers, topic `/waypoint/command`); 60 tests pass
+- [x] Wrote `waypoint_mission/LAB-RECORD.md` (timeline 2026-10-12 → now; result tables blank until run)
+- [x] Wrote `lab-manual/` — front matter + experiments 1–5
+
+### Waypoint mission (Acrux) — plan + code (2026-10-12, commit: _pending_)
+
+- [x] Wrote `waypoint_mission/GUIDE.md` (was `learn/build/09-acrux-greeter-mission.md`) — requirements, architecture (laptop brain,
       robot-side safety), state machine, live commands, 5 safety layers, localization pitfalls
       found in `bots/acrux`, RealSense test plan, mapping/survey steps, runbook, risks, open items
-- [x] Added `practice/acrux_greeter/` — `mission.py` + `greeter_config.py` (60 pytest tests pass),
-      `mission_node.py`, `guests.yaml` (placeholders), collision-monitor config + safety launch
+- [x] Added `waypoint_mission/` (was `practice/acrux_greeter/`) — `mission.py` + `waypoint_config.py` (60 pytest tests pass),
+      `mission_node.py`, `waypoints.yaml` (placeholders), collision-monitor config + safety launch
 - [x] Linked into `learn/README.md` and `.CLAUDE/CLAUDE.md`
 
 ### UNO Smart Robot Car Kit — PID line following + bring-up test sketch (2026-09-24, commit: _pending_)
