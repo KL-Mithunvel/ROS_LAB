@@ -28,3 +28,6 @@ Thumbs.db
 # --- ROS runtime ---
 *.bag
 rosbag2_*/
+
+# --- Personal, non-lab local scripts (contain plaintext credentials) ---
+/vnc-jetson.sh

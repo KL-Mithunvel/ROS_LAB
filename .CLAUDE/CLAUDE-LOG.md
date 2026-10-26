@@ -544,3 +544,12 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - **Accuracy note:** the UNO merged sketch WAS flashed once (2026-09-24 user report: reversed, right turn OK, left not turning, drifted off line); the later PID rewrite and `Hardware_Test` were compile-checked only. The record says so. All result tables are blank by design.
 - **Caveats:** the `docs/` read-only rule was bent for the UNO move (vendor files moved, not edited). `AGENTS.md` not synced. Nothing committed.
 
+
+## 2026-10-20 — Coin-D6 lidar live plotter (`coin_d6/`)
+
+- User has a MENGJIE Coin-D6 TOF lidar on a USB2LDS adapter and asked for a Python live plot; no baud/protocol info.
+- **Probing (read-only):** adapter is a CP210x on COM3. Listened at 230400/115200/460800/921600/128000/153600 baud and all four DTR/RTS combos: 0 bytes. User confirmed the motor is not rotating, so likely power/wiring/motor-control pin, not code. Scratch scripts stayed in the session scratchpad.
+- **Web search:** only a reseller page (230400 baud UART, ~10 Hz, 4000 samples/s, 4-pin with motor control). No public packet format found.
+- **Files created:** `coin_d6/coin_d6.py` (profile-driven parser, reader thread, sniffer with header guess), `coin_d6/plot_live.py` (polar live plot, `--sniff`), `coin_d6/profile_example.yaml`, `coin_d6/requirements.txt`, `coin_d6/tests/test_parser.py`.
+- **Decision:** default `ld06` profile (LDROBOT LD06 layout) is an **unverified guess**; the real Coin-D6 layout goes in a `--profile-file` YAML once the vendor protocol is obtained.
+- **Open:** lidar must spin first; then sniff, then confirm/replace the profile. Tracked in `TODO.md`.

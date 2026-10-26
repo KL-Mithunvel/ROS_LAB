@@ -23,6 +23,19 @@ tracked with a result column in guide §14 — fill them in there as you go.
 - [ ] Decide laptop setup (native Ubuntu vs WSL2 mirrored networking) and install `nav2_simple_commander`
 - [ ] Later: status lights; optional camera-based target detection (guide §15)
 
+### Coin-D6 TOF lidar — live plot (2026-10-20)
+
+Code: `coin_d6/` (`plot_live.py`, `coin_d6.py`). The parser is tested on synthetic frames only;
+the packet format is **unconfirmed** (no public datasheet; default `ld06` profile is a guess).
+
+- [ ] **Get the lidar spinning.** On 2026-10-20 the motor did not rotate and COM3 (CP210x) gave 0 bytes at
+      230400/115200/460800/921600/128000/153600 baud, all DTR/RTS combinations. Check 5 V supply (direct
+      USB port, short cable), connector pinout, the motor-control pin, adapter jumpers. Record: ________
+- [ ] Run `python plot_live.py --sniff --sniff-all-bauds` once it spins; note baud + header guess
+- [ ] Get the vendor protocol PDF / SDK (Guoke Optics / MENGJIE download package), then fill
+      `coin_d6/profile_example.yaml` and run with `--profile-file`; set `verified: true`
+- [ ] Run `python plot_live.py` and confirm the plot matches the room (front = top, clockwise)
+
 ### UNO Smart Robot Car Kit — hardware bring-up tests (kit not in hand yet, 2026-09-24)
 
 The PID line-follower + obstacle-avoid sketch is **compiled but never run on hardware**. Do
