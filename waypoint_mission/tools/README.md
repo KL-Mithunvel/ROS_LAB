@@ -19,6 +19,52 @@ between demo (autostart) and development mode. Run them from `waypoint_mission/t
 | `vnc.sh` | Start a VNC desktop on the robot and tunnel it to your PC |
 | `dev-mode.sh` | Switch between autostart (demo) and development mode |
 | `acrux.env` | Host, user and key path. Edit if the IP or user changes |
+| `acrux_gui.py` | Control panel GUI for all of the above (section 0) |
+
+---
+
+## 0. Control panel (GUI)
+
+```bash
+./acrux_gui.py        # runs on the laptop; needs ROS 2 Humble sourced (it re-launches itself with it)
+```
+
+One window for the whole waypoint-mission project: **E-STOP** (button or Space), camera, LiDAR, map with
+robot pose (click-drag to set the initial pose or send a goal), drive pad (hold buttons or W A S D,
+capped 0.2 m/s / 0.6 rad/s), mission start/stop plus Next/Skip/Retry/Pause/Home/Quit, and the
+**Demo / Development switch, which reboots the robot and reconnects** when it is back. In development
+mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-test.sh`).
+
+- **Robot jobs (ROS stacks)...** opens a window that runs background ROS commands on the robot as
+  `rigbetel-labs` (detached, pid + log in `/tmp/acrux_jobs/`, survives closing the GUI): SLAM stack,
+  navigation on a saved map, save map, AMCL localization, collision monitor, and a custom command.
+  Commands are editable; status is polled; **Log** prints the tail. AMCL/safety presets push
+  `waypoint_mission/` to `/tmp/waypoint_mission` first. These presets are unverified on the robot
+  (guide sections 7-8: check the `cmd_vel` chain and who owns `map -> odom`). **RViz2** starts on the laptop.
+- **SLAM in development mode:** Drivers → LiDAR + Motor bridge (to drive), then Robot jobs → *SLAM
+  (development mode: LiDAR only)*. It runs `slam_dev.launch.py` (Cartographer, `lidar.lua`, static
+  `base_link -> lidar_link` with the URDF's 180 deg yaw) and publishes `/map` at 1 Hz. Drive with the pad,
+  then Robot jobs → *Save current map*. Do not run it in demo mode (the autostart stack already does SLAM).
+  Cartographer logs `Dropped N earlier points` with the X2 LiDAR; the map still builds.
+- **Mapping workflow (development mode):** start at the home spot facing the way you want "home" to face.
+  Start SLAM (and Start Nav) in the Map panel, scan the area with the drive pad, then **Go HOME**: Nav2
+  drives back and turns to the saved heading (heading error is logged; if it is over ~9 deg the goal is
+  re-issued once). **HOME = here** or the *HOME* map mode (click-drag sets position + heading) sets home;
+  the *waypoint* mode with the spinner 1-4 places waypoint spots (drag = the way the robot should FACE). Spots are
+  saved to `spots.json` and `waypoints_gui.yaml` (mission format, `surveyed: true`) and used by the mission
+  panel. **Reset map...** stops SLAM/Nav, clears the map and the spots, and restarts SLAM at the robot's
+  current pose (use it in a new place). Spots are valid only for the SLAM session they were set in (or one
+  started from the same home pose).
+- Nav2 here (`nav_dev.launch.py`, `nav2_dev_params.yaml`) uses only `/scan`; the LiDAR sees the front arc
+  only, so reversing/backup behaviours are blind. Speeds are capped at 0.2 m/s and 0.6 rad/s.
+- Everything robot-side reuses `acrux`, `dev-mode.sh` and `sensor-test.sh`; IP/key stay in `acrux.env`.
+- The robot's sudo password is asked once, kept in memory, never written to disk ("Forget sudo password" clears it).
+- **E-STOP is software**: it latches, streams zero `/cmd_vel`, cancels Nav2 goals and repeats a zero over SSH.
+  It depends on Wi-Fi and this laptop. Keep a person at the physical power switch.
+- The mission program and its safety layer are as described in `GUIDE.md` (one folder up)
+  (the collision monitor still runs on the robot).
+- Status: rendering, teleop and E-stop latching were tested offline with fake topics; the mode switch +
+  reboot + reconnect path has **not** been run against the robot yet.
 
 ---
 

@@ -240,6 +240,10 @@ Two ways forward — pick one in the lab and write the outcome in §14:
 | **A. AMCL on the saved map (recommended)** | Run `nav2_bringup`'s `localization_launch.py` (AMCL + `map_server`) with the saved `.yaml` and Acrux's `amcl` params; make sure Cartographer is **not** also publishing `map → odom` | Proper, repeatable, survives power cycles. Needs initial pose each run |
 | **B. One continuous SLAM session** | Map, survey spots and run the event in the **same** Cartographer session without restarting | Works with the shipped launch; but one reboot or drift ruins the survey |
 
+`launch/localization.launch.py map:=<map.yaml>` starts `map_server` + `amcl`
+for option A (**written, not yet run**; read its header — it cannot coexist with Cartographer owning
+`map → odom`, nor with `navigation.launch.py exploration:=False`'s own `map_server`).
+
 Give AMCL its starting point: place the robot on the **home marker**, then either use
 RViz "2D Pose Estimate" or run `mission_node.py --set-initial-pose` (publishes the `home` pose).
 If the pose is wrong, **everything** else is wrong — verify by watching the laser scan line up
@@ -296,6 +300,10 @@ mapping, and map **with the furniture where it will be on the day**. Copy the `.
 off the robot with `scp` — do **not** commit them (they're gitignored).
 
 **Survey the spots** (map must be loaded and localized):
+
+**Shortcut:** `python3 survey_spots.py` does steps 2-5 for you — drive to each taped spot,
+press Enter, it reads `/amcl_pose`, warns if AMCL is not confident or two spots are too close,
+and writes `waypoints_surveyed.yaml` (`surveyed: true`) for `mission_node.py --waypoints`.
 
 1. Mark the 4 waypoint spots and the home spot on the floor with tape.
 2. For each: drive the robot there by hand, facing the waypoint direction, and read the pose:
@@ -373,6 +381,8 @@ After the last `y` it drives home and the program reports `DONE`.
 ## 14. Open items — not verified, check in the lab
 
 Fill the right-hand column in and keep this section honest; it is the real status of the plan.
+`python3 lab_preflight.py` (in `waypoint_mission/`) answers items 1-6 from the live robot
+in under a minute and is read-only — paste its PASS/WARN/FAIL lines into the Result column.
 
 | # | Open item | How to check | Result |
 |---|---|---|---|

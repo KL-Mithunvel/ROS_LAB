@@ -38,7 +38,16 @@ start() {
   local script="set -e; sudo_user() { runuser -u $OWNER -- bash -lc \"\$1\"; }"
   script+="; mkdir -p /tmp/sensor_test; chmod 777 /tmp/sensor_test"
   if [ "$WHAT" = lidar ] || [ "$WHAT" = all ]; then
-    script+="; pgrep -f '[y]dlidar_ros2_driver_node' >/dev/null && echo 'lidar already running' || { setsid -f runuser -u $OWNER -- bash -lc 'source $OWS/install/setup.bash; exec ros2 launch ydlidar_ros2_driver ydlidar_launch.py params_file:=$OWS/src/acrux/acrux_firmware/config/x2_params.yaml' > /tmp/sensor_test/lidar.log 2>&1; echo 'lidar started'; }"
+    # Start the LiDAR: clear stale launch wrappers (their node already died), start, then verify the driver
+    # node stays up ~20 s. A dead node (e.g. "Device Failed") prints the log tail and exits non-zero.
+    script+="; if pgrep -f '[y]dlidar_ros2_driver_node' >/dev/null; then echo 'lidar already running'; else"
+    script+=" pkill -f '^(runuser .*|/usr/bin/python3 /opt/ros/humble/bin/ros2 launch ydlidar_ros2_driver.*)ydlidar_launch.py' || true; sleep 1; : > /tmp/sensor_test/lidar.log; chmod 666 /tmp/sensor_test/lidar.log"
+    script+="; setsid -f runuser -u $OWNER -- bash -lc 'source $OWS/install/setup.bash; exec ros2 launch ydlidar_ros2_driver ydlidar_launch.py params_file:=$OWS/src/acrux/acrux_firmware/config/x2_params.yaml' > /tmp/sensor_test/lidar.log 2>&1"
+    script+="; ok=1; for i in \$(seq 1 20); do sleep 1; pgrep -f '[y]dlidar_ros2_driver_node' >/dev/null || { [ \$i -gt 3 ] && ok=0 && break; }; grep -q 'Device Failed' /tmp/sensor_test/lidar.log && ok=0 && break; done"
+    script+="; if [ \$ok = 1 ]; then echo 'lidar started (driver node alive after 20 s)'; else echo 'LIDAR FAILED TO START: driver node exited. Last log lines:'; grep -v '^\\s*\$' /tmp/sensor_test/lidar.log | tail -8; pkill -f '^(runuser .*|/usr/bin/python3 /opt/ros/humble/bin/ros2 launch ydlidar_ros2_driver.*)ydlidar_launch.py' || true; echo 'Check LiDAR USB cable/power, then Start again.'; exit 1; fi; fi"
+  fi
+  if [ "$WHAT" = base ]; then   # micro-ROS agent = motor/encoder bridge (development mode only; not part of "all")
+    script+="; pgrep -f '[l]ib/micro_ros_agent/micro_ros_agent' >/dev/null && echo 'base already running' || { setsid -f runuser -u $OWNER -- bash -lc 'source $OWS/install/setup.bash; exec ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/esp -b 921600' > /tmp/sensor_test/base.log 2>&1; echo 'base started'; }"
   fi
   if [ "$WHAT" = camera ] || [ "$WHAT" = all ]; then
     script+="; pgrep -f '[r]ealsense2_camera_node' >/dev/null && echo 'camera already running' || { setsid -f runuser -u $OWNER -- bash -lc 'source $OWS/install/setup.bash; exec ros2 launch realsense2_camera rs_launch.py pointcloud.enable:=true initial_reset:=${SENSOR_RESET:-false} enable_gyro:=${SENSOR_IMU:-false} enable_accel:=${SENSOR_IMU:-false} unite_imu_method:=2 depth_module.depth_profile:=640x480x15 rgb_camera.color_profile:=640x480x15' > /tmp/sensor_test/camera.log 2>&1; echo 'camera started'; }"
@@ -47,6 +56,7 @@ start() {
 }
 
 stop() {
+  if [ "$WHAT" = base ]; then root_sh "pkill -f '[l]ib/micro_ros_agent/micro_ros_agent|[r]os2 run micro_ros_agent' || true; sleep 1; pgrep -af '[l]ib/micro_ros_agent/micro_ros_agent' || echo 'base stopped'"; return; fi
   root_sh "pkill -f '[y]dlidar_launch.py|[y]dlidar_ros2_driver_node|[r]s_launch.py|[r]ealsense2_camera_node|[s]tatic_tf_pub_laser' || true; sleep 1; pgrep -af '[y]dlidar_ros2_driver_node|[r]ealsense2_camera_node' || echo 'drivers stopped'"
 }
 
