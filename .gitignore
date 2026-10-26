@@ -28,5 +28,5 @@ Thumbs.db
 # --- ROS runtime ---
 *.bag
 rosbag2_*/
-tools/acrux/spots.json
-tools/acrux/guests_gui.yaml
+waypoint_mission/tools/spots.json
+waypoint_mission/tools/waypoints_gui.yaml
