@@ -20,7 +20,7 @@ read that first.
 | `waypoints.yaml` | Home + 4 waypoint spots (placeholders until surveyed) and mission settings |
 | `config/collision_monitor.yaml` | Stop/slow boxes for Nav2's collision monitor (robot side) |
 | `launch/safety.launch.py` | Starts the collision monitor + its lifecycle manager on the robot |
-| `survey_spots.py` | Records home + guest spots from the live `/amcl_pose` into `guests_surveyed.yaml` |
+| `survey_spots.py` | Records home + waypoint spots from the live `/amcl_pose` into `waypoints_surveyed.yaml` |
 | `lab_preflight.py` | Read-only check of the guide §14 open items (distro, AMCL, `cmd_vel` chain, RealSense, TF) |
 | `launch/localization.launch.py` | AMCL + map_server on a saved map (robot side; **not yet run**) |
 | `tests/` | pytest: state machine, config, survey maths/writer, preflight parsers (87 tests) |
@@ -73,9 +73,9 @@ Copy this folder to the robot with `scp -r` (it is not a colcon package).
 
 ```bash
 python3 lab_preflight.py                  # 1. what is actually running? (read-only)
-ros2 launch ~/acrux_greeter/launch/localization.launch.py map:=$HOME/maps/lab.yaml   # 2. robot
-python3 survey_spots.py --spots 4         # 3. drive to each spot, press Enter -> guests_surveyed.yaml
-python3 mission_node.py --count 3 --guests guests_surveyed.yaml
+ros2 launch ~/waypoint_mission/launch/localization.launch.py map:=$HOME/maps/lab.yaml   # 2. robot
+python3 survey_spots.py --spots 4         # 3. drive to each spot, press Enter -> waypoints_surveyed.yaml
+python3 mission_node.py --count 3 --waypoints waypoints_surveyed.yaml
 ```
 
 `localization.launch.py` must not run alongside Cartographer or `navigation.launch.py

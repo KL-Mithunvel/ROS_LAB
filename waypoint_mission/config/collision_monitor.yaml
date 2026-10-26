@@ -53,7 +53,7 @@ collision_monitor:
 
     # RealSense point cloud as a second safety source (sees what the 2D LiDAR
     # plane misses: chair seats, table edges). Enable ONLY after the camera has
-    # been tested in the lab (see learn/build/09, section 9):
+    # been tested in the lab (see GUIDE.md, section 9):
     #   1. change observation_sources to ["scan", "realsense"]
     #   2. uncomment the block below and tune min_height / max_height
     # realsense:

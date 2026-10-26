@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Acrux control panel: one window for the whole gift-greeter project, run on the laptop.
+"""Acrux control panel: one window for the whole waypoint-mission project, run on the laptop.
 
     ./acrux_gui.py
 
@@ -63,7 +63,7 @@ from tf2_ros import Buffer, TransformListener
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
-GREETER = REPO / "practice" / "acrux_greeter"
+MISSION = HERE.parent                   # waypoint_mission/ (mission_node.py, launch/, waypoints.yaml)
 ACRUX = str(HERE / "acrux")
 
 LIN_MAX, ANG_MAX = 0.20, 0.60          # same hard caps as `./acrux drive` / wasd_teleop.py
@@ -78,14 +78,14 @@ LIDAR_ROT_DEG = 180.0
 
 OWNER, OWS = "rigbetel-labs", "/home/rigbetel-labs/ros2_ws"   # same as sensor-test.sh
 JOBDIR = "/tmp/acrux_jobs"                                   # pid + log per job, on the robot
-GREETER_REMOTE = "/tmp/acrux_greeter"
+MISSION_REMOTE = "/tmp/waypoint_mission"
 TOOL_FILES = ("image_throttle.py", "slam_dev.launch.py", "nav_dev.launch.py", "nav2_dev_params.yaml",
               "slam_config/lidar.lua")
-SPOTS_FILE = HERE / "spots.json"             # home + guest spots of the current SLAM session
-GUESTS_YAML = HERE / "guests_gui.yaml"       # same spots in mission_node.py format
-HEADING_TOL = 0.15                           # rad (~9 deg): re-issue the home goal once if the robot ends off-heading                        # where the greeter launch files are pushed
+SPOTS_FILE = HERE / "spots.json"             # home + waypoint spots of the current SLAM session
+WAYPOINTS_YAML = HERE / "waypoints_gui.yaml"       # same spots in mission_node.py format
+HEADING_TOL = 0.15                           # rad (~9 deg): re-issue the home goal once if the robot ends off-heading
 # Background ROS jobs run on the robot as OWNER (via sudo), detached, with pid + log files.
-# name, label, command (editable in the window), needs greeter files pushed first, is a "stack"
+# name, label, command (editable in the window), needs mission files pushed first, is a "stack"
 JOBS = [
     ("slamdev", "SLAM (development mode: LiDAR only)",
      "ros2 launch /tmp/acrux_tools/slam_dev.launch.py", "tools", False),
@@ -100,9 +100,9 @@ JOBS = [
      "mkdir -p /home/rigbetel-labs/maps && ros2 run nav2_map_server map_saver_cli -f /home/rigbetel-labs/maps/lab",
      False, False),
     ("amcl", "Localization (AMCL + map_server)",
-     f"ros2 launch {GREETER_REMOTE}/launch/localization.launch.py map:=/home/rigbetel-labs/maps/lab.yaml", True, False),
+     f"ros2 launch {MISSION_REMOTE}/launch/localization.launch.py map:=/home/rigbetel-labs/maps/lab.yaml", True, False),
     ("safety", "Safety: collision monitor",
-     f"ros2 launch {GREETER_REMOTE}/launch/safety.launch.py cmd_vel_in:=cmd_vel_nav cmd_vel_out:=cmd_vel", True, False),
+     f"ros2 launch {MISSION_REMOTE}/launch/safety.launch.py cmd_vel_in:=cmd_vel_nav cmd_vel_out:=cmd_vel", True, False),
     ("camthrottle", "Camera relay for GUI (5 Hz)",
      "python3 /tmp/acrux_tools/image_throttle.py /camera/camera/color/image_raw/compressed "
      "/gui/camera/compressed 5", "tools", False),
@@ -125,7 +125,7 @@ class Ros:
         rclpy.init(context=self.ctx)
         self.node = rclpy.create_node("acrux_gui", context=self.ctx)
         self.cmd_pub = self.node.create_publisher(Twist, "/cmd_vel", 10)
-        self.greeter_pub = self.node.create_publisher(String, "/greeter/command", 10)
+        self.waypoint_pub = self.node.create_publisher(String, "/waypoint/command", 10)
         self.initpose_pub = self.node.create_publisher(PoseWithCovarianceStamped, "/initialpose", 10)
         self.goal_pub = self.node.create_publisher(PoseStamped, "/goal_pose", 10)
 
@@ -307,8 +307,8 @@ class Ros:
         m.linear.x, m.angular.z = float(lin), float(ang)
         self.cmd_pub.publish(m)
 
-    def greeter(self, text):
-        self.greeter_pub.publish(String(data=text))
+    def command(self, text):
+        self.waypoint_pub.publish(String(data=text))
 
     def publish_pose(self, x, y, yaw, as_goal):
         q_z, q_w = math.sin(yaw / 2), math.cos(yaw / 2)
@@ -409,7 +409,7 @@ class App:
         self.mission = None                # subprocess
         self.map_mode = tk.StringVar(value="view")
         self.spots = {}                    # "home" / "g1".."g4" -> (x, y, yaw) in the current map frame
-        self.guest_n = tk.IntVar(value=1)
+        self.waypoint_n = tk.IntVar(value=1)
         self.nav_text = tk.StringVar(value="nav: idle")
         self.opt_nowait = tk.BooleanVar(value=True)
         self.home_retry = 0
@@ -510,13 +510,13 @@ class App:
         self.pose_label = ttk.Label(mid, text="")
         self.pose_label.pack(anchor="w", padx=6)
 
-        sp = ttk.LabelFrame(mid, text="Home & guest spots")
+        sp = ttk.LabelFrame(mid, text="Home & waypoint spots")
         sp.pack(fill="x", padx=2, pady=2)
         self.spot_status = {}
         ttk.Label(sp, text="Place = click-drag on the map (drag toward where the robot should FACE)  |  "
                            "Here = use the robot's current pose",
                   wraplength=380, justify="left").grid(row=0, column=0, columnspan=6, sticky="w", padx=4)
-        names = [("home", "HOME")] + [(f"g{i}", f"Guest {i}") for i in range(1, 5)]
+        names = [("home", "HOME")] + [(f"g{i}", f"Waypoint {i}") for i in range(1, 5)]
         for i, (key, label) in enumerate(names, start=1):
             ttk.Label(sp, text=label, width=8).grid(row=i, column=0, padx=4, pady=1, sticky="w")
             st = ttk.Label(sp, text="not set", width=21)
@@ -579,7 +579,7 @@ class App:
         mis.pack(fill="x", pady=(6, 0))
         r1 = ttk.Frame(mis)
         r1.pack(fill="x", padx=4, pady=2)
-        ttk.Label(r1, text="guests").pack(side="left")
+        ttk.Label(r1, text="waypoints").pack(side="left")
         self.count = tk.IntVar(value=3)
         ttk.Spinbox(r1, from_=1, to=4, width=3, textvariable=self.count).pack(side="left", padx=4)
         self.opt_pose = tk.BooleanVar(value=False)
@@ -588,9 +588,9 @@ class App:
         ttk.Checkbutton(r1, text="no-wait (SLAM)", variable=self.opt_nowait).pack(side="left", padx=4)
         r2 = ttk.Frame(mis)
         r2.pack(fill="x", padx=4)
-        default = GREETER / ("guests_surveyed.yaml" if (GREETER / "guests_surveyed.yaml").exists() else "guests.yaml")
-        self.guests_file = tk.StringVar(value=str(default))
-        ttk.Entry(r2, textvariable=self.guests_file, width=22).pack(side="left", fill="x", expand=True)
+        default = MISSION / ("waypoints_surveyed.yaml" if (MISSION / "waypoints_surveyed.yaml").exists() else "waypoints.yaml")
+        self.waypoints_file = tk.StringVar(value=str(default))
+        ttk.Entry(r2, textvariable=self.waypoints_file, width=22).pack(side="left", fill="x", expand=True)
         ttk.Checkbutton(mis, text="allow unsurveyed (simulation only)", variable=self.opt_unsurveyed).pack(anchor="w", padx=4)
         r3 = ttk.Frame(mis)
         r3.pack(fill="x", padx=4, pady=2)
@@ -883,7 +883,7 @@ class App:
             self.mission_btn.configure(text="Start mission program")
             self.mission_state.configure(text="not running")
         elif self.mission is not None:
-            self.ros.greeter("?")
+            self.ros.command("?")
 
     @staticmethod
     def pick_camera(names):
@@ -1078,8 +1078,8 @@ class App:
             self.log("no map yet: start SLAM first")
             return
         self.map_mode.set(name)
-        text = self.PROMPTS.get(name) or (f"Click-drag on the map to place Guest {name[1:]}: press where the robot "
-                                          "should STOP, drag toward where it should FACE (toward the guest).")
+        text = self.PROMPTS.get(name) or (f"Click-drag on the map to place Waypoint {name[1:]}: press where the robot "
+                                          "should STOP, drag toward where it should FACE (toward the waypoint).")
         self.banner.configure(text=text)
         self.banner_cancel.pack(side="right", padx=4)
         self.map_canvas.configure(cursor="crosshair")
@@ -1100,9 +1100,9 @@ class App:
     def clear_spot(self, name):
         if self.spots.pop(name, None) is not None:
             self.save_spots()
-            self.log(f"{'HOME' if name == 'home' else 'guest ' + name[1:]} cleared")
+            self.log(f"{'HOME' if name == 'home' else 'waypoint ' + name[1:]} cleared")
 
-    # ---- spots (home + guests) and navigation
+    # ---- spots (home + waypoints) and navigation
     def load_spots(self):
         try:
             data = json.loads(SPOTS_FILE.read_text())
@@ -1116,23 +1116,23 @@ class App:
     def save_spots(self):
         try:
             SPOTS_FILE.write_text(json.dumps({k: list(v) for k, v in self.spots.items()}))
-            guests = [self.spots[f"g{i}"] for i in range(1, 5) if f"g{i}" in self.spots]
-            if "home" in self.spots and guests:
+            waypoints = [self.spots[f"g{i}"] for i in range(1, 5) if f"g{i}" in self.spots]
+            if "home" in self.spots and waypoints:
                 hx, hy, hyaw = self.spots["home"]
                 data = {"surveyed": True, "frame_id": "map", "max_auto_retries": 1, "goal_timeout_s": 120,
                         "home": {"label": "Home", "x": round(hx, 3), "y": round(hy, 3), "yaw": round(hyaw, 4)},
-                        "slots": [{"label": f"Guest {i}", "x": round(x, 3), "y": round(y, 3), "yaw": round(a, 4)}
-                                  for i, (x, y, a) in enumerate(guests, start=1)]}
-                GUESTS_YAML.write_text("# written by acrux_gui.py; valid for the current SLAM session only\n"
+                        "waypoints": [{"label": f"Waypoint {i}", "x": round(x, 3), "y": round(y, 3), "yaw": round(a, 4)}
+                                  for i, (x, y, a) in enumerate(waypoints, start=1)]}
+                WAYPOINTS_YAML.write_text("# written by acrux_gui.py; valid for the current SLAM session only\n"
                                        + yaml.safe_dump(data, sort_keys=False))
-                self.guests_file.set(str(GUESTS_YAML))
+                self.waypoints_file.set(str(WAYPOINTS_YAML))
         except OSError as exc:
             self.log(f"cannot save spots: {exc}")
 
     def set_spot(self, name, x, y, yaw):
         self.spots[name] = (x, y, yaw)
         self.save_spots()
-        self.log(f"{'HOME' if name == 'home' else 'guest ' + name[1:]} set: x={x:.2f} y={y:.2f} "
+        self.log(f"{'HOME' if name == 'home' else 'waypoint ' + name[1:]} set: x={x:.2f} y={y:.2f} "
                  f"heading={math.degrees(yaw):.0f}°")
 
     def robot_pose(self):
@@ -1164,9 +1164,9 @@ class App:
     def go_home(self):
         self.go_spot("home", "HOME")
 
-    def go_guest(self):
-        n = self.guest_n.get()
-        self.go_spot(f"g{n}", f"guest {n}")
+    def go_waypoint(self):
+        n = self.waypoint_n.get()
+        self.go_spot(f"g{n}", f"waypoint {n}")
 
     def cancel_nav(self):
         sent = self.ros.cancel_navigation()
@@ -1178,7 +1178,7 @@ class App:
         if not messagebox.askyesno(
                 "Reset map",
                 "Remove the current map and start SLAM from scratch?\n\n"
-                "The robot's current pose becomes the new map origin. HOME and guest spots belong to the old "
+                "The robot's current pose becomes the new map origin. HOME and waypoint spots belong to the old "
                 "map and will be cleared. Nav2 is restarted if it was running."):
             return
         if not self.need_pw():
@@ -1207,7 +1207,7 @@ class App:
             if was_nav:
                 time.sleep(4)
                 self.job_start_sync("navdev")
-            self.log("== map reset: drive around to build the new map, then set HOME / guest spots ==")
+            self.log("== map reset: drive around to build the new map, then set HOME / waypoint spots ==")
         except Exception as exc:
             self.log(f"reset failed: {exc}")
         finally:
@@ -1240,8 +1240,8 @@ class App:
             if messagebox.askyesno("Stop mission", "Stop mission_node.py? (Ctrl-C: it cancels the active goal)"):
                 self.mission.send_signal(signal.SIGINT)
             return
-        cmd = [sys.executable, str(GREETER / "mission_node.py"), "--count", str(self.count.get()),
-               "--guests", self.guests_file.get()]
+        cmd = [sys.executable, str(MISSION / "mission_node.py"), "--count", str(self.count.get()),
+               "--waypoints", self.waypoints_file.get()]
         if self.opt_pose.get():
             cmd.append("--set-initial-pose")
         if self.opt_unsurveyed.get():
@@ -1249,13 +1249,13 @@ class App:
         if self.opt_nowait.get():
             cmd.append("--no-wait")
         try:
-            self.mission = subprocess.Popen(cmd, cwd=GREETER, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+            self.mission = subprocess.Popen(cmd, cwd=MISSION, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                             stderr=subprocess.STDOUT, text=True, bufsize=1)
         except OSError as exc:
             self.log(f"cannot start mission: {exc}")
             return
         self.mission_btn.configure(text="Stop mission program")
-        self.mission_state.configure(text=f"running ({self.count.get()} guests)")
+        self.mission_state.configure(text=f"running ({self.count.get()} waypoints)")
         threading.Thread(target=self.read_mission, args=(self.mission,), daemon=True).start()
         self.log("mission program started: " + " ".join(cmd[1:]))
 
@@ -1279,7 +1279,7 @@ class App:
             return
         if c == "q" and not messagebox.askyesno("Quit mission", "End the mission program?"):
             return
-        self.ros.greeter(c)
+        self.ros.command(c)
         self.log(f"mission command: {c}")
         if self.mission is None:
             self.log("(mission program is not running; start it first)")
@@ -1415,9 +1415,9 @@ class App:
                     bad += r.returncode != 0
                 self.log(f"job {name}: pushed tool files ({'ok' if not bad else str(bad) + ' failed'})")
             elif job[3]:
-                rc = subprocess.run([ACRUX, "push", f"{GREETER}/", f"{GREETER_REMOTE}/"],
+                rc = subprocess.run([ACRUX, "push", f"{MISSION}/", f"{MISSION_REMOTE}/"],
                                     capture_output=True, text=True, timeout=60, cwd=HERE)
-                self.log(f"job {name}: pushed greeter files (rc={rc.returncode})")
+                self.log(f"job {name}: pushed mission files (rc={rc.returncode})")
             inner = (f"echo $$ > {JOBDIR}/{name}.pid; source /opt/ros/humble/setup.bash; "
                      f"source {OWS}/install/setup.bash 2>/dev/null; exec bash -c {shlex.quote(cmd)}")
             f = f"{JOBDIR}/{name}"

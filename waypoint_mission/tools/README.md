@@ -29,7 +29,7 @@ between demo (autostart) and development mode. Run them from `waypoint_mission/t
 ./acrux_gui.py        # runs on the laptop; needs ROS 2 Humble sourced (it re-launches itself with it)
 ```
 
-One window for the whole gift-greeter project: **E-STOP** (button or Space), camera, LiDAR, map with
+One window for the whole waypoint-mission project: **E-STOP** (button or Space), camera, LiDAR, map with
 robot pose (click-drag to set the initial pose or send a goal), drive pad (hold buttons or W A S D,
 capped 0.2 m/s / 0.6 rad/s), mission start/stop plus Next/Skip/Retry/Pause/Home/Quit, and the
 **Demo / Development switch, which reboots the robot and reconnects** when it is back. In development
@@ -39,7 +39,7 @@ mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-
   `rigbetel-labs` (detached, pid + log in `/tmp/acrux_jobs/`, survives closing the GUI): SLAM stack,
   navigation on a saved map, save map, AMCL localization, collision monitor, and a custom command.
   Commands are editable; status is polled; **Log** prints the tail. AMCL/safety presets push
-  `practice/acrux_greeter/` to `/tmp/acrux_greeter` first. These presets are unverified on the robot
+  `waypoint_mission/` to `/tmp/waypoint_mission` first. These presets are unverified on the robot
   (guide sections 7-8: check the `cmd_vel` chain and who owns `map -> odom`). **RViz2** starts on the laptop.
 - **SLAM in development mode:** Drivers → LiDAR + Motor bridge (to drive), then Robot jobs → *SLAM
   (development mode: LiDAR only)*. It runs `slam_dev.launch.py` (Cartographer, `lidar.lua`, static
@@ -50,8 +50,8 @@ mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-
   Start SLAM (and Start Nav) in the Map panel, scan the area with the drive pad, then **Go HOME**: Nav2
   drives back and turns to the saved heading (heading error is logged; if it is over ~9 deg the goal is
   re-issued once). **HOME = here** or the *HOME* map mode (click-drag sets position + heading) sets home;
-  the *guest* mode with the spinner 1-4 places guest spots (drag = the way the robot should FACE). Spots are
-  saved to `spots.json` and `guests_gui.yaml` (mission format, `surveyed: true`) and used by the mission
+  the *waypoint* mode with the spinner 1-4 places waypoint spots (drag = the way the robot should FACE). Spots are
+  saved to `spots.json` and `waypoints_gui.yaml` (mission format, `surveyed: true`) and used by the mission
   panel. **Reset map...** stops SLAM/Nav, clears the map and the spots, and restarts SLAM at the robot's
   current pose (use it in a new place). Spots are valid only for the SLAM session they were set in (or one
   started from the same home pose).
@@ -61,7 +61,7 @@ mode the *Drivers* box starts/stops the motor bridge, LiDAR and camera (`sensor-
 - The robot's sudo password is asked once, kept in memory, never written to disk ("Forget sudo password" clears it).
 - **E-STOP is software**: it latches, streams zero `/cmd_vel`, cancels Nav2 goals and repeats a zero over SSH.
   It depends on Wi-Fi and this laptop. Keep a person at the physical power switch.
-- The mission program and its safety layer are as described in `learn/build/09-acrux-greeter-mission.md`
+- The mission program and its safety layer are as described in `GUIDE.md` (one folder up)
   (the collision monitor still runs on the robot).
 - Status: rendering, teleop and E-stop latching were tested offline with fake topics; the mode switch +
   reboot + reconnect path has **not** been run against the robot yet.

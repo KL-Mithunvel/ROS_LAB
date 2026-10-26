@@ -240,7 +240,7 @@ Two ways forward — pick one in the lab and write the outcome in §14:
 | **A. AMCL on the saved map (recommended)** | Run `nav2_bringup`'s `localization_launch.py` (AMCL + `map_server`) with the saved `.yaml` and Acrux's `amcl` params; make sure Cartographer is **not** also publishing `map → odom` | Proper, repeatable, survives power cycles. Needs initial pose each run |
 | **B. One continuous SLAM session** | Map, survey spots and run the event in the **same** Cartographer session without restarting | Works with the shipped launch; but one reboot or drift ruins the survey |
 
-`practice/acrux_greeter/launch/localization.launch.py map:=<map.yaml>` starts `map_server` + `amcl`
+`launch/localization.launch.py map:=<map.yaml>` starts `map_server` + `amcl`
 for option A (**written, not yet run**; read its header — it cannot coexist with Cartographer owning
 `map → odom`, nor with `navigation.launch.py exploration:=False`'s own `map_server`).
 
@@ -381,7 +381,7 @@ After the last `y` it drives home and the program reports `DONE`.
 ## 14. Open items — not verified, check in the lab
 
 Fill the right-hand column in and keep this section honest; it is the real status of the plan.
-`python3 lab_preflight.py` (in `practice/acrux_greeter/`) answers items 1-6 from the live robot
+`python3 lab_preflight.py` (in `waypoint_mission/`) answers items 1-6 from the live robot
 in under a minute and is read-only — paste its PASS/WARN/FAIL lines into the Result column.
 
 | # | Open item | How to check | Result |
