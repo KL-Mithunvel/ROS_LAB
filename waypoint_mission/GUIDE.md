@@ -386,12 +386,12 @@ in under a minute and is read-only — paste its PASS/WARN/FAIL lines into the R
 
 | # | Open item | How to check | Result |
 |---|---|---|---|
-| 1 | **ROS distro on Acrux** (repo says Humble; its `nav2_params.yaml` uses Galactic-era `nav2_recoveries` names) | `printenv ROS_DISTRO`; `ros2 pkg list \| grep nav2` | |
+| 1 | **ROS distro on Acrux** (repo says Humble; its `nav2_params.yaml` uses Galactic-era `nav2_recoveries` names) | `printenv ROS_DISTRO`; `ros2 pkg list \| grep nav2` | **Humble** (robot, 2026-10-13) |
 | 2 | **Is AMCL launched at all** when `exploration:=False`? Who owns `map → odom`? (§8) | `ros2 node list`; `tf2_echo map odom` | |
 | 3 | **Real `cmd_vel` chain** (Nav2 → ? → base) (§7) | `ros2 topic info /cmd_vel -v` | |
-| 4 | `nav2_collision_monitor` installed on the robot? Humble param names correct (`max_points`)? | `ros2 pkg list \| grep collision`; node log on start | |
+| 4 | `nav2_collision_monitor` installed on the robot? Humble param names correct (`max_points`)? | `ros2 pkg list \| grep collision`; node log on start | Package installed on robot; param names still unchecked |
 | 5 | RealSense usable? Stable cloud? CPU cost? (§9) | §9 steps | |
-| 6 | Laptop OS / ROS install (native Ubuntu? WSL2?) and `nav2_simple_commander` present | `python3 -c "import nav2_simple_commander"` | |
+| 6 | Laptop OS / ROS install (native Ubuntu? WSL2?) and `nav2_simple_commander` present | `python3 -c "import nav2_simple_commander"` | Present on robot and on the lab laptop (native Ubuntu 22.04, Humble) |
 | 7 | Real waypoint spots, home, lane widths, floor markers | §10 | |
 | 8 | Is the LiDAR mounted so the payload don't intrude on its plane? | RViz scan with the payload loaded | |
 | 9 | Does `nav2_simple_commander`'s `goToPose`/`cancelTask` behave as `mission_node.py` assumes on this version? | Gazebo rung 1 | |
