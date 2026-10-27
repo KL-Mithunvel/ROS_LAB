@@ -85,6 +85,11 @@ letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground
 
 ## Done
 
+### Figures added to AMR lab record (2026-10-27, commit: _pending_)
+
+- [x] `docs/AMR_Lab_Record_23BMH1029.md`: inserted all 106 images (117 references) from the Downloads zip; images in `docs/AMR_Lab_Record_23BMH1029_images/`
+- [ ] Eyeball the cover pages and multi-image steps — placement was automatic
+
 ### robot_calc and uno_car moved to root as experiments 6–7 (2026-10-18, commit: _pending_)
 
 - [x] `practice/robot_calc/` → `robot_calc/`; `docs/UNO Smart Robot Car Kit/` → `uno_car/` (whole folder, unedited); `practice/` removed

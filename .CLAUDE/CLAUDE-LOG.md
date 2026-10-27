@@ -553,3 +553,11 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - **Files created:** `coin_d6/coin_d6.py` (profile-driven parser, reader thread, sniffer with header guess), `coin_d6/plot_live.py` (polar live plot, `--sniff`), `coin_d6/profile_example.yaml`, `coin_d6/requirements.txt`, `coin_d6/tests/test_parser.py`.
 - **Decision:** default `ld06` profile (LDROBOT LD06 layout) is an **unverified guess**; the real Coin-D6 layout goes in a `--profile-file` YAML once the vendor protocol is obtained.
 - **Open:** lidar must spin first; then sniff, then confirm/replace the profile. Tracked in `TODO.md`.
+
+
+## 2026-10-27 — Add figures to AMR lab record
+
+- Source: `Downloads/AMR_Lab_Record_23BMH1029.zip` (original HTML + 106 images). Matched each image to the md paragraph preceding it in the HTML.
+- **Changed:** `docs/AMR_Lab_Record_23BMH1029.md` — 117 `![Figure](...)` lines inserted (106 distinct images, nothing skipped, incl. cover/logo pages); no existing text altered.
+- **Added:** `docs/AMR_Lab_Record_23BMH1029_images/` (106 files, ~20 MB), a new folder so it does not clash with `docs/wolf/images`.
+- **Caveat:** placement is automatic (text alignment) - eyeball the cover pages and the multi-image steps. Nothing committed.
