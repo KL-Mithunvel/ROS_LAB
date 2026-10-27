@@ -268,35 +268,41 @@ source /opt/ros/humble/setup.bash
 
 This command loads the ROS 2 Humble environment into the current terminal session. It configures the necessary environment variables required to use ROS 2 commands. This command must be executed before working with any ROS 2 packages.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image88.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp1/e1_01_source_ros.png)
+
+<p style="text-align:center"><em>Sourcing the ROS 2 Humble environment (ROS_DISTRO = humble). Captured on the lab laptop, ROS 2 Humble.</em></p>
 
 **Step 2: Create the Workspace**
 
 **Command**
 
 ```bash
-mkdir -p ~/23BMH1064/src
+mkdir -p ~/23BMH1029/src
 ```
 
 **Explanation**
 
-This command creates a new ROS 2 workspace named 23BMH1064, where 23BMH1064 is the registration number. The -p option automatically creates all required parent directories, while the src folder stores the source code of ROS packages.
+This command creates a new ROS 2 workspace named 23BMH1029, where 23BMH1029 is the registration number. The -p option automatically creates all required parent directories, while the src folder stores the source code of ROS packages.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image91.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp1/e1_02_mkdir.png)
+
+<p style="text-align:center"><em>Creating the workspace 23BMH1029/src. Captured on the lab laptop, ROS 2 Humble.</em></p>
 
 **Step 3: Navigate to the Workspace**
 
 **Command**
 
 ```bash
-cd ~/23BMH1064
+cd ~/23BMH1029
 ```
 
 **Explanation**
 
 This command changes the current working directory to the newly created ROS workspace. All subsequent build commands will be executed from this directory.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image90.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp1/e1_03_cd.png)
+
+<p style="text-align:center"><em>Changing into the workspace. Captured on the lab laptop, ROS 2 Humble.</em></p>
 
 **Step 4: Build the Workspace**
 
@@ -310,14 +316,16 @@ colcon build
 
 The colcon build command compiles all packages available in the workspace. Even though the workspace is currently empty, building it generates the necessary folders (build, install, and log) required for future ROS development.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image93.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp1/e1_04_colcon_build.png)
+
+<p style="text-align:center"><em>colcon build on the empty workspace. Captured on the lab laptop, ROS 2 Humble.</em></p>
 
 **Step 5: Source the Workspace**
 
 **Command**
 
 ```bash
-source 23BMH1064/install/setup.bash
+source 23BMH1029/install/setup.bash
 ```
 
 **Explanation**
@@ -337,7 +345,7 @@ gedit ~/.bashrc
 This command opens the .bashrc file in the Gedit text editor. The .bashrc file is a shell configuration file that is executed automatically every time a new terminal is opened. By adding the workspace sourcing command to this file, the ROS 2 workspace will be loaded automatically, eliminating the need to source it manually each time. Scroll to the end of the .bashrc file and add the following line:
 
 ```bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ```
 
 Save the file and close the editor.
@@ -412,7 +420,7 @@ This command starts the keyboard teleoperation node. The node publishes velocity
 
 ### RESULT
 
-A ROS 2 Humble workspace named 23BMH1064 was successfully created and configured. The workspace was built using the Colcon build system and permanently added to the .bashrc configuration file. The Turtlesim package was installed successfully, and the turtle was controlled using keyboard teleoperation, confirming that the ROS 2 installation and workspace configuration were functioning correctly.
+A ROS 2 Humble workspace named 23BMH1029 was successfully created and configured. The workspace was built using the Colcon build system and permanently added to the .bashrc configuration file. The Turtlesim package was installed successfully, and the turtle was controlled using keyboard teleoperation, confirming that the ROS 2 installation and workspace configuration were functioning correctly.
 
 | **Evaluation Rubrics** | | |
 | :-: | :-: | :-: |
@@ -534,7 +542,9 @@ This command starts the primary BeetleBot bringup file. It initializes the LiDAR
 
 **Note:** **Do not close this terminal.** Keep it running throughout the experiment because it continuously publishes sensor data and controls the hardware.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image101.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp2/e2_01_terminal1_launch.png)
+
+<p style="text-align:center"><em>Starting the BeetleBot emulator (lyra_sim, ROS_DOMAIN_ID=122). Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Image**
 
@@ -615,7 +625,9 @@ ros2 service call /lyra/arm std_srvs/srv/Trigger
 
 The BeetleBot starts in a protected state where the wheel motors are disabled. Calling the /lyra/arm service enables the motor controllers so that velocity commands can be accepted.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image77.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp2/e2_04_arm.png)
+
+<p style="text-align:center"><em>Arming the robot: /lyra/arm succeeds and /lyra/armed reads true. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 10: Move the Robot Forward**
 
@@ -629,7 +641,9 @@ ros2 topic pub -r 10 -t 50 /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: 0.
 
 This command publishes a forward velocity of **0.3 m/s** for approximately **5 seconds**. After the movement is completed, a zero-velocity command is automatically published to stop the robot safely.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image78.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp2/e2_05_forward.png)
+
+<p style="text-align:center"><em>Publishing 0.3 m/s forward on /cmd_vel_nav. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 11: Move the Robot Backward**
 
@@ -643,7 +657,9 @@ ros2 topic pub -r 10 -t 50 /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: -0
 
 This command commands the BeetleBot to move backward at 0.3 m/s for approximately 5 seconds. A stop command is automatically issued afterward to halt the robot.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image79.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp2/e2_07_backward.png)
+
+<p style="text-align:center"><em>Publishing -0.3 m/s (reverse) on /cmd_vel_nav. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 ![Figure](AMR_Lab_Record_23BMH1029_images/image14.png)
 
@@ -801,7 +817,9 @@ This command initializes all the major hardware interfaces of the BeetleBot, inc
 
 **Note:** Keep this terminal open throughout the experiment because it continuously manages the robot hardware.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image86.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp3/e3_A_as_recorded_00_launch.png)
+
+<p style="text-align:center"><em>Emulator started at (-0.5, -0.5), ROS_DOMAIN_ID=122. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 6: Arm the Robot**
 
@@ -818,7 +836,9 @@ ros2 service call /lyra/arm std_srvs/srv/Trigger
 
 For safety, the BeetleBot starts in a disarmed state. This service call enables the motor controllers, allowing the robot to accept movement commands.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image15.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp3/e3_A_as_recorded_01_arm.png)
+
+<p style="text-align:center"><em>Arming the robot. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 7: Execute the Square Path Motion**
 
@@ -861,7 +881,13 @@ This command publishes a sequence of Twist messages to the /cmd_vel_nav topic to
 
 The geometry_msgs/msg/Twist message defines the robot's motion, where linear.x controls forward movement and angular.z controls rotation. The option -r 10 publishes commands at 10 Hz for smooth motion, -t specifies the number of messages to publish (thereby controlling the duration of each movement), and && ensures that each command executes only after the previous one has finished.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image16.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp3/e3_A_as_recorded_02_command.png)
+
+<p style="text-align:center"><em>Square-path command exactly as recorded (turn: 1.0 rad/s for 20 messages). In the emulator this turns about 140 degrees per corner, so the path is a star, not a square. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
+
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp3/e3_B_corrected_90deg_02_command.png)
+
+<p style="text-align:center"><em>Same sequence with the turn shortened to 12 messages (about 90 degrees per corner), which draws a near-square. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 ![Figure](AMR_Lab_Record_23BMH1029_images/image9.png)
 
@@ -926,7 +952,9 @@ ros2 topic list
 
 With the robot's hardware bringup (ros2 launch lyra_bringup robot.launch.py) already running in Terminal 1, the PC terminal is set to the same ROS Domain ID as the robot (124), so that it communicates only with this BeetleBot. The source command reports "No such file or directory" on the PC because the lyra_ws workspace exists only on the robot; this is expected and harmless. The ros2 topic list command confirms that /scan (LiDAR), /cmd_vel_nav (drive command), /imu/data and the camera topics are live before the control node is written.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image84.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp4/e4_03_topic_list.png)
+
+<p style="text-align:center"><em>Active topics (ROS_DOMAIN_ID=124). Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 2: Write the Obstacle Avoidance Node**
 
@@ -983,7 +1011,9 @@ nano setup.py
 
 The package root contains setup.py. Inside entry_points → console_scripts, the line obstacle_avoid = lyra_control.obstacle_avoidance:main is added. This registers obstacle_avoid as a command name that points to the main() function of the obstacle_avoidance module, which allows the node to be launched using ros2 run lyra_control obstacle_avoid. The existing cmd_vel_mux and joy_teleop_wrapper entries are left unchanged.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image21.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp4/e4_05_chmod_setup.png)
+
+<p style="text-align:center"><em>Making obstacle_avoidance.py executable and the obstacle_avoid entry point in setup.py. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 5: Build the Package and Launch the Node**
 
@@ -1005,11 +1035,15 @@ The ros2 run command launches the node, which prints "Obstacle Avoidance Node st
 
 Monitoring /scan..." followed by "Obstacle detected at 0.40m! Turning away..." as soon as the LiDAR detects an object within the 0.5 m safe distance.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image61.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp4/e4_06_build.png)
+
+<p style="text-align:center"><em>Building lyra_control and listing its executables (obstacle_avoid present). Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 ![Figure](AMR_Lab_Record_23BMH1029_images/image87.png)
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image96.png)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp4/e4_08_run_log.png)
+
+<p style="text-align:center"><em>obstacle_avoid running: scan readings and turn-away decisions. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 6: Stop the Robot Safely**
 
@@ -1091,7 +1125,9 @@ ros2 launch lyra_bringup robot.launch.py mode:=slam camera:=true imu:=true
 
 From the laptop, a remote session is opened on the robot's Raspberry Pi using SSH. The ROS 2 Jazzy environment and the Lyra workspace are sourced, and the bringup launch file is started in SLAM mode with the camera and IMU enabled. It starts the robot state publisher, wheel odometry, IMU filter, EKF, camera node, and the command-velocity gate. The log confirms that the gate is active and that the robot starts in the DISARMED state.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image3.jpg)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp5/e5_01_terminal1_launch.png)
+
+<p style="text-align:center"><em>Starting the BeetleBot emulator (ROS_DOMAIN_ID=129). Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 2: Confirm That the Camera and LiDAR Are Ready**
 
@@ -1113,7 +1149,9 @@ ros2 topic list
 
 In a second terminal (logged in to the robot through SSH), the topic list is checked to ensure that the sensor data is available. The key topics for this experiment are /pi_camera/image_raw (camera images, the input to the colour-detection node), /cmd_vel (velocity commands to the robot base through the gate), /lyra/armed (Boolean arm state of the robot), /scan (LiDAR scan data used by SLAM Toolbox), and /imu/data, /wheel/odom, and /odometry/filtered (IMU, wheel odometry, and EKF-fused odometry).
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image5.jpg)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp5/e5_02_topic_list.png)
+
+<p style="text-align:center"><em>Active topics, including /pi_camera/image_raw. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 4: Create the Colour-Detection Package**
 
@@ -1129,7 +1167,9 @@ ros2 pkg create color_detection --build-type ament_python \
 
 A new ament_python package named color_detection is created inside the workspace source folder, with the dependencies needed for image processing and motion commands. This generates package.xml, setup.py, setup.cfg, the color_detection/ Python module folder, and the standard test files. The licence warning shown is only a reminder to replace the TODO placeholder and is harmless.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image6.jpg)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp5/e5_03_pkg_create.png)
+
+<p style="text-align:center"><em>Creating the color_detection package. Captured on the lab laptop, ROS 2 Humble.</em></p>
 
 **Step 5: Transfer the Control Script to the Robot**
 
@@ -1145,7 +1185,9 @@ veerobot@192.168.0.129:~/lyra_ws/src/color_detection/color_detection/color_contr
 
 The control program, written on the laptop as color_detection_beetlebot.txt, is located using find and copied to the robot with scp (secure copy), from a laptop terminal, where it is saved as color_control.py inside the package. The transfer completes at 100% (5877 bytes).
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image7.jpg)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp5/e5_04_copy_script.png)
+
+<p style="text-align:center"><em>Locating the control script and copying it into the package (cp used instead of scp, as no robot is involved). Captured on the lab laptop, ROS 2 Humble.</em></p>
 
 **Code**
 
@@ -1431,7 +1473,9 @@ ros2 topic echo /lyra/armed --once
 
 The setup.py file is edited so that the script is exposed as the ROS 2 executable color_control, by adding the entry point color_control = color_detection.color_control:main under console_scripts. The package is then built and the workspace sourced. The build finishes in about 3 s, and ros2 pkg executables lists color_detection color_control, confirming that the node is registered. Reading the first lines of the file confirms that the script was transferred correctly. The arm state is checked with ros2 topic echo /lyra/armed --once, which returns data: false (robot disarmed).
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image8.jpg)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp5/e5_05_register_build.png)
+
+<p style="text-align:center"><em>Registering color_control in setup.py, building, and listing the executable. Captured on the lab laptop, ROS 2 Humble.</em></p>
 
 **Step 7: Arm the Robot**
 
@@ -1448,7 +1492,9 @@ ros2 service call /lyra/disarm std_srvs/srv/Trigger {}
 
 Because the cmd_vel_gate blocks motion while the robot is disarmed, the robot is armed through the Trigger service. The service type is first confirmed, the arm service is called, and /lyra/armed is read back. The arm call returns success=True with the message "ARM command sent", and /lyra/armed changes to true. The disarm service works in the same way and is used as the manual safety stop at the end of every test.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image10.jpg)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp5/e5_06_armed_check_arm.png)
+
+<p style="text-align:center"><em>Checking /lyra/armed and arming the robot. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 8: Run the Colour-Control Node**
 
@@ -1462,7 +1508,9 @@ ros2 run color_detection color_control
 
 With the robot armed, the node is started in a separate terminal. It prints its start-up banner "GREEN = FORWARD | RED = STOP | BLUE = BACKWARD" and then logs a message each time the detected colour changes. Coloured cards are shown to the camera in turn, and the robot's response is observed.
 
-![Figure](AMR_Lab_Record_23BMH1029_images/image11.jpg)
+![Figure](AMR_Lab_Record_23BMH1029_sim_screenshots/exp5/e5_green_05_node_log.png)
+
+<p style="text-align:center"><em>color_control running: a green object is detected and the robot drives FORWARD. Simulated: captured from the lyra_sim emulator (no robot hardware).</em></p>
 
 **Step 9: Observe the Colour Responses**
 
@@ -1939,12 +1987,12 @@ The map is saved using the Nav2 map server as a .pgm (portable grey map) image o
 **Command**
 
 ```bash
-mkdir -p ~/23BMH1064/src
+mkdir -p ~/23BMH1029/src
 ```
 
 **Explanation**
 
-mkdir creates a new directory. The -p (parent) option creates any intermediate folders that do not exist, without an error. ~ refers to the home directory, 23BMH1064 is the name of the workspace, and src is the folder that will contain the ROS packages.
+mkdir creates a new directory. The -p (parent) option creates any intermediate folders that do not exist, without an error. ~ refers to the home directory, 23BMH1029 is the name of the workspace, and src is the folder that will contain the ROS packages.
 
 ![Figure](AMR_Lab_Record_23BMH1029_images/image42.jpg)
 
@@ -1953,7 +2001,7 @@ mkdir creates a new directory. The -p (parent) option creates any intermediate f
 **Command**
 
 ```bash
-cd ~/23BMH1064
+cd ~/23BMH1029
 ```
 
 **Explanation**
@@ -2004,7 +2052,7 @@ rosdep install --from-paths src --ignore-src -r -y
 
 **Explanation**
 
-cd .. goes back one folder to the workspace root (23BMH1064). rosdep is the ROS dependency manager, which checks all packages and installs missing libraries automatically. --from-paths src looks inside src for ROS packages, --ignore-src does not install packages that are already present in the workspace, -r continues even if a dependency fails, and -y answers yes to all installation prompts.
+cd .. goes back one folder to the workspace root (23BMH1029). rosdep is the ROS dependency manager, which checks all packages and installs missing libraries automatically. --from-paths src looks inside src for ROS packages, --ignore-src does not install packages that are already present in the workspace, -r continues even if a dependency fails, and -y answers yes to all installation prompts.
 
 ![Figure](AMR_Lab_Record_23BMH1029_images/image46.jpg)
 
@@ -2028,7 +2076,7 @@ colcon is the ROS 2 build system, which compiles every package inside src. After
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ```
 
 **Explanation**
@@ -2071,7 +2119,7 @@ ros2 starts the ROS 2 command-line interface, and launch runs a launch file (wri
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ros2 service list | grep spawn
 ```
 
@@ -2087,7 +2135,7 @@ In a new terminal, ros2 service list lists all ROS services. The | (pipe) operat
 
 ```bash
 ros2 run gazebo_ros spawn_entity.py -entity burger \
--file ~/23BMH1064/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf \
+-file ~/23BMH1029/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf \
 -x 0 -y 0 -z 0.1
 ```
 
@@ -2105,7 +2153,7 @@ run executes a specific program from a ROS package. spawn_entity.py is the Pytho
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
@@ -2121,7 +2169,7 @@ In a new terminal, the teleoperation node is started. Each time a key is pressed
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 export TURTLEBOT3_MODEL=burger
 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 ```
@@ -2137,7 +2185,7 @@ The previous terminals are closed and a new terminal is opened for mapping. turt
 **Command**
 
 ```bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 export TURTLEBOT3_MODEL=burger
 ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True
 ```
@@ -2151,7 +2199,7 @@ In a new terminal, this command starts the Cartographer SLAM node. It listens to
 **Command**
 
 ```bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ros2 launch turtlebot3_cartographer occupancy_grid.launch.py use_sim_time:=True
 ```
 
@@ -2164,7 +2212,7 @@ In a new terminal, the occupancy grid node is started. It converts the Cartograp
 **Command**
 
 ```bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 rviz2
 ```
 
@@ -2177,7 +2225,7 @@ RViz2 is a visualization tool that displays the data published by ROS. Using the
 **Command**
 
 ```bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
@@ -2190,7 +2238,7 @@ In a new terminal, the teleoperation node is started, and the robot is driven sl
 **Command**
 
 ```bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 mkdir -p ~/maps
 ros2 run nav2_map_server map_saver_cli -f ~/maps/my_world
 ```
@@ -2208,7 +2256,7 @@ In a new terminal, mkdir -p ~/maps creates a maps folder in the home directory. 
 **Command**
 
 ```bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 export TURTLEBOT3_MODEL=burger
 ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/my_world.yaml
 ```
@@ -2297,7 +2345,7 @@ These packages provide the Gazebo–ROS interface, the ros2_control framework an
 **Command**
 
 ```bash
-cd ~/23BMH1064/src
+cd ~/23BMH1029/src
 git clone -b humble https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git
 ls
 ```
@@ -2315,11 +2363,11 @@ The turtlebot3_manipulation repository is cloned into the workspace used in the 
 **Command**
 
 ```bash
-cd ~/23BMH1064
+cd ~/23BMH1029
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
 source /opt/ros/humble/setup.bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ```
 
 **Explanation**
@@ -2349,7 +2397,7 @@ This launch file generates the robot description of the TurtleBot3 Waffle Pi wit
 
 ```bash
 source /opt/ros/humble/setup.bash
-source ~/23BMH1064/install/setup.bash
+source ~/23BMH1029/install/setup.bash
 ros2 control list_controllers
 ros2 topic list
 ```
@@ -2385,7 +2433,7 @@ The first command publishes a single joint trajectory point to the arm controlle
 **Command**
 
 ```bash
-cd ~/23BMH1064/src
+cd ~/23BMH1029/src
 ros2 pkg create --build-type ament_python amr_pick_place \
 --dependencies rclpy geometry_msgs nav_msgs control_msgs trajectory_msgs
 mkdir -p amr_pick_place/models
@@ -2449,7 +2497,7 @@ An SDF model of a small red cube (2.5 cm side, 20 g) is written. High friction c
 
 ```bash
 ros2 run gazebo_ros spawn_entity.py -entity pick_box \
--file ~/23BMH1064/src/amr_pick_place/models/pick_box.sdf -x 0.68 -y 0.0 -z 0.0125
+-file ~/23BMH1029/src/amr_pick_place/models/pick_box.sdf -x 0.68 -y 0.0 -z 0.0125
 ```
 
 **Explanation**
@@ -2463,7 +2511,7 @@ The cube is spawned on the ground 0.68 m in front of the robot. After the robot 
 **Command**
 
 ```bash
-cd ~/23BMH1064/src/amr_pick_place/amr_pick_place/
+cd ~/23BMH1029/src/amr_pick_place/amr_pick_place/
 nano pick_and_place.py
 ```
 
@@ -2684,7 +2732,7 @@ drive publishes a forward velocity of 0.1 m/s until the distance travelled (from
 **Command**
 
 ```bash
-cd ~/23BMH1064/src/amr_pick_place/
+cd ~/23BMH1029/src/amr_pick_place/
 nano setup.py
 'pick_and_place = amr_pick_place.pick_and_place:main',
 ```
@@ -2698,7 +2746,7 @@ Inside entry_points → console_scripts, the line pick_and_place = amr_pick_plac
 **Command**
 
 ```bash
-cd ~/23BMH1064
+cd ~/23BMH1029
 colcon build --packages-select amr_pick_place
 source install/setup.bash
 ros2 run amr_pick_place pick_and_place
