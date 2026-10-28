@@ -28,6 +28,7 @@ to them instead of repeating them. Commands are marked **[PC]** (lab computer) o
 | 5 | [Waypoint navigation mission](05-waypoint-mission.md) | Acrux | 3–4 — SLAM and path planning (Nav2) | `waypoint_mission/` |
 | 6 | [Mobile-robot mechatronics calculations](06-robot-calculations.md) | PC (Python) | Locomotion, kinematics and dynamics (course Module 2) | `robot_calc/` |
 | 7 | [UNO car: PID line following + obstacle avoidance](07-uno-car-line-follow-obstacle.md) | UNO Smart Robot Car | Reactive control and sensing (non-ROS contrast to 3–5) | `uno_car/` |
+| 8 | [Beetle Patrol: zone heatmap, priority patrol, motion warning](08-beetle-patrol.md) | BeetleBot | 3–5 — Navigation, perception and sensor fusion | `beetle_patrol/` |
 
 \*The syllabus lists six indicative experiments in ROS 1 vocabulary (`move_base`, `actionlib`).
 Map them to ROS 2 as: `move_base` → **Nav2**, `actionlib` → **ROS 2 actions**, `catkin` →
