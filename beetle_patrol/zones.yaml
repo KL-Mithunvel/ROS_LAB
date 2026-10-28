@@ -1,0 +1,32 @@
+# Warehouse zone grid, in the MAP frame (metres). Each cell of the grid is one patrol zone and one
+# cell of the heatmap. Zone ids are "R<row>C<col>"; row 0 / col 0 is the bottom-left.
+#
+# STATIC GRID (used only when dynamic.enabled is false).
+# SMALL TEST AREA: a 3 m x 3 m lab floor, 3 x 3 zones of 1.0 m. The robot is 0.375 x 0.36 m, so
+# a zone centre 0.5 m from a wall leaves little room - keep cells >= 1.0 m.
+#
+# The map frame starts where SLAM starts (the robot's first pose). `origin` assumes the robot starts
+# in the MIDDLE of the area; after the map is made, check it (RViz / GUI) and correct `origin`.
+# DYNAMIC ZONES (enabled below): the grid starts EMPTY. Zone 1 is the cell centred on the robot's start
+# pose; new cells (ids "R<row>C<col>", row/col may be negative, relative to zone 1 = R0C0) appear as the
+# SLAM map shows free floor next to existing zones. With dynamic.enabled: false the fixed `grid:` below
+# is used exactly as before.
+dynamic:
+  enabled: false                  # reduced scope (user, 2026-10-28): fixed 3x3 grid only; set true to grow zones from /map
+  cell_size_m: 1.0                # edge of one zone
+  min_free_fraction: 0.40         # a cell appears when at least this share of it is known-free in /map
+  blocked_occupied_fraction: 0.50 # a cell at least this occupied is a wall / furniture: never a zone
+  max_zones: 50
+  map_update_s: 2.0               # /map is processed at most this often (one ring of new zones per pass)
+
+grid:
+  origin: [-1.5, -1.5]  # bottom-left corner of the whole grid (x, y)
+  rows: 3
+  cols: 3
+  cell_w: 1.0           # size of one zone along x
+  cell_h: 1.0           # size of one zone along y
+default_risk: 0.3       # 0..1, how much a missed visit matters for an ordinary zone
+risk:                   # per-zone overrides, key "row,col"
+  "0,0": 0.9            # e.g. the "loading dock" corner
+  "2,2": 0.7
+blocked: []             # "row,col" cells that cannot be entered (shelving, furniture) - never patrolled

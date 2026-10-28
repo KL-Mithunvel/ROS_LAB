@@ -1,0 +1,20 @@
+# explore_lite (robo-friends/m-explore-ros2, node `explore`, package explore_lite)
+# Tuned for a tiny 3 m x 3 m room. `/**` matches whatever node name/namespace is used.
+# Parameter names below are from memory of the m-explore-ros2 params_costmap.yaml;
+# see the README for the ones not verified against the built source.
+/**:
+  ros__parameters:
+    robot_base_frame: base_link
+    # Use Nav2's global costmap (needs track_unknown_space: true) so frontiers
+    # near inflated obstacles are rejected. Alternative: costmap_topic: map.
+    costmap_topic: global_costmap/costmap
+    costmap_updates_topic: global_costmap/costmap_updates
+    visualize: true            # publishes explore/frontiers markers for RViz
+    planner_frequency: 1.0     # Hz; re-evaluate frontiers about once a second
+    progress_timeout: 15.0     # s without progress toward a frontier -> blacklist it
+    potential_scale: 3.0       # weight of distance to frontier
+    orientation_scale: 0.0     # unused in the ROS 2 port, harmless
+    gain_scale: 1.0            # weight of frontier size
+    transform_tolerance: 0.3
+    min_frontier_size: 0.3     # m; room is tiny, accept small frontiers (default 0.5 is too big)
+    return_to_init: false      # patrol node decides where to go afterwards

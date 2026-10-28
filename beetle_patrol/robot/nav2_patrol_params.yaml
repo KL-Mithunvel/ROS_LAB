@@ -1,0 +1,226 @@
+# ============================================================================
+# Nav2 parameters for the BeetleBot PATROL stack (our own copy).
+# Derived from bots/BeetleBot/lyra_ws/src/lyra_nav2/config/nav2_params.yaml
+# (vendor file is untouched). "VENDOR:" comments give the original value.
+#
+# Global changes vs vendor:
+#  * amcl + map_server sections REMOVED: patrol uses slam_toolbox (online async)
+#    which publishes /map and the map->odom TF, so no localisation server.
+#  * cmd_vel is remapped to /cmd_vel_nav in patrol_robot.launch.py (as vendor
+#    full_nav.launch.py does); cmd_vel_gate then forwards it to /cmd_vel.
+#  * Robot is 0.375 x 0.36 m (vendor tuned for a 0.30 m round robot).
+# ============================================================================
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: /odometry/filtered
+    bt_loop_duration: 10
+    default_server_timeout: 20
+
+controller_server:
+  ros__parameters:
+    use_sim_time: false
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.001
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["goal_checker"]
+    controller_plugins: ["FollowPath"]
+
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      # CHANGED 0.5 -> 0.15: at 0.15 m/s the robot only covers 1.5 m in 10 s, and in a
+      # 3 m room it often turns in place; 0.5 m would falsely report "no progress".
+      required_movement_radius: 0.15
+      # CHANGED 10 -> 15 s: slower robot.
+      movement_time_allowance: 15.0
+
+    goal_checker:
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.15      # unchanged (matches the 0.15 requested)
+      # CHANGED 0.2 -> 0.4 rad: zone patrol cares about position, not heading;
+      # tight yaw on a skid-steer just makes it wiggle at the goal.
+      yaw_goal_tolerance: 0.4
+      stateful: true
+
+    FollowPath:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 0.15     # CHANGED 0.4 -> 0.15 m/s: safety cap for first autonomous runs
+      # CHANGED lookahead 0.4/0.2/0.6 -> 0.3/0.15/0.45: scaled down with the speed
+      # and the 3 m room (corners are close).
+      lookahead_dist: 0.3
+      min_lookahead_dist: 0.15
+      max_lookahead_dist: 0.45
+      lookahead_time: 1.5
+      # CHANGED 2.0 -> 0.5 rad/s: angular cap. Skid-steer scrubs on turns; this
+      # also keeps the IMU/odom yaw sane.
+      rotate_to_heading_angular_vel: 0.5
+      transform_tolerance: 1.0
+      use_velocity_scaled_lookahead_dist: false
+      min_approach_linear_velocity: 0.05
+      approach_velocity_scaling_dist: 0.4   # CHANGED 0.6 -> 0.4 (short runs in a small room)
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 1.0
+      use_regulated_linear_velocity_scaling: true
+      use_cost_regulated_linear_velocity_scaling: false
+      regulated_linear_scaling_min_radius: 0.9
+      # CHANGED 0.25 -> 0.05: vendor minimum speed was ABOVE our 0.15 cap, which
+      # would make the regulator misbehave. Keep it below desired_linear_vel.
+      regulated_linear_scaling_min_speed: 0.05
+      use_rotate_to_heading: true
+      allow_reversing: false
+      rotate_to_heading_min_angle: 0.785
+      # CHANGED 3.2 -> 1.0 rad/s^2: gentler turn-in-place start/stop.
+      max_angular_accel: 1.0
+      max_robot_pose_search_dist: 10.0
+      use_interpolation: false
+
+planner_server:
+  ros__parameters:
+    use_sim_time: false
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner::NavfnPlanner"
+      tolerance: 0.3        # CHANGED 0.5 -> 0.3: 1 m zones, do not snap goals too far
+      use_astar: false
+      allow_unknown: true   # needed so explore_lite frontiers (next to unknown) are plannable
+
+behavior_server:
+  ros__parameters:
+    use_sim_time: false
+    # VENDOR keys (Humble-era names), kept for the Humble twin:
+    costmap_topic: local_costmap/costmap_raw
+    footprint_topic: local_costmap/published_footprint
+    # ADDED Jazzy key names (behavior_server in Jazzy uses local_/global_ prefixes).
+    local_costmap_topic: local_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_footprint_topic: global_costmap/published_footprint
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_link
+    transform_tolerance: 1.0
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]
+    spin:
+      plugin: "nav2_behaviors::Spin"
+    backup:
+      plugin: "nav2_behaviors::BackUp"
+    drive_on_heading:
+      plugin: "nav2_behaviors::DriveOnHeading"
+    wait:
+      plugin: "nav2_behaviors::Wait"
+    # ADDED: cap recovery speeds (Jazzy names; ignored by older releases).
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.2
+    rotational_acc_lim: 1.0
+
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: false
+    loop_rate: 20
+    stop_on_failure: false
+    waypoint_task_executor_plugin: "wait_at_waypoint"
+    wait_at_waypoint:
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
+      enabled: true
+      waypoint_pause_duration: 200
+
+# ----------------------------------------------------------------------------
+# Costmaps
+# Footprint: rectangle 0.375 long (x) x 0.36 wide (y), centred on base_link
+# (assumed; adjust if the lidar/base_link is off-centre). Chosen over
+# robot_radius 0.27 because a circle would waste ~0.09 m on the sides and make
+# doorway-free but tight spots in a 3 m room look blocked. Inscribed radius is
+# 0.18 m, circumscribed radius is 0.26 m.
+# Inflation: 0.30 m (VENDOR 0.25 local / 0.30 global). Must be >= inscribed
+# 0.18 m; 0.30 leaves ~0.12 m of cost gradient. With 0.30 m from each wall a
+# 3 m room still has a 2.4 m wide free area, so 1 m zone centres (>=0.5 m from
+# walls) remain reachable. A radius near the 0.26 circumscribed value or more
+# (>0.5) would blur the zones. cost_scaling_factor 3.0 -> 5.0 so cost drops
+# faster and robot is allowed closer than a mid-cost to walls.
+# ----------------------------------------------------------------------------
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      use_sim_time: false
+      global_frame: odom
+      robot_base_frame: base_link
+      rolling_window: true
+      transform_tolerance: 1.0
+      width: 4          # CHANGED 5 -> 4 m (room is 3 m)
+      height: 4
+      resolution: 0.05
+      update_frequency: 10.0
+      publish_frequency: 2.0
+      # CHANGED robot_radius 0.15 -> footprint of the real 0.375 x 0.36 m body
+      footprint: "[[0.1875, 0.18], [0.1875, -0.18], [-0.1875, -0.18], [-0.1875, 0.18]]"
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: true
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 4.0     # CHANGED 6.0 -> 4.0 (room is 3 m)
+          raytrace_min_range: 0.0
+          obstacle_max_range: 3.5     # CHANGED 2.5 -> 3.5 so far walls are marked
+          obstacle_min_range: 0.0
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+        inflation_radius: 0.30        # CHANGED 0.25 -> 0.30 (see block comment)
+        cost_scaling_factor: 5.0      # CHANGED 3.0 -> 5.0
+        inflate_unknown: false
+        inflate_around_unknown: false
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      width: 100        # vendor value; static layer resizes to the SLAM map anyway
+      height: 100
+      resolution: 0.05
+      use_sim_time: false
+      global_frame: map
+      robot_base_frame: base_link
+      rolling_window: false
+      # ADDED: explore_lite needs unknown cells marked -1 in the costmap to find frontiers.
+      track_unknown_space: true
+      transform_tolerance: 1.0
+      footprint: "[[0.1875, 0.18], [0.1875, -0.18], [-0.1875, -0.18], [-0.1875, 0.18]]"
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: true   # /map comes from slam_toolbox
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 5.0     # CHANGED 11.5 -> 5.0 (3 m room; less clutter from through-window returns)
+          raytrace_min_range: 0.0
+          obstacle_max_range: 4.0     # CHANGED 10.0 -> 4.0
+          obstacle_min_range: 0.0
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+        inflation_radius: 0.30        # unchanged from vendor global value
+        cost_scaling_factor: 5.0      # CHANGED 3.0 -> 5.0
+        inflate_unknown: false
+        inflate_around_unknown: false

@@ -1,0 +1,63 @@
+# Simulator settings. Topic NAMES come from ../patrol.yaml (topics:), so sim and node always agree.
+# Unknown keys are rejected (see world.make). World frame == map frame, room centred on the origin.
+seed: 1
+room:
+  half_x: 1.5             # walls at +/- 1.5 m  -> 3 x 3 m room like zones.yaml
+  half_y: 1.5
+  boxes: []               # static obstacles [cx, cy, width, height], e.g. [[0.8, 0.0, 0.4, 0.4]]
+
+lidar:                    # RPLiDAR C1-like
+  n_beams: 508
+  range_min: 0.15
+  range_max: 12.0
+  rate_hz: 9.0
+  noise_sigma_m: 0.01
+  inf_prob: 0.01
+  nan_prob: 0.003
+
+robot:
+  start: [0.0, 0.0, 0.0]  # x, y, yaw in the map frame
+  max_lin_speed: 0.5
+  max_ang_speed: 1.5
+  lin_accel: 0.8
+  ang_accel: 3.0
+  radius: 0.2
+  cmd_timeout_s: 0.5      # no /cmd_vel_nav for this long -> command treated as zero (like a gate watchdog)
+  physics_hz: 50.0
+
+mount:                    # sensor mounting, published as the tf base_link -> laser
+  laser_flipped: true     # true = laser mounted 180 deg yaw (exercises the laser-mount bug class)
+  laser_xyz: [0.10, 0.0, 0.15]
+
+tf:
+  map_odom_offset: [0.0, 0.0, 0.0]   # x, y, yaw of odom in map (fake_nav only); small non-zero tests tf use
+
+rates:
+  imu_hz: 50.0
+  odom_hz: 50.0         # odom + tf; keep high so scan stamps always fall inside the tf buffer
+  armed_hz: 10.0
+
+camera:
+  width: 160
+  height: 120
+  fov_deg: 62.0
+  noise_sigma: 1.0
+  rate_hz: 5.0
+  jpeg_quality: 80
+
+intruder:                 # walks the path at constant speed between t_start and t_end (sim seconds)
+  enabled: true
+  size: 0.3
+  t_start: 30.0
+  t_end: 60.0
+  path: [[-1.2, 1.2], [1.0, 1.2], [1.0, -1.0]]
+
+nav:                      # fake NavigateToPose server (fake_nav mode only)
+  max_lin_speed: 0.3
+  max_ang_speed: 1.0
+  xy_tolerance: 0.15
+  goal_timeout_s: 90.0
+  disarmed_abort_s: 3.0   # abort if the robot stays disarmed this long during a goal
+  margin_m: 0.2           # goals closer than this to a wall (or outside) are aborted
+  map_resolution: 0.05
+  map_margin_m: 0.5

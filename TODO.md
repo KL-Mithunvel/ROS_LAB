@@ -8,6 +8,33 @@
 - [ ] Verify the Track B guides against a live ROS 2 Jazzy + Gazebo Harmonic environment
       (written against docs/source, not yet run end to end — no Linux box in this session)
 
+### Beetle patrol app (2026-10-28)
+
+Code: `beetle_patrol/` (pure logic done, 35 pytest tests pass: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest beetle_patrol`).
+Robot 192.168.0.154 (`veerobot`, key `~/.ssh/beetlebot_ed25519`, creds in gitignored `beetle_patrol/secrets.env`).
+
+- [x] Robot: fixed OpenCV (moved user-site NumPy 2.5.3 to `~/.local/numpy2_backup`); built `explore_lite` in `~/patrol_ws`; installed `ros-jazzy-compressed-image-transport`
+- [x] Logic: `heatmap.py`, `priority.py`, `motion.py`, `fusion.py`, `config.py` + `patrol.yaml`/`zones.yaml`
+- [x] `patrol/engine.py`, `patrol/bag.py`, `patrol_node.py` written (46 tests pass; the node compiles but has NOT been run end to end - needs map + Nav2 on the robot)
+- [x] Laptop <-> robot comms verified (Humble <-> Jazzy, domain 155): scan/imu/camera/odom/tf received; arm/disarm services answer
+- [x] Diagnosed `/lyra/armed` flapping: domain 155 is **shared with another BeetleBot** (all nodes doubled, 4 publishers). Moved my robot to private domain **154** (`~/patrol_logs/start_base.sh`). Earlier arm/disarm calls on 155 may have hit the other robot
+- [x] Rebooted robot (2026-10-28), started ONE stack on domain 154: 13 nodes, no duplicates; arm/disarm verified (`/lyra/armed` True 40/43 after arm, one flip, then steady; all False after disarm). **No motion command sent yet**
+- [x] Motion test (2026-10-28, domain 154): arm -> 0.1 m/s on `/cmd_vel_nav` for 1 s -> disarm. Gate passed it to `/cmd_vel` (26 msgs, max 0.100); robot stopped, odom vx ~0, `/lyra/armed` False. **Odometry reported only 0.027 m (peak 0.049 m/s) for ~0.10 m commanded** - check by eye / tape measure whether the robot or the odometry is short
+- [ ] Robot rebooted a 2nd time at 07:15 with no sudo/cron entry (clean shutdown, power OK) - find out if someone did it
+- [ ] `/etc/systemd/system/lyra_base.service` ExecStart is mangled (restart loop, ~600 restarts) - ask before fixing
+- [x] Settings retuned for the **3 m x 3 m test area** (3x3 zones of 1 m, visit radius 0.5, max_age 120 s ...); grid validation added (risk/blocked cells outside the grid now error); 48 tests pass
+- [ ] After the first map: check `zones.yaml` `origin` (assumes robot starts mid-room) and fix it
+- [ ] Nav2 on the robot: `robot_radius` 0.15 is smaller than the robot (~0.26 half-diagonal), `desired_linear_vel` 0.4 is fast for 3 m - decide whether to override for the test (not changed)
+- [x] README written: `beetle_patrol/README.md`
+- [ ] Camera streams ~56 Hz x 29 KB (~1.6 MB/s) - throttle on the robot or in the node before patrolling over Wi-Fi
+- [ ] Robot log noise: EKF "failed to meet update rate", wheel-odom "Encoder spike" warnings while stationary; odom shows v=-0.02 at rest
+- [ ] Humble CLI prints "sequence size exceeds remaining buffer" against Jazzy (harmless for rclpy; `ros2 topic hz` unreliable) - consider Jazzy on the laptop
+- [ ] Control test with motion (needs clear floor + you present), then run SLAM + explore_lite, then patrol
+- [ ] `sim/` fake robot + warehouse, then `beetle_gui.py` (heatmap, warnings, decision panel, E-STOP)
+- [ ] Robot-side launch file for patrol (SLAM/Nav2/camera + `~/patrol_ws` sourcing)
+- [ ] Laptop has ROS **Humble**, robot **Jazzy** - verify topics/msgs interoperate; `explore_lite` never run yet
+- [ ] Later: ORB-SLAM hook; line-of-sight visit check; set real zones after the lab map is made
+
 ### Waypoint mission (Acrux) — verify in the lab (planned 2026-10-12)
 
 Plan: `waypoint_mission/GUIDE.md`; code: `waypoint_mission/`; record: `waypoint_mission/LAB-RECORD.md`. The state

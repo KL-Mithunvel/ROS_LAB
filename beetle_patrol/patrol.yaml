@@ -1,0 +1,68 @@
+# Beetle patrol settings. Every number the algorithms use lives here.
+# Tuned for a SMALL 3 m x 3 m test area (zones.yaml); a full warehouse needs larger radii and ages.
+
+heatmap:
+  visit_radius_m: 0.5     # a zone counts as visited when the robot is this close to its centre (1 m zones)
+  max_age_s: 120.0        # age at which a zone is "fully stale" (age_norm = 1)
+  alert_memory_s: 60.0    # a motion alert fades from 1 to 0 over this long
+
+priority:
+  weights:                # relative importance of each term; they are normalised to sum to 1
+    age: 0.50             # time since the zone was last visited
+    risk: 0.20            # fixed importance of the zone (zones.yaml)
+    distance: 0.20        # nearer zones are cheaper to reach
+    alert: 0.10           # recent motion alert in the zone
+  failed_goal_cooldown_s: 30.0   # skip a zone for this long after Nav2 fails to reach it
+  goal_timeout_s: 90.0           # safety net: cancel a goal in flight this long and treat it as failed (cooldown)
+  min_revisit_s: 15.0            # a zone visited this recently is never picked (stops loitering)
+  replan_min_interval_s: 5.0     # an alert cancels the current goal at most this often (and only if it outranks it)
+  max_scan_jump_m: 0.3           # motion limits: a LiDAR pose moving further than this between scans is a
+  max_scan_jump_rad: 0.5         # localisation jump (or turning more than this); the scan is dropped
+
+lidar_motion:
+  compare_dt_s: 0.4       # compare each scan with the one this much older
+  history_s: 2.0
+  appear_tol_m: 0.25      # a point must be this much nearer than before to count as "new"
+  neighbour_beams: 2      # beams either side checked in the older scan (absorbs pose jitter)
+  cluster_gap_m: 0.25     # points further apart than this start a new cluster
+  min_points: 3
+  max_cluster_size_m: 0.8 # bigger clusters are walls / localisation jumps (small room: walls are close)
+  saturate_points: 8      # cluster size at which LiDAR confidence reaches 1.0
+
+camera_motion:
+  pixel_thresh: 25        # grey-level change (0-255) that counts as a changed pixel
+  min_fraction: 0.004     # below this share of changed pixels -> confidence 0
+  saturate_fraction: 0.05 # share of changed pixels that gives confidence 1.0
+  global_change_fraction: 0.6   # more than this = lighting / exposure change, ignored
+
+fusion:
+  lidar_weight: 0.7       # fused = lidar_weight*lidar + camera_weight*camera
+  camera_weight: 0.3      # < warn_threshold, so the camera alone can never raise a warning
+  warn_threshold: 0.5
+  confirm_frames: 3       # warn when the threshold is passed in this many ...
+  window_frames: 5        # ... of the last this-many updates
+  cooldown_s: 5.0         # no repeat warning near the same spot for this long
+  cooldown_radius_m: 1.5
+  camera_max_age_s: 1.0   # ignore a camera confidence older than this
+  moving_mps: 0.05        # above this linear speed the camera is ignored (whole image shifts)
+  turning_rps: 0.25       # above this yaw rate the LiDAR is down-weighted
+  turn_penalty: 0.5       # LiDAR confidence multiplier while turning
+
+topics:                   # BeetleBot defaults; change here for the sim or another robot
+  scan: /scan
+  map: /map               # SLAM occupancy grid (dynamic zones)
+  odom: /odometry/filtered   # EKF output (wheel odometry + IMU)
+  imu: /imu/data
+  camera: /patrol/camera/compressed   # throttled copy made on the robot (robot/image_throttle.py)
+  nav_action: /navigate_to_pose
+  nav_cmd_vel: /cmd_vel_nav
+  arm_service: /lyra/arm
+  disarm_service: /lyra/disarm
+  map_frame: map
+  base_frame: base_link
+
+recording:
+  auto_start: true        # start a bag whenever a patrol starts
+  folder: runs
+  storage: sqlite3        # laptop (Humble) has no mcap plugin
+  compression: zstd

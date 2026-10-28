@@ -1,0 +1,13 @@
+# What a healthy patrol bag must contain (checked by tools/bag_check.py).
+# Each entry: `topics` = alternatives (any ONE of them satisfies the entry, the best one is reported),
+#             `min_hz` = minimum average rate over the bag duration; leave out to only require
+#             that at least one message was recorded.
+checks:
+  - {topics: [/scan], min_hz: 5}
+  - {topics: [/odometry/filtered], min_hz: 10}
+  - {topics: [/imu/data], min_hz: 20}
+  - {topics: [/pi_camera/image_raw/compressed, /patrol/camera/compressed], min_hz: 2}
+  - {topics: [/tf], min_hz: 10}
+  - {topics: [/patrol/status], min_hz: 1}
+  - {topics: [/tf_static]}
+  - {topics: [/map]}

@@ -30,3 +30,7 @@ Thumbs.db
 rosbag2_*/
 waypoint_mission/tools/spots.json
 waypoint_mission/tools/waypoints_gui.yaml
+
+# BeetleBot patrol: robot credentials
+beetle_patrol/secrets.env
+beetle_patrol/runs/

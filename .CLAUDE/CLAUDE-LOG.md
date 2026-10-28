@@ -561,3 +561,71 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - **Changed:** `docs/AMR_Lab_Record_23BMH1029.md` — 117 `![Figure](...)` lines inserted (106 distinct images, nothing skipped, incl. cover/logo pages); no existing text altered.
 - **Added:** `docs/AMR_Lab_Record_23BMH1029_images/` (106 files, ~20 MB), a new folder so it does not clash with `docs/wolf/images`.
 - **Caveat:** placement is automatic (text alignment) - eyeball the cover pages and the multi-image steps. Nothing committed.
+
+
+## 2026-10-28 — Beetle patrol: robot setup + pure-logic modules
+
+- **Robot (192.168.0.154, ROS 2 Jazzy):** installed a new SSH key; fixed OpenCV by moving the user-site NumPy 2.5.3 to `~/.local/numpy2_backup` (system NumPy 1.26.4 + cv2 4.6.0 now import); built `explore_lite` from robo-friends/m-explore-ros2 `main` in a separate `~/patrol_ws` (not run yet); `apt update` + installed `ros-jazzy-compressed-image-transport`. `lyra_ws` untouched.
+- **Laptop:** new `beetle_patrol/` — `patrol/{heatmap,priority,motion,fusion,config,schema}.py`, `patrol.yaml`, `zones.yaml`, 35 tests (all pass). Credentials in gitignored `beetle_patrol/secrets.env` (+ `.example`); `.gitignore` updated.
+- **Decisions:** camera weight < warn threshold so the camera alone cannot raise a warning; EKF (wheel+IMU) is reused for ego-motion, not rebuilt; ORB-SLAM deferred.
+- **Note:** pytest must run with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` when ROS Humble is sourced (its plugins need `lark`).
+- **Open:** node, bag recording, sim, GUI, robot launch file. Nothing committed.
+
+## 2026-10-28 (later) — Beetle patrol: engine, node, bag recorder, robot comms test
+
+- **Added:** `patrol/engine.py` (mode + goal + decision logic), `patrol/bag.py` (`ros2 bag record`, sqlite3+zstd because Humble has no mcap plugin), `patrol_node.py` (Nav2 goals, tf, E-STOP via disarm + zero-vel stream), `topics`/`recording` sections in `patrol.yaml`. 46 tests pass.
+- **Design fix found by a test:** a just-visited high-risk zone was re-picked immediately -> added `priority.min_revisit_s` (30 s).
+- **Correction to earlier plan:** a laptop-only node cannot stop the robot over a dead link; Nav2 runs on the robot and just finishes/aborts its goal. Documented in `patrol_node.py`.
+- **Robot:** started base stack (`~/patrol_logs/start_base.sh`: `robot.launch.py mode:=teleop imu:=true camera:=true`, log `~/patrol_logs/base.log`). Camera topic is `/pi_camera/image_raw/compressed` (config corrected).
+- **Comms test (10 s rclpy probe):** scan, imu, camera, odom, armed all received; `map->base_link` tf OK; arm/disarm services return success.
+- **Not verified:** `/lyra/armed` flaps between True/False after arming, so real arming is unproven; no motion command was sent. Node never run against Nav2.
+- Nothing committed.
+
+## 2026-10-28 (evening) — Arming investigation: shared ROS domain
+
+- **Root cause (very likely):** `/lyra/armed` flapped and every node appeared twice because another BeetleBot shares ROS_DOMAIN_ID 155 on the lab Wi-Fi (my robot runs one copy; `ps` agrees). On domain 154 each node appears once. My earlier `/lyra/arm` + `/lyra/disarm` calls on 155 may have been answered by the other robot; no motion command was ever sent.
+- **Also found:** broken `lyra_base.service` (mangled ExecStart, restart counter ~596) — untouched.
+- **Blocked:** a name-pattern `pkill` of the robot stack was denied by the permission system (could hit other processes); stale pids 6568/6580 remain. Chose a reboot instead.
+- **Docs:** added `beetle_patrol/README.md`; TODO updated. Nothing committed.
+
+## 2026-10-28 (night) — Arming fixed (private domain), robot rebooted
+
+- Rebooted the robot at the user's request (`sudo systemctl reboot`, stale pids gone). Started one stack on **ROS_DOMAIN_ID=154**: 13 nodes, none duplicated; scan 8 Hz, odom 17 Hz (the earlier doubled rates were two robots).
+- The `map` frame seen earlier came from the other robot's SLAM; in teleop mode there is no `map` frame, so `map->base_link` fails until SLAM/AMCL runs on our robot.
+- **Arm test (laptop rclpy, no motion):** arm -> `/lyra/armed` True 40/43, one flip, steady; disarm -> all False. Arming confirmed working.
+- Open: motion test, then SLAM + explore_lite, then patrol. Nothing committed.
+
+## 2026-10-28 (night, cont.) — Motion test
+
+- First attempt aborted safely before arming (no odom within 2 s; disarm service not discovered). The robot had meanwhile rebooted again at 07:15 (clean `systemd-reboot`, power OK, throttled=0x0; trigger unknown - no sudo/cron entry). Test script hardened: waits up to 20 s for odom, requires arm AND disarm services before arming, always zero+disarm in `finally`.
+- **Result:** arm OK; 0.1 m/s x 1 s on `/cmd_vel_nav` reached `/cmd_vel` through the gate (26 msgs); odom shows 0.027 m, peak 0.049 m/s; disarm -> stopped (final odom vx ~0), armed False.
+- **Open:** odometry vs commanded distance gap (ramp-up vs wheel-odom spike filtering vs real slip) - needs a physical measurement. Nothing committed.
+
+## 2026-10-28 (night, cont.) — Retune for 3 m x 3 m test area
+
+- `zones.yaml`: 3x3 grid of 1.0 m, origin (-1.5,-1.5) (assumes robot starts mid-room). `patrol.yaml`: visit radius 0.5, max_age 120, alert memory 60, min_revisit 15, failed cooldown 30, cluster gap 0.25, max cluster 0.8.
+- `heatmap.build_zones` now rejects risk/blocked cells outside the grid (the old "2,3" override would have been silently ignored). Engine tests now use their own fixed 3x4 grid so they do not depend on the shipped yaml. 48 tests pass.
+- Nav2 params read, not changed (vendor config): robot_radius 0.15 < real ~0.26, inflation 0.25-0.30, cruise 0.4 m/s.
+- Nothing committed.
+
+## 2026-10-28 (night, cont.) — Robot ladder, Part A (disarmed bring-up)
+
+- Subagents (Sonnet, planned by Opus): protocol.py (37 tests), robot/ stack files + watchdog (14 tests), tools (overlay, bag_check; 23 tests) done; sim, GUI, node fixes still running. Suite 122 passing at last count.
+- Fixed `robot/deploy.sh` key-path expansion (secrets.env holds a literal `$HOME`). Dry run, then `--go`: files now in `~/patrol_ws/beetle_patrol_robot/` (compile OK under Jazzy python).
+- Started `~/patrol_logs/start_patrol.sh` (patrol_robot.launch.py explore:=false, domain 154, pid in ~/patrol_logs/patrol.pid, log ~/patrol_logs/patrol.log). Nav2 lifecycle: "Managed nodes are active"; only a benign bt_navigator error-code warning.
+- Verified from the laptop (rclpy, Humble): /navigate_to_pose server present, explore + watchdog + image_throttle nodes up, our Nav2 params loaded (footprint 0.375x0.36, 0.15 m/s), explore min_frontier_size 0.3, map 247x246 @0.05, tf map->odom, map->base_link, base_link->lidar_link all OK, camera throttled to 4.5 Hz x 32 KB (was ~56 Hz), /lyra/armed False. NOTHING ARMED OR MOVED.
+- Part B (arm + goal with wheels lifted, E-STOP, watchdog) waits for the node fixes + explicit user confirmation that wheels are off the ground.
+
+## 2026-10-28 (late) — Wheels-lifted movement test + first hardware run of node and GUI
+
+- Sonnet agents finished: simulator (18 tests, isolated domain 77), GUI (20 tests), node fixes (25 new tests; 182/183 pass, one stale test being fixed), tools. A further Sonnet agent is fixing Nav2 result delivery (below).
+- **Wheels-lifted test (scratchpad lifted_test.py, my own rclpy script, domain 154):** arm OK after the heartbeat is primed (an earlier run aborted before motion because the robot never confirmed armed; cause not fully proven); forward/reverse/rotate: all four wheels turn in the right direction, ticks ~1350-1370 per wheel and mirrored on reverse; odom distance 0.155 m vs 0.30 m commanded (3 s at 0.1 m/s); yaw odom unreliable when lifted (IMU does not rotate). Watchdog disarmed the robot 2.03 s after the heartbeat stopped. 
+- **Found:** (1) Nav2 goals are accepted but the RESULT never reaches the Humble client (Jazzy result msg differs) - the robot log shows 'Goal failed'/'Goal canceled' while the laptop waited -> patrol would stall; fix delegated (use /navigate_to_pose/_action/status + goal timeout). (2) Nav2 planner aborted both goals ('Failed to create plan' from (0.08,0.01)) - lifted robot, nearly unknown map; retest on the floor in the 3x3 room. (3) cmd_vel_gate forwards /cmd_vel_nav to /cmd_vel even when disarmed (auto_arm_for_nav=True); stopping relies on the bridge/STM32 refusing commands while disarmed - NOT yet proven at wheel level (no wheel-tick check after disarm).
+- Node (pid in scratchpad) + GUI started on domain 154 from detached scripts; node status valid against protocol.validate_status at ~2 Hz with live robot pose; nothing armed, no Start sent. Lesson: background `&` jobs die when the tool call ends - use `setsid nohup`.
+
+## 2026-10-28 (late night) — Reduced scope + boxes turn green on entry
+
+- User reduced scope: fixed 3x3 m box, virtual boundary, only revisit those zones. Stopped the dynamic-zone agent mid-run; its code (patrol/discovery.py, set_start, zones[].n, engine/heatmap changes) stays in the tree but `zones.yaml` `dynamic.enabled: false`; one test updated; 244 tests pass in both interpreters.
+- E-STOP stuck: node was in `estop` and the GUI window had its own latch streaming zero Twist (~18 Hz) on /cmd_vel_nav; node released via `release` command; the GUI latch must be released from the GUI (not closed by me - could not confirm that window was mine).
+- Heatmap rule changed: entering a box (point inside its rectangle, or within visit radius) turns it green in EVERY mode (before: patrol mode only, centre radius only). Verified live on the robot: box R2C2 at pose (0.79, 0.51) age 0.0 s while the other 8 aged 19.6 s. Node restarted by PID (domain 154).
+- Open: virtual boundary (geofence) not built yet; need the robot's start position inside the box to place the grid origin; zone numbers n are row-major (R0C0 = 1), not 'start = 1'. Motion warnings still skipped on hardware (map<-lidar_link tf lookup fails at the scan stamp).
