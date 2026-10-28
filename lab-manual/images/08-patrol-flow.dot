@@ -1,0 +1,38 @@
+digraph patrol {
+  rankdir=TB; nodesep=0.35; ranksep=0.35;
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, fillcolor="#eef3fb", color="#4a6fa5"];
+  edge [fontname="Helvetica", fontsize=10, color="#555555"];
+
+  start [label="Start patrol\nload patrol.yaml + zones.yaml", fillcolor="#d9ead3", color="#6aa84f"];
+  grid  [label="Build zone grid\n(heatmap: last-visit time per zone)"];
+  pos   [label="Read robot pose\n(map frame, from SLAM/AMCL + odometry)"];
+  visit [label="Mark visited:\nzones within 1.2 m of robot reset to age 0"];
+  score [label="Score every zone\n0.5·age + 0.2·risk + 0.2·closeness + 0.1·alert"];
+  pick  [label="Pick highest score\n(skip zones in failed-goal cooldown)\nshow why in decision panel"];
+  goal  [label="Send Nav2 goal to zone centre"];
+  drive [label="Robot drives to zone", shape=box];
+  reach [label="Reached?", shape=diamond, fillcolor="#fff2cc", color="#bf9000"];
+  fail  [label="Mark zone failed\n(cooldown 60 s)", fillcolor="#f4cccc", color="#cc0000"];
+
+  subgraph cluster_sense {
+    label="Runs continuously while driving"; fontname="Helvetica"; fontsize=11; style="dashed"; color="#999999";
+    scan [label="LiDAR scan"];
+    cam  [label="Camera frame"];
+    ego  [label="Odometry + IMU\n(is robot moving / turning?)"];
+    ldet [label="Find points nearer than 0.4 s ago\ncluster → LiDAR confidence"];
+    cdet [label="Frame difference\n→ camera confidence\n(ignored while driving)"];
+    fuse [label="fused = 0.7·LiDAR + 0.3·camera\n(LiDAR ×0.5 while turning)"];
+    thr  [label="fused ≥ 0.5 in 3 of last 5\nand not in cooldown?", shape=diamond, fillcolor="#fff2cc", color="#bf9000"];
+    warn [label="WARNING\nshow in GUI, record alert in zone", fillcolor="#f4cccc", color="#cc0000"];
+  }
+
+  start -> grid -> pos -> visit -> score -> pick -> goal -> drive -> reach;
+  reach -> pos [label="yes"];
+  reach -> fail [label="no"];
+  fail -> score;
+
+  scan -> ldet; cam -> cdet; ego -> ldet; ego -> cdet;
+  ldet -> fuse; cdet -> fuse; ego -> fuse;
+  fuse -> thr; thr -> warn [label="yes"];
+  warn -> score [label="alert term\nraises that zone", style=dashed, constraint=false];
+}
