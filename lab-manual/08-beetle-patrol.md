@@ -70,6 +70,13 @@ feed it. A thin ROS node (planned `patrol_node.py`) will subscribe to `/scan`, t
 the logic, send Nav2 goals, and stop the robot if the link to the laptop is lost. All thresholds live in `patrol.yaml`;
 unknown or misspelt keys raise an error naming the section.
 
+**4.7 Flowchart.** The left column is the patrol loop (choose a zone, drive, update the heatmap); the dashed box is the
+motion-warning pipeline that runs alongside it. A warning feeds back into the loop through the `alert` term.
+
+![Beetle Patrol flowchart](images/08-patrol-flow.png)
+
+*Figure 1 — Beetle Patrol: patrol loop and motion-warning pipeline.*
+
 ## 5. Pre-lab questions
 1. Why is `age` weighted higher than `risk`? What would the robot do if `risk` were 0.8 and `age` 0.1?
 2. Why must `camera_weight` stay below `warn_threshold`?
