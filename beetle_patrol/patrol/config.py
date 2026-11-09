@@ -1,4 +1,5 @@
 """Load patrol.yaml + zones.yaml into ready-to-use settings objects."""
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -56,7 +57,10 @@ def _read_yaml(path):
     return data
 
 
-def load_settings(patrol_yaml=HERE / "patrol.yaml", zones_yaml=HERE / "zones.yaml"):
+def load_settings(patrol_yaml=None, zones_yaml=None):
+    """Env BEETLE_PATROL_YAML / BEETLE_ZONES_YAML point at other files (used by sim_gazebo/); default is the lab pair."""
+    patrol_yaml = Path(patrol_yaml or os.environ.get("BEETLE_PATROL_YAML") or HERE / "patrol.yaml")
+    zones_yaml = Path(zones_yaml or os.environ.get("BEETLE_ZONES_YAML") or HERE / "zones.yaml")
     cfg = _read_yaml(patrol_yaml)
     unknown = set(cfg) - SECTIONS
     if unknown:

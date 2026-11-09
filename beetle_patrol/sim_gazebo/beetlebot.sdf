@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<!-- Simplified BeetleBot ("Lyra") for Gazebo Classic: 0.375 x 0.36 m diff-drive base, 360-beam LiDAR,
+     forward camera, IMU. It publishes the same topic names as the real robot (see ../patrol.yaml):
+       /scan (via scan_restamp.py from /scan_raw), /odometry/filtered (+ tf odom->base_link), /imu/data, /patrol_cam/image_raw/compressed.
+     Drive commands arrive on /cmd_vel_gated, written by gate_node.py (the arm/disarm gate). -->
+<sdf version="1.6">
+  <model name="beetlebot">
+    <pose>0 0 0.06 0 0 0</pose>
+    <link name="base_link">
+      <inertial><mass>4.0</mass><inertia><ixx>0.05</ixx><iyy>0.06</iyy><izz>0.08</izz></inertia></inertial>
+      <collision name="c"><pose>0 0 0.05 0 0 0</pose><geometry><box><size>0.375 0.30 0.10</size></box></geometry></collision>
+      <visual name="v"><pose>0 0 0.05 0 0 0</pose><geometry><box><size>0.375 0.30 0.10</size></box></geometry>
+        <material><ambient>0.10 0.55 0.55 1</ambient><diffuse>0.10 0.55 0.55 1</diffuse></material></visual>
+      <visual name="top"><pose>-0.05 0 0.11 0 0 0</pose><geometry><box><size>0.2 0.22 0.02</size></box></geometry>
+        <material><ambient>0.1 0.1 0.12 1</ambient><diffuse>0.1 0.1 0.12 1</diffuse></material></visual>
+      <visual name="nose"><pose>0.19 0 0.06 0 0 0</pose><geometry><box><size>0.02 0.18 0.05</size></box></geometry>
+        <material><ambient>0.95 0.8 0.1 1</ambient><diffuse>0.95 0.8 0.1 1</diffuse></material></visual>
+      <collision name="caster_f"><pose>0.14 0 -0.035 0 0 0</pose><geometry><sphere><radius>0.025</radius></sphere></geometry>
+        <surface><friction><ode><mu>0</mu><mu2>0</mu2></ode></friction></surface></collision>
+      <collision name="caster_b"><pose>-0.14 0 -0.035 0 0 0</pose><geometry><sphere><radius>0.025</radius></sphere></geometry>
+        <surface><friction><ode><mu>0</mu><mu2>0</mu2></ode></friction></surface></collision>
+    </link>
+
+    <link name="left_wheel"><pose>0 0.17 0 -1.5708 0 0</pose>
+      <inertial><mass>0.3</mass><inertia><ixx>0.0003</ixx><iyy>0.0003</iyy><izz>0.0004</izz></inertia></inertial>
+      <collision name="c"><geometry><cylinder><radius>0.06</radius><length>0.03</length></cylinder></geometry>
+        <surface><friction><ode><mu>1.5</mu><mu2>1.5</mu2></ode></friction></surface></collision>
+      <visual name="v"><geometry><cylinder><radius>0.06</radius><length>0.03</length></cylinder></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual></link>
+    <link name="right_wheel"><pose>0 -0.17 0 -1.5708 0 0</pose>
+      <inertial><mass>0.3</mass><inertia><ixx>0.0003</ixx><iyy>0.0003</iyy><izz>0.0004</izz></inertia></inertial>
+      <collision name="c"><geometry><cylinder><radius>0.06</radius><length>0.03</length></cylinder></geometry>
+        <surface><friction><ode><mu>1.5</mu><mu2>1.5</mu2></ode></friction></surface></collision>
+      <visual name="v"><geometry><cylinder><radius>0.06</radius><length>0.03</length></cylinder></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual></link>
+    <joint name="left_wheel_joint" type="revolute"><parent>base_link</parent><child>left_wheel</child>
+      <axis><xyz>0 0 1</xyz><limit><lower>-1e9</lower><upper>1e9</upper></limit></axis></joint>
+    <joint name="right_wheel_joint" type="revolute"><parent>base_link</parent><child>right_wheel</child>
+      <axis><xyz>0 0 1</xyz><limit><lower>-1e9</lower><upper>1e9</upper></limit></axis></joint>
+
+    <!-- LiDAR on top, 0.10 m ahead of the centre (matches tf base_link -> laser in the launch script) -->
+    <link name="laser"><pose>0.10 0 0.19 0 0 0</pose>
+      <inertial><mass>0.05</mass><inertia><ixx>1e-5</ixx><iyy>1e-5</iyy><izz>1e-5</izz></inertia></inertial>
+      <visual name="v"><geometry><cylinder><radius>0.035</radius><length>0.05</length></cylinder></geometry>
+        <material><ambient>0.9 0.1 0.1 1</ambient><diffuse>0.9 0.1 0.1 1</diffuse></material></visual>
+      <sensor name="lidar" type="ray"><always_on>true</always_on><visualize>false</visualize><update_rate>9</update_rate>
+        <ray>
+          <scan><horizontal><samples>360</samples><resolution>1</resolution><min_angle>-3.14159</min_angle><max_angle>3.14159</max_angle></horizontal></scan>
+          <range><min>0.15</min><max>12.0</max><resolution>0.01</resolution></range>
+          <noise><type>gaussian</type><mean>0.0</mean><stddev>0.01</stddev></noise>
+        </ray>
+        <plugin name="scan" filename="libgazebo_ros_ray_sensor.so">
+          <ros><remapping>~/out:=scan_raw</remapping></ros>
+          <output_type>sensor_msgs/LaserScan</output_type><frame_name>laser</frame_name>
+        </plugin>
+      </sensor>
+    </link>
+    <joint name="laser_joint" type="fixed"><parent>base_link</parent><child>laser</child></joint>
+
+    <link name="camera_link"><pose>0.18 0 0.15 0 0.1 0</pose>
+      <inertial><mass>0.05</mass><inertia><ixx>1e-5</ixx><iyy>1e-5</iyy><izz>1e-5</izz></inertia></inertial>
+      <sensor name="cam" type="camera"><always_on>true</always_on><update_rate>10</update_rate>
+        <camera><horizontal_fov>1.8</horizontal_fov><image><width>320</width><height>240</height><format>R8G8B8</format></image>
+          <clip><near>0.05</near><far>15</far></clip></camera>
+        <plugin name="cam_plugin" filename="libgazebo_ros_camera.so">
+          <camera_name>patrol_cam</camera_name><frame_name>camera_link</frame_name>
+        </plugin>
+      </sensor>
+    </link>
+    <joint name="camera_joint" type="fixed"><parent>base_link</parent><child>camera_link</child></joint>
+
+    <link name="imu_link"><pose>0 0 0.1 0 0 0</pose>
+      <inertial><mass>0.01</mass><inertia><ixx>1e-6</ixx><iyy>1e-6</iyy><izz>1e-6</izz></inertia></inertial>
+      <sensor name="imu" type="imu"><always_on>true</always_on><update_rate>50</update_rate>
+        <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <ros><remapping>~/out:=imu/data</remapping></ros><frame_name>imu_link</frame_name>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+      </sensor>
+    </link>
+    <joint name="imu_joint" type="fixed"><parent>base_link</parent><child>imu_link</child></joint>
+
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros><remapping>cmd_vel:=cmd_vel_gated</remapping><remapping>odom:=odometry/filtered</remapping></ros>
+      <left_joint>left_wheel_joint</left_joint><right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.34</wheel_separation><wheel_diameter>0.12</wheel_diameter>
+      <max_wheel_torque>20</max_wheel_torque><max_wheel_acceleration>3.0</max_wheel_acceleration>
+      <publish_odom>true</publish_odom><publish_odom_tf>true</publish_odom_tf><publish_wheel_tf>false</publish_wheel_tf>
+      <odometry_frame>odom</odometry_frame><robot_base_frame>base_link</robot_base_frame>
+      <update_rate>50</update_rate>
+    </plugin>
+  </model>
+</sdf>

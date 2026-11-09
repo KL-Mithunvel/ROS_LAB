@@ -28,6 +28,7 @@ wheel-level E-STOP latency, odometry scale. The virtual boundary (geofence) is *
 | `patrol_node.py` | ROS node (laptop): Nav2 goals, tf, E-STOP, status topics, bag start/stop |
 | `beetle_gui.py`, `gui/view_model.py` | Tkinter control panel (+ pure view-model) |
 | `sim/` | Fake 3 × 3 m robot + intruder on an isolated domain (77, localhost only) |
+| `sim_gazebo/` | Gazebo warehouse (12 × 9 m) + BeetleBot model + Nav2 + intruder, same domain 77 |
 | `robot/` | Robot-side files: our Nav2 params, `explore_lite` params, launch file, camera throttle, watchdog, `deploy.sh` |
 | `tools/` | `bag_check.py` (PASS/FAIL per topic), `zone_overlay.py` (suggests the grid origin from a saved map) |
 | `patrol.yaml`, `zones.yaml` | All settings; unknown YAML keys are rejected |
@@ -56,6 +57,9 @@ The env var is required when ROS Humble is sourced (its pytest plugins need `lar
 
 **Simulator (no robot):** `sim/run_sim.sh --mode fake_nav` (forces domain 77 + localhost-only; refuses 154/155),
 then in other terminals with the same env: `/usr/bin/python3 patrol_node.py` and `./beetle_gui.py`.
+
+**Gazebo warehouse (no robot):** `sim_gazebo/run_gazebo_sim.sh` then `sim_gazebo/run_patrol_gz.sh` - a 12 x 9 m world with racks,
+Nav2 and a walking intruder; see `sim_gazebo/README.md`.
 
 **Real robot** (192.168.0.154, user `veerobot`, key `~/.ssh/beetlebot_ed25519`, see `secrets.env`):
 ```bash

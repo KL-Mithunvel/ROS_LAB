@@ -47,7 +47,6 @@ RED, AMBER, GREEN = "#d63031", "#e0a800", "#2ea043"
 STATUS_COLOUR = {"ok": GREEN, "warn": AMBER, "lost": RED}
 DEFAULT_TOPICS = {"scan": "/scan", "camera": "/pi_camera/image_raw/compressed", "nav_cmd_vel": "/cmd_vel_nav",
                   "disarm_service": "/lyra/disarm"}
-CAMERA_TOPIC = "/patrol/camera/compressed"
 # Laser yaw relative to base_link (not in /patrol/status; the sim uses 180). Override: BEETLE_LASER_YAW_DEG.
 LASER_YAW = math.radians(float(os.environ.get("BEETLE_LASER_YAW_DEG", "0")))
 
@@ -55,10 +54,13 @@ LASER_YAW = math.radians(float(os.environ.get("BEETLE_LASER_YAW_DEG", "0")))
 def load_topics():
     try:
         import yaml
-        with open(os.path.join(HERE, "patrol.yaml")) as f:
+        with open(os.environ.get("BEETLE_PATROL_YAML") or os.path.join(HERE, "patrol.yaml")) as f:
             return {**DEFAULT_TOPICS, **(yaml.safe_load(f).get("topics") or {})}
     except Exception:
         return dict(DEFAULT_TOPICS)
+
+
+CAMERA_TOPIC = load_topics().get("camera", "/patrol/camera/compressed")   # patrol.yaml topics.camera
 
 
 # --------------------------------------------------------------------------- ROS plumbing
