@@ -1,0 +1,36 @@
+# waypoints_sim.yaml - spots for the Gazebo room2 world (map frame). NOT the real lab.
+#
+# !! The numbers below are PLACEHOLDERS. They are not a real room. !!
+# Survey the real spots with RViz ("2D Goal Pose" then `ros2 topic echo /goal_pose`,
+# or read /amcl_pose with the robot standing on the spot), type them in, then
+# change `surveyed` to true. mission_node.py refuses to drive a real robot while
+# `surveyed` is false (override only with --allow-unsurveyed).
+#
+# yaw: 0 = facing +x of the map, 1.5708 = facing +y, 3.1416 = facing -x.
+# Point each waypoint's yaw so the robot FACES whatever is at the waypoint.
+# Waypoints are served in the order listed. A run with --count 3 uses the first 3.
+#
+# STANDOFF: the x/y here is where the robot's CENTRE stops, not where the target
+# stands. Put it >= 0.8 m from the target itself. Closer than ~0.55 m puts the
+# waypoint inside the collision monitor's stop box (config/collision_monitor.yaml),
+# which freezes the robot there. Acrux is ~0.76 x 0.80 m, so leave wide lanes
+# between waypoints (about 1.5 m or more) - Nav2 treats each waypoint as an obstacle
+# with a 0.55 m inflation halo.
+
+surveyed: true   # SIM ONLY: spots chosen on the Gazebo room2 map, not the real lab
+
+frame_id: map            # leave as `map`
+max_auto_retries: 1      # automatic retries of a failed goal before asking you
+goal_timeout_s: 120      # give up on one goal after this many seconds
+
+home:
+  label: Home
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+
+waypoints:
+  - {label: "Waypoint 1", x: 4.5, y: -0.3, yaw: 0.0}
+  - {label: "Waypoint 2", x: 5.0, y: 2.5, yaw: 1.5708}
+  - {label: "Waypoint 3", x: 0.8, y: 7.5, yaw: 1.5708}
+  - {label: "Waypoint 4", x: 7.3, y: 6.8, yaw: 0.0}

@@ -1,0 +1,20 @@
+[waypoint] waiting for Nav2 to become active...
+[INFO] [1794223134.678465974] [basic_navigator]: Nav2 is ready for use!
+[waypoint] ready: 4 waypoint(s). Commands:  y/Enter = next waypoint   s = skip   r = retry   p = pause/resume   h = go home   q = quit   ? = status
+[waypoint] Press y/Enter to send the robot to the first waypoint.
+[waypoint] Heading to Waypoint 1.
+[INFO] [1794223195.372396074] [basic_navigator]: Navigating to goal: 4.5 -0.3...
+[waypoint] Arrived at Waypoint 1. Waiting - press y/Enter once the waypoint task is done.
+[waypoint] Heading to Waypoint 2.
+[INFO] [1794223229.626170259] [basic_navigator]: Navigating to goal: 5.0 2.5...
+[waypoint] Arrived at Waypoint 2. Waiting - press y/Enter once the waypoint task is done.
+[waypoint] Heading to Waypoint 3.
+[INFO] [1794223245.952507367] [basic_navigator]: Navigating to goal: 0.8 7.5...
+[waypoint] Arrived at Waypoint 3. Waiting - press y/Enter once the waypoint task is done.
+[waypoint] Heading to Waypoint 4.
+[INFO] [1794223280.212338150] [basic_navigator]: Navigating to goal: 7.3 6.8...
+[waypoint] Arrived at Waypoint 4. Waiting - press y/Enter once the waypoint task is done.
+[waypoint] All waypoints served. Heading home.
+[INFO] [1794223311.390672983] [basic_navigator]: Navigating to goal: 0.0 0.0...
+[waypoint] Home. Mission complete. state=DONE  target=Home  still to visit: -  visited: Waypoint 1, Waypoint 2, Waypoint 3, Waypoint 4  skipped: -
+[waypoint] state=DONE  target=Home  still to visit: -  visited: Waypoint 1, Waypoint 2, Waypoint 3, Waypoint 4  skipped: -
