@@ -563,6 +563,12 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - **Caveat:** placement is automatic (text alignment) - eyeball the cover pages and the multi-image steps. Nothing committed.
 
 
+## 2026-11-09 - Portfolio artifact source saved to the repo
+
+- User asked to run "the showcase gui"; the repo's only GUI is `beetle_patrol/beetle_gui.py` (needs ROS 2 Humble + `/usr/bin/python3`, not runnable on this Windows box, WSL has no distro). User meant the published artifact instead: "Mithunvel ROS 2 Portfolio" (https://claude.ai/artifact/95mdeAT51U9ifLwxFLowbr), opened it.
+- No source for it in `ROS_LAB` or the sibling `SHOW-CASE` repo, so read the published artifact and saved its HTML to `showcase/portfolio.html` (4,599,855 bytes, byte-identical to the live version `1794225074-4273`).
+- Committed with only these two doc entries; the unrelated uncommitted tunnel-rig notes in `TODO.md` / `CLAUDE-LOG.md` were left out of the commit.
+
 ## 2026-10-28 — Beetle patrol: robot setup + pure-logic modules
 
 - **Robot (192.168.0.154, ROS 2 Jazzy):** installed a new SSH key; fixed OpenCV by moving the user-site NumPy 2.5.3 to `~/.local/numpy2_backup` (system NumPy 1.26.4 + cv2 4.6.0 now import); built `explore_lite` from robo-friends/m-explore-ros2 `main` in a separate `~/patrol_ws` (not run yet); `apt update` + installed `ros-jazzy-compressed-image-transport`. `lyra_ws` untouched.

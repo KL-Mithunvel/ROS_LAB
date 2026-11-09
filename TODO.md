@@ -112,6 +112,11 @@ letter + Enter, any key aborts). Put the bot on a stand, **wheels off the ground
 
 ## Done
 
+### Portfolio page source saved (2026-11-09, commit: _pending_)
+
+- [x] Saved the published artifact "Mithunvel ROS 2 Portfolio" (https://claude.ai/artifact/95mdeAT51U9ifLwxFLowbr) as `showcase/portfolio.html` - self-contained, images/video embedded, 4.4 MB. Source was not in either repo before.
+- [ ] Decide whether to keep editing the HTML here and republish to the same artifact URL, or keep the artifact as the master
+
 ### Figures added to AMR lab record (2026-10-27, commit: _pending_)
 
 - [x] `docs/AMR_Lab_Record_23BMH1029.md`: inserted all 106 images (117 references) from the Downloads zip; images in `docs/AMR_Lab_Record_23BMH1029_images/`
