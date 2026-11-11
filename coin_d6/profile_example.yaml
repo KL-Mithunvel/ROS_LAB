@@ -1,0 +1,16 @@
+# Frame layout for plot_live.py --profile-file. Fill in from the Coin-D6 protocol document
+# (or from the --sniff header guess). This example is the LD06 layout, unverified for Coin-D6.
+name: coin_d6_custom
+header: "54 2C"          # hex bytes that start every frame
+frame_len: 47            # total bytes per frame, header and checksum included
+n_points: 12             # measurements per frame
+points_offset: 6         # byte offset of the first measurement
+point_stride: 3          # bytes per measurement
+dist_offset: 0           # distance (uint16 little-endian) within a measurement
+intensity_offset: 2      # intensity (uint8) within a measurement; -1 if none
+start_angle_offset: 4    # uint16 little-endian
+end_angle_offset: 42     # uint16 little-endian
+angle_scale: 0.01        # degrees per count
+dist_scale: 0.001        # metres per count (0.001 = millimetres)
+checksum: crc8           # none | crc8 | sum8 | xor8, over all bytes before the last
+verified: false
