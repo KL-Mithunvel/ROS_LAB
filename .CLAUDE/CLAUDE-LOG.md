@@ -562,12 +562,38 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - **Added:** `docs/AMR_Lab_Record_23BMH1029_images/` (106 files, ~20 MB), a new folder so it does not clash with `docs/wolf/images`.
 - **Caveat:** placement is automatic (text alignment) - eyeball the cover pages and the multi-image steps. Nothing committed.
 
-
 ## 2026-11-09 - Portfolio artifact source saved to the repo
 
 - User asked to run "the showcase gui"; the repo's only GUI is `beetle_patrol/beetle_gui.py` (needs ROS 2 Humble + `/usr/bin/python3`, not runnable on this Windows box, WSL has no distro). User meant the published artifact instead: "Mithunvel ROS 2 Portfolio" (https://claude.ai/artifact/95mdeAT51U9ifLwxFLowbr), opened it.
 - No source for it in `ROS_LAB` or the sibling `SHOW-CASE` repo, so read the published artifact and saved its HTML to `showcase/portfolio.html` (4,599,855 bytes, byte-identical to the live version `1794225074-4273`).
 - Committed with only these two doc entries; the unrelated uncommitted tunnel-rig notes in `TODO.md` / `CLAUDE-LOG.md` were left out of the commit.
+
+## 2026-11-07 — Tunnel inspection rig (ESP32 + MG996R) added
+
+- User asked for an ESP32 web GUI to pan/tilt a camera in a small tunnel: zero on boot, a HOME button that returns to zero. Defaults agreed: zero = 0 deg, 2 servos (Pan GPIO13, Tilt GPIO14), no light output, AP mode (`TunnelRig`).
+- **Files created:** `tunnel_rig/tunnel_rig.ino`, `tunnel_rig/README.md` (wiring, flash, use).
+- Adapted the user's pasted sketch: zero replaces the 90 deg home, ZERO and Home merged into one HOME button, saved-home/Preferences removed, Tilt min widened to 0.
+- Build fix: the web page raw string failed to compile (everything after the first ~120 lines was parsed as C++); fixed by splitting it with `)rawliteral" R"rawliteral(` at the `<script>` tag.
+- Compiled (arduino-cli, esp32 core 3.3.3, ESP32Servo 3.2.1) and flashed to COM3; serial shows `[ZERO] driving to zero` -> AP up -> `READY`. Servos/GUI not yet tested on hardware.
+- Camera is the Ethernet one and goes to the laptop, not the ESP; GUI only embeds an MJPEG/snapshot URL.
+- Nothing committed.
+
+## 2026-11-11 — Tunnel rig rewritten: servos/Wi-Fi out, MDD3A motors + Bluetooth in
+
+- User dropped the servo pan/tilt and wants motor movement via a Cytron MDD3A over Android Classic Bluetooth. Agreed: 4 motors as tank drive (left pair on channel 1, right pair on channel 2), Android only, Wi-Fi GUI removed (Wi-Fi + Classic BT together is unreliable on the ESP32).
+- **Files rewritten:** `tunnel_rig/tunnel_rig.ino`, `tunnel_rig/README.md`; updated `TODO.md` and the `tunnel_rig/` entry in `.CLAUDE/CLAUDE.md`.
+- **Design:** MDD3A PWM-PWM mode (A = forward PWM, B = reverse PWM, both 0 = brake), 20 kHz 8-bit LEDC. Pins: left GPIO25/26, right GPIO32/33 (not GPIO14/12 — boot-time glitches). Commands F/B/L/R/G/I/H/J/S + 0–9 speed; acceleration ramped, S/failsafe stop instantly; 500 ms failsafe (`CMD_TIMEOUT_MS`, 0 disables); `INVERT_LEFT/RIGHT` flags; USB serial accepts the same characters for bench tests.
+- Compiled (arduino-cli 1.5.1, esp32 core 3.3.3, no extra libs; 81 % flash) and uploaded to COM3; boot log shows `[BT] ready ... 'TunnelRig'`. **Not tested with the MDD3A or motors wired**, nor paired from an Android phone.
+- Nothing committed.
+
+## 2026-11-11 — Tunnel rig: Windows PC control panel
+
+- User asked for a PC control panel (option 1 of: PC panel / ESP web page / Android app). `TunnelRig` was already paired with this PC; Windows exposes it as outgoing **COM6** (MAC 8C94DF4CB662; COM4/COM7 are incoming ports, COM5 is another device).
+- **Files created in `tunnel_rig/`:** `control_panel.py` (Tkinter GUI + pyserial, connect in a background thread, hold-to-drive with 150 ms keepalive, key auto-repeat debounce, stop on release/focus loss/disconnect/close), `panel_logic.py` (held directions → F/B/L/R/G/I/H/J/S; opposites cancel), `panel_config.yaml`, `requirements.txt`, `tests/test_panel_logic.py`, local `.venv`.
+- **Verified:** 33 pytest tests pass; headless open of COM6 took 1.8 s and the ESP32 answered `speed 5` to `S` + `5`; the panel window starts without errors. **No drive command has been sent to the rig**, so motor behaviour is untested.
+- `repeat_ms` is clamped to 50–400 ms so it can never exceed the firmware's 500 ms failsafe. The panel rewrites `panel_config.yaml` (port) on each successful connect.
+- Nothing committed.
+
 
 ## 2026-10-28 — Beetle patrol: robot setup + pure-logic modules
 

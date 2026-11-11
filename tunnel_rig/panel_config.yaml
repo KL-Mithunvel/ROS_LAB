@@ -1,0 +1,3 @@
+port: COM6
+repeat_ms: 150
+default_speed: 6

@@ -214,6 +214,17 @@ avoidance state machine) and `Hardware_Test/Hardware_Test.ino` (serial-menu brin
 version is compiled but **not run on hardware**; the checklist is in `TODO.md`. The Arduino IDE
 wants one same-named folder per sketch — not restructured. Record: `uno_car/LAB-RECORD.md`.
 
+### `tunnel_rig/` — ESP32 4-motor tank drive over Bluetooth (side project, Arduino C++, no ROS)
+
+`tunnel_rig.ino`: ESP32 DevKit V1 + Cytron MDD3A (PWM-PWM mode); left motor pair on channel 1
+(GPIO25/26), right pair on channel 2 (GPIO32/33). Android Classic Bluetooth (`BluetoothSerial`,
+device `TunnelRig`); single-char commands F/B/L/R/G/I/H/J/S + 0–9 speed, 500 ms failsafe.
+(Was a servo pan/tilt rig with a Wi-Fi GUI until 2026-11-11.) Flashed to COM3 with `arduino-cli`;
+not yet tested with the MDD3A/motors wired. See `tunnel_rig/README.md`.
+PC side: `control_panel.py` (Tkinter + pyserial, WASD/arrows/pad, speed slider, STOP; port in
+`panel_config.yaml`, default COM6), `panel_logic.py` (key → command mapping), `tests/` (pytest),
+own `.venv` + `requirements.txt`. Run: `cd tunnel_rig && .venv\Scripts\python control_panel.py`.
+
 ### `lab-manual/` — course lab manual
 
 `00-front-matter.md` (course info, safety rules, appendices) plus `01`–`07`, one file per

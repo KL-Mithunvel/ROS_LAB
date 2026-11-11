@@ -53,6 +53,20 @@ tracked with a result column in guide §14 — fill them in there as you go.
 - [ ] Decide laptop setup (native Ubuntu vs WSL2 mirrored networking) and install `nav2_simple_commander`
 - [ ] Later: status lights; optional camera-based target detection (guide §15)
 
+### Tunnel rig (ESP32 + Cytron MDD3A, 4-motor tank drive, Android Bluetooth) — 2026-11-11
+
+Code: `tunnel_rig/` (sketch + README). Rewritten from the servo/Wi-Fi version. Compiled and flashed to COM3; boots and advertises `TunnelRig` over Bluetooth Classic.
+
+- [x] Replace servo/Wi-Fi code with MDD3A PWM-PWM drive + BluetoothSerial (F/B/L/R/G/I/H/J/S, 0-9 speed), 500 ms failsafe
+- [x] PC control panel `tunnel_rig/control_panel.py` (Tkinter, WASD/arrows/pad, speed slider, STOP); 33 pytest tests pass; Bluetooth link to COM6 verified (stop + speed commands only, no motors driven)
+- [ ] Test the panel with the MDD3A/motors wired (wheels off the ground): hold-to-drive, release-to-stop, STOP, unplug/disconnect behaviour
+- [ ] Wire MDD3A per `tunnel_rig/README.md` (GPIO25/26 left, GPIO32/33 right, common GND, fuse, 470–1000 uF cap)
+- [ ] Check each pair's combined stall current is within the MDD3A's ~3 A/channel rating
+- [ ] Pair `TunnelRig` on Android, test each command with wheels off the ground; flip `INVERT_LEFT/RIGHT` if a side is backwards
+- [ ] Decide on `CMD_TIMEOUT_MS` (500 ms hold-to-drive vs 0 = latching) for the app you use
+- [ ] Power the ESP32 from battery (buck converter to VIN) once bench tests pass
+- [ ] Removed (was planned for the servo version): Ethernet camera GUI, Wi-Fi range check, lights
+
 ### Coin-D6 TOF lidar — live plot (2026-10-20)
 
 Code: `coin_d6/` (`plot_live.py`, `coin_d6.py`). The parser is tested on synthetic frames only;
