@@ -1,28 +1,37 @@
-"""PC control panel for the tunnel rig (ESP32 + Cytron MDD3A, Classic Bluetooth).
+"""PC control panel for the tunnel rig (ESP32 + Cytron MDD3A over Wi-Fi / UDP).
 
 Run:  .venv\\Scripts\\python control_panel.py
-Pair "TunnelRig" in Windows first; use its *outgoing* COM port (default in panel_config.yaml).
+Network: laptop (Ethernet) -> router <- ESP32 (2.4 GHz Wi-Fi, fixed IP). See WIFI-PLAN.md.
 
-Hold a key (WASD / arrows) or a pad button to drive; release to stop. The held command is resent
-every `repeat_ms` so the firmware's 500 ms failsafe never trips while you are driving.
+Hold a key (WASD / arrows) or a pad button to drive; release to stop. A packet is sent every
+`repeat_ms` (the held command, or STOP when idle). Every packet is answered by the ESP32 with its
+Wi-Fi signal strength, which feeds the comm-health bar (RSSI, round-trip time, packet loss).
+No reply for `lost_after_ms` -> LINK LOST: drive is disabled, and the rig stops by itself.
 """
 import os
-import queue
-import threading
+import socket
+import time
 import tkinter as tk
+import webbrowser
 from tkinter import ttk
 
-import serial
-import serial.tools.list_ports
 import yaml
 
-from panel_logic import STOP, clamp_speed, command_for, direction_for_key
+from panel_logic import (STOP, HealthTracker, build_packet, clamp_speed, command_for,
+                         direction_for_key, parse_reply)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(HERE, "panel_config.yaml")
-DEFAULTS = {"port": "COM6", "repeat_ms": 150, "default_speed": 6}
-BAUD = 115200
-KEY_RELEASE_DEBOUNCE_MS = 40   # Windows key auto-repeat sends release+press pairs
+DEFAULTS = {
+    "host": "192.168.1.60", "udp_port": 4210,
+    "camera_url": "https://192.168.1.250/#/index/Preview/",
+    "repeat_ms": 150, "lost_after_ms": 500, "default_speed": 6,
+}
+KEY_RELEASE_DEBOUNCE_MS = 40     # Windows key auto-repeat sends release+press pairs
+POLL_MS = 20                     # how often the socket is read (keeps RTT readings accurate)
+SPEED_RESYNC_S = 0.3             # min gap between speed re-sends
+BAR_W, BAR_H = 320, 20
+LEVEL_COLOUR = {"GOOD": "#2e9e5b", "FAIR": "#d9a21b", "POOR": "#d9534f", "LOST": "#777777"}
 
 # Pad layout: (label, row, col, directions held while pressed)
 PAD = [
@@ -41,67 +50,70 @@ def load_config():
         pass
     except yaml.YAMLError as exc:
         print(f"[config] ignoring bad {CONFIG_PATH}: {exc}")
-    cfg["repeat_ms"] = max(50, min(400, int(cfg["repeat_ms"])))   # must stay < 500 ms failsafe
+    cfg["udp_port"] = int(cfg["udp_port"])
+    cfg["repeat_ms"] = max(50, min(400, int(cfg["repeat_ms"])))          # must stay < 500 ms failsafe
+    cfg["lost_after_ms"] = max(200, min(2000, int(cfg["lost_after_ms"])))
     cfg["default_speed"] = clamp_speed(cfg["default_speed"])
     return cfg
-
-
-def save_port(port):
-    """Remember the last working port in panel_config.yaml."""
-    cfg = load_config()
-    cfg["port"] = port
-    try:
-        with open(CONFIG_PATH, "w", encoding="utf-8") as fh:
-            yaml.safe_dump(cfg, fh, sort_keys=False)
-    except OSError as exc:
-        print(f"[config] could not save port: {exc}")
 
 
 class Panel:
     def __init__(self, root):
         self.root = root
         self.cfg = load_config()
-        self.ser = None
-        self.connecting = False
+        self.sock = None
+        self.target = None
+        self.seq = 0
+        self.tracker = HealthTracker(lost_after_s=self.cfg["lost_after_ms"] / 1000.0)
         self.held = {}              # source token -> direction (e.g. "key:w" -> "up")
-        self.release_jobs = {}      # key token -> after-id (debounce)
-        self.last_sent = STOP
-        self.results = queue.Queue()   # connect-thread results
+        self.release_jobs = {}      # key -> after-id (debounce)
         self.pad_buttons = []
+        self.drive_enabled = None   # unknown until first health refresh
+        self.link_ok = False
+        self.last_speed_sync = 0.0
 
-        root.title("Tunnel Rig Control")
+        root.title("Tunnel Rig Control (Wi-Fi)")
         root.configure(padx=12, pady=12)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
-        root.minsize(380, 460)
+        root.minsize(400, 560)
         self._build_ui()
-        self.refresh_ports()
         self._set_drive_enabled(False)
+        self._set_stop_enabled(False)
+        self._draw_health(None)
 
         root.bind("<KeyPress>", self.on_key_press)
         root.bind("<KeyRelease>", self.on_key_release)
         root.bind("<FocusOut>", lambda e: self.release_all() if e.widget is root else None)
         root.after(self.cfg["repeat_ms"], self.tick)
+        root.after(POLL_MS, self.poll)
 
     # ---------------- UI ----------------
     def _build_ui(self):
         top = ttk.Frame(self.root)
         top.pack(fill="x")
-        ttk.Label(top, text="Port").pack(side="left")
-        self.port_var = tk.StringVar(value=self.cfg["port"])
-        self.port_box = ttk.Combobox(top, textvariable=self.port_var, width=34, state="readonly")
-        self.port_box.pack(side="left", padx=6)
-        ttk.Button(top, text="↻", width=3, command=self.refresh_ports).pack(side="left")
-
-        row = ttk.Frame(self.root)
-        row.pack(fill="x", pady=(8, 0))
-        self.connect_btn = ttk.Button(row, text="Connect", command=self.toggle_connection)
+        ttk.Label(top, text="Rig IP").pack(side="left")
+        self.host_var = tk.StringVar(value=self.cfg["host"])
+        ttk.Entry(top, textvariable=self.host_var, width=16).pack(side="left", padx=6)
+        self.connect_btn = ttk.Button(top, text="Connect", command=self.toggle_connection)
         self.connect_btn.pack(side="left")
-        self.status_var = tk.StringVar(value="Disconnected")
-        self.status_lbl = tk.Label(row, textvariable=self.status_var, fg="#a33", anchor="w")
-        self.status_lbl.pack(side="left", padx=10)
+        ttk.Button(top, text="Open camera", command=self.open_camera).pack(side="right")
+
+        self.status_var = tk.StringVar(value="Not connected")
+        self.status_lbl = tk.Label(self.root, textvariable=self.status_var, fg="#a33", anchor="w")
+        self.status_lbl.pack(fill="x", pady=(8, 0))
+
+        health = ttk.LabelFrame(self.root, text="Comm health", padding=8)
+        health.pack(fill="x", pady=(8, 0))
+        self.health_title = tk.StringVar(value="--")
+        tk.Label(health, textvariable=self.health_title, font=("Segoe UI", 11, "bold"), anchor="w").pack(fill="x")
+        self.bar = tk.Canvas(health, width=BAR_W, height=BAR_H, highlightthickness=1,
+                             highlightbackground="#999", bg="#eeeeee")
+        self.bar.pack(anchor="w", pady=4)
+        self.health_detail = tk.StringVar(value="RSSI --   RTT --   loss --")
+        ttk.Label(health, textvariable=self.health_detail, foreground="#555").pack(anchor="w")
 
         pad = ttk.Frame(self.root)
-        pad.pack(pady=18)
+        pad.pack(pady=16)
         for item in PAD:
             if item is None:
                 continue
@@ -126,115 +138,115 @@ class Panel:
 
         ttk.Label(self.root, foreground="#666",
                   text="Hold W/A/S/D or arrows (or the pad) to drive. Space = STOP. "
-                       "Release = stop.").pack(pady=(10, 0))
+                       "Release = stop.").pack(pady=(8, 0))
         self.cmd_var = tk.StringVar(value="cmd: -")
         ttk.Label(self.root, textvariable=self.cmd_var, foreground="#666").pack(anchor="w", pady=(6, 0))
-        self.reply_var = tk.StringVar(value="")
-        ttk.Label(self.root, textvariable=self.reply_var, foreground="#666").pack(anchor="w")
 
     def _set_drive_enabled(self, enabled):
+        if enabled == self.drive_enabled:
+            return
+        self.drive_enabled = enabled
         state = "normal" if enabled else "disabled"
-        for b in self.pad_buttons + [self.stop_btn, self.speed_scale]:
+        for b in self.pad_buttons + [self.speed_scale]:
             b.config(state=state)
+        if not enabled:
+            self.release_all()
+
+    def _set_stop_enabled(self, enabled):
+        self.stop_btn.config(state="normal" if enabled else "disabled")
 
     def set_status(self, text, ok):
         self.status_var.set(text)
         self.status_lbl.config(fg="#1b7a3a" if ok else "#a33")
 
-    # ---------------- ports ----------------
-    def refresh_ports(self):
-        ports = sorted(serial.tools.list_ports.comports(), key=lambda p: p.device)
-        self._port_map = {f"{p.device} - {p.description}": p.device for p in ports}
-        labels = list(self._port_map)
-        self.port_box["values"] = labels
-        wanted = self.port_var.get().split(" - ")[0]
-        for label, dev in self._port_map.items():
-            if dev == wanted:
-                self.port_var.set(label)
-                break
+    def _draw_health(self, h):
+        self.bar.delete("all")
+        if h is None:
+            self.health_title.set("Not connected")
+            self.health_detail.set("RSSI --   RTT --   loss --")
+            return
+        colour = LEVEL_COLOUR[h.level]
+        self.bar.create_rectangle(0, 0, int(BAR_W * h.score / 100), BAR_H, fill=colour, width=0)
+        if h.level == "LOST":
+            self.health_title.set("LINKING..." if not h.ever_replied else "LINK LOST - rig will stop")
         else:
-            if labels:
-                self.port_var.set(labels[0])
-
-    def selected_port(self):
-        return self.port_var.get().split(" - ")[0].strip()
+            self.health_title.set(f"{h.level}  ({h.score}/100)")
+        rssi = f"{h.rssi} dBm" if h.rssi is not None else "--"
+        rtt = f"{h.rtt_ms:.0f} ms" if h.rtt_ms is not None else "--"
+        self.health_detail.set(f"RSSI {rssi}   RTT {rtt}   loss {h.loss_pct:.0f} %")
 
     # ---------------- connection ----------------
     def toggle_connection(self):
-        if self.ser:
-            self.disconnect("Disconnected")
-        elif not self.connecting:
+        if self.sock:
+            self.disconnect("Not connected")
+        else:
             self.connect()
 
     def connect(self):
-        port = self.selected_port()
-        if not port:
-            self.set_status("No port selected", False)
-            return
-        self.connecting = True
-        self.connect_btn.config(state="disabled")
-        self.set_status(f"Connecting to {port}... (can take a few seconds)", False)
-        threading.Thread(target=self._open_port, args=(port,), daemon=True).start()
-        self.root.after(100, self._poll_connect)
-
-    def _open_port(self, port):
+        host = self.host_var.get().strip()
         try:
-            ser = serial.Serial(port, BAUD, timeout=0, write_timeout=0.3)
-            self.results.put((port, ser, None))
-        except (serial.SerialException, OSError, ValueError) as exc:
-            self.results.put((port, None, exc))
-
-    def _poll_connect(self):
+            ip = socket.gethostbyname(host)
+        except (socket.gaierror, UnicodeError) as exc:
+            self.set_status(f"Bad address '{host}': {exc}", False)
+            return
         try:
-            port, ser, err = self.results.get_nowait()
-        except queue.Empty:
-            self.root.after(100, self._poll_connect)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.bind(("", 0))
+            sock.setblocking(False)
+            if hasattr(socket, "SIO_UDP_CONNRESET"):      # Windows: don't raise on ICMP "port unreachable"
+                sock.ioctl(socket.SIO_UDP_CONNRESET, False)
+        except OSError as exc:
+            self.set_status(f"Socket error: {exc}", False)
             return
-        self.connecting = False
-        self.connect_btn.config(state="normal")
-        if err is not None:
-            self.set_status(f"Failed: {err}", False)
-            return
-        self.ser = ser
-        self.last_sent = STOP
+        self.sock = sock
+        self.target = (ip, self.cfg["udp_port"])
+        self.tracker.reset()
         self.connect_btn.config(text="Disconnect")
-        self.set_status(f"Connected: {port}", True)
-        self._set_drive_enabled(True)
-        save_port(port)
-        self.send(STOP)
-        self.send(str(self.speed_var.get()))
+        self._set_stop_enabled(True)
+        self.set_status(f"Linking to {ip}:{self.cfg['udp_port']} ...", False)
         self.root.focus_set()
 
     def disconnect(self, message):
-        if self.ser:
+        if self.sock:
+            for _ in range(2):                            # UDP: send stop twice, fire-and-forget
+                self._send_raw(STOP)
             try:
-                self.ser.write(STOP.encode())
-            except (serial.SerialException, OSError):
+                self.sock.close()
+            except OSError:
                 pass
-            try:
-                self.ser.close()
-            except (serial.SerialException, OSError):
-                pass
-        self.ser = None
+        self.sock = None
+        self.target = None
         self.held.clear()
+        self.link_ok = False
         self.connect_btn.config(text="Connect")
         self._set_drive_enabled(False)
+        self._set_stop_enabled(False)
+        self._draw_health(None)
         self.set_status(message, False)
 
-    def send(self, char):
-        """Write one command char. On a serial error, drop the link and report it."""
-        if not self.ser:
+    def _send_raw(self, cmd):
+        if not self.sock:
             return False
+        self.seq += 1
         try:
-            self.ser.write(char.encode())
-            self.cmd_var.set(f"cmd: {char}")
-            return True
-        except (serial.SerialException, OSError) as exc:
-            self.disconnect(f"Link lost: {exc}")
+            self.sock.sendto(build_packet(self.seq, cmd), self.target)
+        except OSError as exc:
+            self.set_status(f"Send failed: {exc}", False)
             return False
+        self.tracker.sent(self.seq, time.monotonic())
+        return True
+
+    def send(self, cmd):
+        if self._send_raw(cmd):
+            self.cmd_var.set(f"cmd: {cmd}")
+
+    def open_camera(self):
+        webbrowser.open(self.cfg["camera_url"])
 
     # ---------------- input ----------------
     def press(self, token, dirs):
+        if not self.link_ok:
+            return
         for d in dirs:
             self.held[f"{token}:{d}"] = d
 
@@ -254,7 +266,7 @@ class Panel:
             self.emergency_stop()
             return
         direction = direction_for_key(key)
-        if not direction:
+        if not direction or not self.link_ok:
             return
         job = self.release_jobs.pop(key, None)
         if job:
@@ -275,41 +287,62 @@ class Panel:
 
     def emergency_stop(self):
         self.release_all()
-        if self.ser:
+        if self.sock:
             self.send(STOP)
-            self.last_sent = STOP
+            self.send(STOP)                      # twice: UDP can drop one
 
     def on_speed(self, value):
-        level = clamp_speed(value)
-        if self.ser:
-            self.send(str(level))
+        if self.sock and self.link_ok:
+            self.send(str(clamp_speed(value)))
+            self.last_speed_sync = time.monotonic()
 
     # ---------------- periodic ----------------
     def tick(self):
-        if self.ser:
-            cmd = command_for(set(self.held.values()))
-            if cmd != STOP:
-                self.send(cmd)                   # keepalive: resend while held
-            elif self.last_sent != STOP:
-                self.send(STOP)
-            self.last_sent = cmd
-            self._read_replies()
+        if self.sock:
+            dirs = set(self.held.values()) if self.link_ok else set()
+            self.send(command_for(dirs))         # held command, or STOP when idle (also the ping)
+            self.refresh_health()
         self.root.after(self.cfg["repeat_ms"], self.tick)
 
-    def _read_replies(self):
-        if not self.ser:
-            return
-        try:
-            waiting = self.ser.in_waiting
-            if waiting:
-                text = self.ser.read(waiting).decode(errors="replace").strip()
-                if text:
-                    self.reply_var.set(f"rig: {text.splitlines()[-1]}")
-        except (serial.SerialException, OSError) as exc:
-            self.disconnect(f"Link lost: {exc}")
+    def poll(self):
+        if self.sock:
+            while True:
+                try:
+                    data, addr = self.sock.recvfrom(256)
+                except BlockingIOError:
+                    break
+                except ConnectionResetError:     # ICMP unreachable on Windows: ignore, keep reading
+                    continue
+                except OSError as exc:
+                    self.set_status(f"Receive error: {exc}", False)
+                    break
+                if addr[0] != self.target[0]:
+                    continue
+                reply = parse_reply(data)
+                if reply:
+                    self.tracker.on_reply(reply, time.monotonic())
+                    self._sync_speed(reply)
+        self.root.after(POLL_MS, self.poll)
+
+    def _sync_speed(self, reply):
+        """If the rig's speed differs from the slider (lost packet, reboot), send it again."""
+        now = time.monotonic()
+        if reply.speed != self.speed_var.get() and now - self.last_speed_sync > SPEED_RESYNC_S:
+            self.last_speed_sync = now
+            self.send(str(self.speed_var.get()))
+
+    def refresh_health(self):
+        h = self.tracker.snapshot(time.monotonic())
+        self._draw_health(h)
+        self.link_ok = not h.lost
+        self._set_drive_enabled(self.link_ok)
+        if self.link_ok:
+            self.set_status(f"Connected: {self.target[0]}", True)
+        elif h.ever_replied:
+            self.set_status("LINK LOST - drive disabled (rig stops by itself)", False)
 
     def on_close(self):
-        self.disconnect("Disconnected")
+        self.disconnect("Not connected")
         self.root.destroy()
 
 

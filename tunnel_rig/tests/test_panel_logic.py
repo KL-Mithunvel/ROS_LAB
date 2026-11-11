@@ -60,3 +60,93 @@ def test_direction_for_key(keysym, expected):
 )
 def test_clamp_speed(value, expected):
     assert clamp_speed(value) == expected
+
+
+# ---- Wi-Fi link: packets, replies, health ----
+from panel_logic import (  # noqa: E402
+    HealthTracker, Reply, build_packet, health_level, health_score, parse_reply,
+)
+
+
+def test_build_packet():
+    assert build_packet(1042, "F") == b"1042:F"
+
+
+def test_parse_reply_ok():
+    assert parse_reply(b"1042,-61,6,F\n") == Reply(1042, -61, 6, "F")
+
+
+@pytest.mark.parametrize("data", [b"", b"junk", b"1,2,3", b"a,-60,6,F", b"1,-60,6,FF", b"\xff\xfe", None])
+def test_parse_reply_rejects_bad(data):
+    assert parse_reply(data) is None
+
+
+def test_health_score_perfect_and_awful():
+    assert health_score(0, 10, -40) == 100
+    assert health_score(50, 400, -95) == 0
+
+
+def test_health_score_weights_loss_most():
+    assert health_score(0, 30, -50) > health_score(20, 30, -50)
+    assert health_score(0, 30, -50) - health_score(20, 30, -50) == 20   # 0.5 * (2 * 20)
+
+
+@pytest.mark.parametrize("score, level", [(100, "GOOD"), (70, "GOOD"), (69, "FAIR"), (40, "FAIR"), (39, "POOR"), (0, "POOR")])
+def test_health_level(score, level):
+    assert health_level(score) == level
+
+
+def _tracker_with_replies(n, rtt=0.02, rssi=-55, start=0.0, step=0.15):
+    t = HealthTracker()
+    now = start
+    for seq in range(1, n + 1):
+        t.sent(seq, now)
+        t.on_reply(Reply(seq, rssi, 6, "S"), now + rtt)
+        now += step
+    return t, now
+
+
+def test_tracker_healthy_link():
+    t, now = _tracker_with_replies(20)
+    h = t.snapshot(now)
+    assert not h.lost and h.level == "GOOD"
+    assert h.loss_pct == 0 and 19 < h.rtt_ms < 21 and h.rssi == -55
+
+
+def test_tracker_never_replied_is_lost():
+    t = HealthTracker()
+    t.sent(1, 0.0)
+    h = t.snapshot(0.1)
+    assert h.lost and h.level == "LOST" and not h.ever_replied and h.score == 0
+
+
+def test_tracker_goes_lost_after_silence():
+    t, now = _tracker_with_replies(5)
+    assert not t.snapshot(now).lost
+    h = t.snapshot(now + 0.7)                       # > lost_after (0.5 s) since last reply
+    assert h.lost and h.ever_replied and h.level == "LOST"
+
+
+def test_tracker_counts_loss():
+    t = HealthTracker()
+    now = 0.0
+    for seq in range(1, 21):
+        t.sent(seq, now)
+        if seq % 4 != 1:                             # seq 1,5,9,13,17 get no reply -> 25 % loss
+            t.on_reply(Reply(seq, -60, 6, "S"), now + 0.02)
+        now += 0.15
+    h = t.snapshot(now)
+    assert h.loss_pct == pytest.approx(25.0)
+    assert not h.lost
+
+
+def test_tracker_recent_unanswered_not_counted_as_loss_yet():
+    t, now = _tracker_with_replies(10)
+    t.sent(99, now)                                  # just sent, reply still in flight
+    assert t.snapshot(now + 0.05).loss_pct == 0
+
+
+def test_tracker_reset():
+    t, now = _tracker_with_replies(5)
+    t.reset()
+    assert t.snapshot(now).level == "LOST"

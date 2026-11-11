@@ -1,34 +1,42 @@
 /*
-  Tunnel Rig - 4-motor tank drive, ESP32 DevKit V1 + Cytron MDD3A, Android Classic Bluetooth.
+  Tunnel Rig - 4-motor tank drive, ESP32 DevKit V1 + Cytron MDD3A, Wi-Fi (UDP) control.
 
   - Left  motors (2, parallel) -> MDD3A channel 1 (M1A/M1B)
   - Right motors (2, parallel) -> MDD3A channel 2 (M2A/M2B)
   - MDD3A runs in PWM-PWM mode: forward = PWM on A, reverse = PWM on B, both 0 = brake.
-  - Bluetooth Classic SPP (BluetoothSerial, built into the ESP32 core). Android only.
-    Pair "TunnelRig", then send single characters from a serial-Bluetooth app.
+  - The ESP32 joins the router (2.4 GHz, fixed IP) and listens for UDP packets on UDP_PORT.
+    Packet:  "<seq>:<cmd>"   e.g. "1042:F"   (a bare "F" also works, for quick tests)
+    Reply:   "<seq>,<rssi>,<speedLevel>,<lastCmd>"   e.g. "1042,-61,6,F"
+    The PC panel uses the replies to draw the comm-health bar (RSSI, round-trip time, loss).
 
   Commands (case-insensitive):
     F forward   B backward   L spin left   R spin right
     G fwd-left  I fwd-right  H back-left   J back-right
-    S stop (immediate)
-    0..9 speed level (0 = stopped-speed, 9 = 100 %)
-    q   full speed (same as 9)
+    S stop (immediate)       ? ping only (no motion, does NOT feed the failsafe)
+    0..9 speed level (9 = 100 %)    Q = same as 9
 
-  Failsafe: if no drive command arrives for CMD_TIMEOUT_MS the motors stop.
-  Joystick apps resend the command while a button is held, so hold = drive, release = stop.
-  Set CMD_TIMEOUT_MS to 0 to disable (a single tap then drives until you send S).
+  Failsafe: no drive command for CMD_TIMEOUT_MS, or Wi-Fi lost -> motors stop.
+  Wi-Fi credentials live in secrets.h (gitignored) - copy secrets.h.example and fill it in.
 
   Board: "ESP32 Dev Module" (esp32:esp32:esp32), core 3.x (uses ledcAttach/ledcWrite).
-  Wiring: see README.md.
+  Wiring: see README.md.  Network plan: see WIFI-PLAN.md.
 */
-#include <BluetoothSerial.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
 
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error "Bluetooth Classic is not enabled for this board - select 'ESP32 Dev Module'."
+#if __has_include("secrets.h")
+#include "secrets.h"
+#else
+#error "Copy secrets.h.example to secrets.h and fill in WIFI_SSID / WIFI_PASS."
 #endif
 
 // ================= CONFIG =================
-const char* BT_NAME = "TunnelRig";
+// Fixed address on the router's LAN (outside its DHCP pool .100-.199).
+const IPAddress LOCAL_IP(192, 168, 1, 60);
+const IPAddress GATEWAY(192, 168, 1, 1);
+const IPAddress SUBNET(255, 255, 255, 0);
+const uint16_t  UDP_PORT = 4210;
+const uint32_t  WIFI_RETRY_MS = 5000;
 
 // MDD3A signal pins (see README wiring table)
 const uint8_t PIN_L_A = 25;   // MDD3A M1A  left  forward
@@ -37,8 +45,8 @@ const uint8_t PIN_R_A = 32;   // MDD3A M2A  right forward
 const uint8_t PIN_R_B = 33;   // MDD3A M2B  right reverse
 
 // If a side runs backwards, flip it here instead of rewiring.
-const bool INVERT_LEFT  = false;
-const bool INVERT_RIGHT = false;
+const bool INVERT_LEFT  = true;    // tested 2026-11-11: both sides ran backwards with false
+const bool INVERT_RIGHT = true;
 
 const uint32_t PWM_FREQ_HZ = 20000;      // above audible range
 const uint8_t  PWM_BITS    = 8;          // duty 0..255
@@ -48,12 +56,14 @@ const int      RAMP_PER_STEP = 12;       // duty change per RAMP_MS (acceleratio
 const uint32_t RAMP_MS = 10;
 // ==========================================
 
-BluetoothSerial SerialBT;
+WiFiUDP udp;
 
 int  speedLevel = DEFAULT_LEVEL;
 int  tgtL = 0, tgtR = 0;         // target signed duty, -255..255
 int  curL = 0, curR = 0;         // current signed duty
-uint32_t lastCmd = 0, lastRamp = 0;
+char lastCmdChar = 'S';          // reported back to the panel
+uint32_t lastCmd = 0, lastRamp = 0, lastWifiTry = 0;
+bool wifiWasUp = false;
 
 // Write a signed duty (-255..255) to one MDD3A channel.
 void driveChannel(uint8_t pinA, uint8_t pinB, int duty, bool invert) {
@@ -69,6 +79,7 @@ void applyOutputs() {
 
 void stopNow() {                 // immediate stop, no ramp
   tgtL = tgtR = curL = curR = 0;
+  lastCmdChar = 'S';
   applyOutputs();
 }
 
@@ -112,12 +123,67 @@ void handleCommand(char c) {
           tgtR = (int)((long)tgtR * newBase / base);
         }
         Serial.printf("[SPEED] level %d\n", speedLevel);
-        SerialBT.printf("speed %d\n", speedLevel);
       }
-      drive = false;                              // ignore \r \n and unknown bytes
+      drive = false;                              // ping '?', \r \n and unknown bytes: no motion
       break;
   }
-  if (drive) lastCmd = millis();
+  if (drive) { lastCmd = millis(); lastCmdChar = c; }
+}
+
+// ---------- Wi-Fi ----------
+void startWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);                           // lower latency
+  WiFi.setAutoReconnect(true);
+  if (!WiFi.config(LOCAL_IP, GATEWAY, SUBNET)) Serial.println("[WiFi] static IP config failed");
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  lastWifiTry = millis();
+  Serial.printf("[WiFi] joining '%s' (2.4 GHz) as %s ...\n", WIFI_SSID, LOCAL_IP.toString().c_str());
+}
+
+void wifiLoop() {
+  bool up = (WiFi.status() == WL_CONNECTED);
+  if (up && !wifiWasUp) {
+    udp.begin(UDP_PORT);
+    Serial.printf("[WiFi] up, RSSI %d dBm, listening on udp/%u\n", WiFi.RSSI(), UDP_PORT);
+  }
+  if (!up && wifiWasUp) {
+    udp.stop();
+    stopNow();                                    // never keep driving without a link
+    Serial.println("[WiFi] lost -> stop");
+  }
+  wifiWasUp = up;
+  if (!up && millis() - lastWifiTry >= WIFI_RETRY_MS) {
+    lastWifiTry = millis();
+    WiFi.disconnect();
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    Serial.println("[WiFi] retrying...");
+  }
+}
+
+void handleUdp() {
+  int size = udp.parsePacket();
+  while (size > 0) {
+    char buf[32];
+    int len = udp.read(buf, sizeof(buf) - 1);
+    if (len <= 0) break;
+    buf[len] = 0;
+
+    long seq = 0;
+    char cmd = 0;
+    char* colon = strchr(buf, ':');
+    if (colon) { *colon = 0; seq = atol(buf); cmd = colon[1]; }
+    else       { cmd = buf[0]; }
+    if (cmd) handleCommand(cmd);
+
+    char reply[40];
+    snprintf(reply, sizeof(reply), "%ld,%d,%d,%c", seq, WiFi.RSSI(), speedLevel, lastCmdChar);
+    udp.beginPacket(udp.remoteIP(), udp.remotePort());
+    udp.print(reply);
+    udp.endPacket();
+
+    size = udp.parsePacket();
+  }
 }
 
 void setup() {
@@ -135,19 +201,15 @@ void setup() {
     }
   }
   stopNow();
-
-  if (!SerialBT.begin(BT_NAME)) {
-    Serial.println("[BT] failed to start - halting");
-    while (true) delay(1000);
-  }
-  Serial.printf("[BT] ready. Pair with '%s' on Android and open a serial-Bluetooth app.\n", BT_NAME);
+  startWiFi();
 }
 
 void loop() {
-  while (SerialBT.available()) handleCommand((char)SerialBT.read());
-  while (Serial.available())   handleCommand((char)Serial.read());   // USB serial for bench tests
+  wifiLoop();
+  if (wifiWasUp) handleUdp();
+  while (Serial.available()) handleCommand((char)Serial.read());   // USB serial for bench tests
 
-  // Failsafe: link lost / no commands -> stop
+  // Failsafe: no drive command -> stop
   if (CMD_TIMEOUT_MS && (tgtL || tgtR || curL || curR) && millis() - lastCmd > CMD_TIMEOUT_MS) {
     stopNow();
     Serial.println("[FAILSAFE] no command -> stop");

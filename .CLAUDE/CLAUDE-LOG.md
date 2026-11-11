@@ -595,6 +595,16 @@ everything, and document tests in the TODO to run later. Then: "commit is now".
 - Nothing committed.
 
 
+## 2026-11-11 — Tunnel rig: Bluetooth -> Wi-Fi/UDP with comm-health bar
+
+- Bluetooth dropped as soon as the rig entered the tunnel. New plan (user): router inside the tunnel, ESP32 joins it over Wi-Fi, router -> Ethernet -> laptop; PoE camera (192.168.1.250) on a PoE switch uplinked to the router. Router model/settings taken from the old `Tile_Sorting` project (`documents/electrical/network_plan.md`): D-Link DIR-825 AC1200, LAN 192.168.1.1/24, DHCP .100-.199, planned SSID `TileLine` (Wi-Fi never verified there). User clarified none of the tile project's other nodes are used.
+- Earlier same day: both `INVERT_*` flags set `true` (motors ran backwards) and reflashed over USB; forward/turns then OK. Remaining hardware fault: **left side does not move on reverse** -> suspect GPIO25 -> M1A jumper (A inputs = physical reverse after inversion).
+- **Firmware rewritten (`tunnel_rig.ino`):** Bluetooth removed; Wi-Fi STA with fixed IP 192.168.1.60, UDP 4210, `"<seq>:<cmd>"` in / `"<seq>,<rssi>,<speed>,<last>"` out, `?` = ping, auto-reconnect every 5 s, `stopNow()` on Wi-Fi loss, 500 ms failsafe kept. Credentials in gitignored `secrets.h` (`secrets.h.example` committed; `.gitignore` updated). Compiles (69 % flash). **Not flashed** - `secrets.h` holds placeholders.
+- **Panel rewritten:** pyserial/COM port replaced by a UDP socket; packet every 150 ms (held command or STOP, doubles as ping); `HealthTracker` + `health_score` in `panel_logic.py` (50 % loss / 25 % RTT / 25 % RSSI -> GOOD/FAIR/POOR/LOST); coloured health bar + RSSI/RTT/loss text; drive disabled on LINK LOST; speed re-sync from replies; Windows UDP connreset handled; Open camera button. `requirements.txt` now pyyaml + pytest.
+- **Verified:** 56 pytest tests pass (one test of mine was wrong and fixed); the panel run against a fake UDP rig on localhost showed healthy -> hold W sends F -> release sends S -> silence gives LOST with drive disabled -> recovery. Not tested against the real ESP32/router/motors.
+- **Docs:** new `tunnel_rig/WIFI-PLAN.md` (topology, addressing, protocol, safety, health scoring, test procedure, results table, open items); `README.md` rewritten; `TODO.md` and `CLAUDE.md` updated.
+- Nothing committed.
+
 ## 2026-10-28 — Beetle patrol: robot setup + pure-logic modules
 
 - **Robot (192.168.0.154, ROS 2 Jazzy):** installed a new SSH key; fixed OpenCV by moving the user-site NumPy 2.5.3 to `~/.local/numpy2_backup` (system NumPy 1.26.4 + cv2 4.6.0 now import); built `explore_lite` from robo-friends/m-explore-ros2 `main` in a separate `~/patrol_ws` (not run yet); `apt update` + installed `ros-jazzy-compressed-image-transport`. `lyra_ws` untouched.

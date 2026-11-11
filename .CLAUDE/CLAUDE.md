@@ -214,16 +214,19 @@ avoidance state machine) and `Hardware_Test/Hardware_Test.ino` (serial-menu brin
 version is compiled but **not run on hardware**; the checklist is in `TODO.md`. The Arduino IDE
 wants one same-named folder per sketch — not restructured. Record: `uno_car/LAB-RECORD.md`.
 
-### `tunnel_rig/` — ESP32 4-motor tank drive over Bluetooth (side project, Arduino C++, no ROS)
+### `tunnel_rig/` — ESP32 4-motor tank drive over Wi-Fi (side project, Arduino C++ + Python panel, no ROS)
 
 `tunnel_rig.ino`: ESP32 DevKit V1 + Cytron MDD3A (PWM-PWM mode); left motor pair on channel 1
-(GPIO25/26), right pair on channel 2 (GPIO32/33). Android Classic Bluetooth (`BluetoothSerial`,
-device `TunnelRig`); single-char commands F/B/L/R/G/I/H/J/S + 0–9 speed, 500 ms failsafe.
-(Was a servo pan/tilt rig with a Wi-Fi GUI until 2026-11-11.) Flashed to COM3 with `arduino-cli`;
-not yet tested with the MDD3A/motors wired. See `tunnel_rig/README.md`.
-PC side: `control_panel.py` (Tkinter + pyserial, WASD/arrows/pad, speed slider, STOP; port in
-`panel_config.yaml`, default COM6), `panel_logic.py` (key → command mapping), `tests/` (pytest),
-own `.venv` + `requirements.txt`. Run: `cd tunnel_rig && .venv\Scripts\python control_panel.py`.
+(GPIO25/26), right pair on channel 2 (GPIO32/33), both invert flags `true`. Joins the in-tunnel router
+(2.4 GHz, fixed IP `192.168.1.60`, creds in gitignored `secrets.h`) and takes UDP `"<seq>:<cmd>"` on 4210;
+single-char commands F/B/L/R/G/I/H/J/S + 0-9 speed, replies `"<seq>,<rssi>,<speed>,<last>"`; 500 ms
+failsafe + stop on Wi-Fi loss. (History: servo/web GUI -> Bluetooth, dropped out in the tunnel -> Wi-Fi, 2026-11-11.)
+PC side: `control_panel.py` (Tkinter, UDP, WASD/arrows/pad, speed slider, STOP, **comm-health bar**, Open camera
+button for the PoE camera at 192.168.1.250), `panel_logic.py` (key -> command, packets, health scoring),
+`panel_config.yaml`, `tests/` (pytest, 56), own `.venv` + `requirements.txt`. Run:
+`cd tunnel_rig && .venv\Scripts\python control_panel.py`. Network plan + test procedure: `tunnel_rig/WIFI-PLAN.md`
+(router model/settings taken from the old Tile_Sorting project; none of its nodes are used). Firmware compiled, panel
+tested against a fake rig; **not yet flashed/tested on the real router or with the motors on Wi-Fi**.
 
 ### `lab-manual/` — course lab manual
 

@@ -34,3 +34,6 @@ waypoint_mission/tools/waypoints_gui.yaml
 # BeetleBot patrol: robot credentials
 beetle_patrol/secrets.env
 beetle_patrol/runs/
+
+# tunnel_rig Wi-Fi credentials
+tunnel_rig/secrets.h

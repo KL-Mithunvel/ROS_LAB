@@ -1,3 +1,7 @@
-port: COM6
-repeat_ms: 150
-default_speed: 6
+# PC control panel settings for the tunnel rig (Wi-Fi / UDP).
+host: 192.168.1.60      # the ESP32's fixed IP on the router's LAN (see WIFI-PLAN.md)
+udp_port: 4210          # must match UDP_PORT in tunnel_rig.ino
+camera_url: https://192.168.1.250/#/index/Preview/   # opened by the "Open camera" button
+repeat_ms: 150          # a packet is sent this often (firmware failsafe is 500 ms)
+lost_after_ms: 500      # no reply for this long -> LINK LOST, drive disabled
+default_speed: 6        # speed level 0-9
