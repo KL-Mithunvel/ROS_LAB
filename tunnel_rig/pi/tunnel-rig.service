@@ -1,0 +1,13 @@
+[Unit]
+Description=Tunnel rig UDP motor server
+After=network.target
+
+[Service]
+User=klm
+WorkingDirectory=/home/klm/tunnel_rig_pi
+ExecStart=/usr/bin/python3 /home/klm/tunnel_rig_pi/rig_server.py
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
