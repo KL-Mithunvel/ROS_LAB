@@ -1,12 +1,15 @@
 # Pi tunnel rig settings. Pins are BCM GPIO numbers (not header pin numbers).
 udp_port: 4210          # must match udp_port in ../panel_config.yaml
+# Measured 2026-11-12 on the real rig: MDD3A channel 1 (M1A/M1B, GPIO12/13) drives the
+# physical RIGHT side and channel 2 (M2A/M2B, GPIO19/16) the physical LEFT side, so the pin
+# pairs are swapped here (wiring unchanged). Flip an invert flag if a side runs backwards.
 pins:
-  left_a: 12            # header pin 32 -> MDD3A M1A (left forward)
-  left_b: 13            # header pin 33 -> MDD3A M1B (left reverse)
-  right_a: 19           # header pin 35 -> MDD3A M2A (right forward)
-  right_b: 16           # header pin 36 -> MDD3A M2B (right reverse)
-invert_left: true       # same as the ESP32 build; flip if a side runs backwards
-invert_right: true
+  left_a: 19            # header pin 35 -> MDD3A M2A (physical left motors)
+  left_b: 16            # header pin 36 -> MDD3A M2B
+  right_a: 12           # header pin 32 -> MDD3A M1A (physical right motors)
+  right_b: 13           # header pin 33 -> MDD3A M1B
+invert_left: true
+invert_right: false
 pwm_hz: 1000            # software PWM; the MDD3A accepts up to 20 kHz
 default_level: 6        # speed level 0-9 at start
 cmd_timeout_ms: 500     # no drive command for this long -> motors stop

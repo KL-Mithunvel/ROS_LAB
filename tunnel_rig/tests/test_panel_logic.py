@@ -150,3 +150,26 @@ def test_tracker_reset():
     t, now = _tracker_with_replies(5)
     t.reset()
     assert t.snapshot(now).level == "LOST"
+
+
+def test_ssh_server_command_start_and_stop():
+    from panel_logic import ssh_server_command
+    start = ssh_server_command("start", "klm", "192.168.1.11", "tunnel_rig_pi")
+    assert start[:5] == ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6"]
+    assert start[5] == "klm@192.168.1.11"
+    assert "cd ~/tunnel_rig_pi" in start[6] and "rig_server.py" in start[6]
+    stop = ssh_server_command("stop", "klm", "192.168.1.11", "tunnel_rig_pi")
+    assert "[r]ig_server" in stop[6] and "rig_server" not in stop[6].replace("[r]ig_server", "")
+
+
+@pytest.mark.parametrize("user, host, d", [("k;m", "h", "d"), ("klm", "h h", "d"), ("klm", "h", "../x")])
+def test_ssh_server_command_rejects_unsafe_values(user, host, d):
+    from panel_logic import ssh_server_command
+    with pytest.raises(ValueError):
+        ssh_server_command("start", user, host, d)
+
+
+def test_ssh_server_command_rejects_unknown_action():
+    from panel_logic import ssh_server_command
+    with pytest.raises(ValueError):
+        ssh_server_command("restart", "klm", "h", "d")

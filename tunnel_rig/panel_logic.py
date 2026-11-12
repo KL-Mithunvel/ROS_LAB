@@ -2,8 +2,11 @@
 
 No GUI and no serial here so it can be unit-tested. Commands match tunnel_rig.ino.
 """
+import re
 
 STOP = "S"
+
+_SAFE_NAME = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 # (up, down, left, right) booleans -> command character
 _COMMANDS = {
@@ -144,3 +147,22 @@ class HealthTracker:
             return Health(0, "LOST", self._rssi, rtt_ms, loss_pct, True, ever)
         score = health_score(loss_pct, rtt_ms, self._rssi)
         return Health(score, health_level(score), self._rssi, rtt_ms, loss_pct, False, ever)
+
+
+def ssh_server_command(action, user, host, server_dir):
+    """argv that starts or stops rig_server.py on the Pi over SSH (key login, no password prompt).
+
+    The stop pattern is written '[r]ig_server' so the remote shell's own command line does not
+    match it (otherwise pkill would kill the very shell running it).
+    """
+    for label, value in (("user", user), ("host", host), ("server_dir", server_dir)):
+        if not _SAFE_NAME.match(str(value)):
+            raise ValueError(f"unsafe {label}: {value!r}")
+    if action == "start":
+        remote = (f"cd ~/{server_dir} && "
+                  "(setsid nohup python3 rig_server.py > rig.log 2>&1 < /dev/null &); sleep 1")
+    elif action == "stop":
+        remote = "pkill -f '[r]ig_server'; sleep 0.5; true"
+    else:
+        raise ValueError(f"unknown action: {action!r}")
+    return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", f"{user}@{host}", remote]

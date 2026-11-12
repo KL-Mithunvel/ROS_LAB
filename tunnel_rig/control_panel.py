@@ -10,6 +10,8 @@ No reply for `lost_after_ms` -> LINK LOST: drive is disabled, and the rig stops 
 """
 import os
 import socket
+import subprocess
+import threading
 import time
 import tkinter as tk
 import webbrowser
@@ -18,7 +20,7 @@ from tkinter import ttk
 import yaml
 
 from panel_logic import (STOP, HealthTracker, build_packet, clamp_speed, command_for,
-                         direction_for_key, parse_reply)
+                         direction_for_key, parse_reply, ssh_server_command)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(HERE, "panel_config.yaml")
@@ -26,6 +28,7 @@ DEFAULTS = {
     "host": "192.168.1.60", "udp_port": 4210,
     "camera_url": "https://192.168.1.250/#/index/Preview/",
     "repeat_ms": 150, "lost_after_ms": 500, "default_speed": 6,
+    "ssh_user": "klm", "server_dir": "tunnel_rig_pi",   # where rig_server.py lives on the Pi
 }
 KEY_RELEASE_DEBOUNCE_MS = 40     # Windows key auto-repeat sends release+press pairs
 POLL_MS = 20                     # how often the socket is read (keeps RTT readings accurate)
@@ -97,6 +100,16 @@ class Panel:
         self.connect_btn = ttk.Button(top, text="Connect", command=self.toggle_connection)
         self.connect_btn.pack(side="left")
         ttk.Button(top, text="Open camera", command=self.open_camera).pack(side="right")
+
+        srv = ttk.Frame(self.root)
+        srv.pack(fill="x", pady=(6, 0))
+        ttk.Label(srv, text="Pi server").pack(side="left")
+        self.start_btn = ttk.Button(srv, text="Start", width=8,
+                                    command=lambda: self.run_server_action("start"))
+        self.start_btn.pack(side="left", padx=(6, 2))
+        self.stop_srv_btn = ttk.Button(srv, text="Stop", width=8,
+                                       command=lambda: self.run_server_action("stop"))
+        self.stop_srv_btn.pack(side="left")
 
         self.status_var = tk.StringVar(value="Not connected")
         self.status_lbl = tk.Label(self.root, textvariable=self.status_var, fg="#a33", anchor="w")
@@ -239,6 +252,41 @@ class Panel:
     def send(self, cmd):
         if self._send_raw(cmd):
             self.cmd_var.set(f"cmd: {cmd}")
+
+    def run_server_action(self, action):
+        """Start/stop rig_server.py on the Pi via SSH in a thread (the GUI must not block)."""
+        host = self.host_var.get().strip()
+        try:
+            cmd = ssh_server_command(action, self.cfg["ssh_user"], host, self.cfg["server_dir"])
+        except ValueError as exc:
+            self.set_status(f"Server {action}: {exc}", False)
+            return
+        if action == "stop" and self.sock:
+            self.disconnect("Not connected")                 # sends STOP before the server dies
+        self.start_btn.config(state="disabled")
+        self.stop_srv_btn.config(state="disabled")
+        self.set_status(f"Pi server: {action} ...", False)
+
+        def work():
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+            try:
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=20,
+                                     creationflags=flags)
+                ok, detail = res.returncode == 0, (res.stderr or res.stdout).strip()
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                ok, detail = False, str(exc)
+            self.root.after(0, lambda: self._server_action_done(action, ok, detail))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _server_action_done(self, action, ok, detail):
+        self.start_btn.config(state="normal")
+        self.stop_srv_btn.config(state="normal")
+        if ok:
+            past = "started - click Connect" if action == "start" else "stopped"
+            self.set_status(f"Pi server {past}", ok=(action == "start"))
+        else:
+            self.set_status(f"Pi server {action} failed: {detail[:80] or 'ssh error'}", False)
 
     def open_camera(self):
         webbrowser.open(self.cfg["camera_url"])

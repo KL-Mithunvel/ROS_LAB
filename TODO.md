@@ -71,7 +71,8 @@ Code: `tunnel_rig/` (sketch, PC panel, `WIFI-PLAN.md`). Bluetooth dropped out in
 - [x] 2026-11-12: ESP32 flashed OK (needed `upload.speed=115200`) but never joined Wi-Fi: the D-Link's 2.4 GHz radio still shows a blank SSID on channel 7, no `TileLine` (router config not applied)
 - [x] 2026-11-12: Pi 5 (`klmpi`) alternative written in `tunnel_rig/pi/` (same UDP protocol, wired Ethernet); logic tested on the PC (69 tests pass in `tunnel_rig/`)
 - [x] Pi reachable at 192.168.1.11 (hostname tile-pi, key SSH works), code deployed to ~/tunnel_rig_pi, UDP ping/stop/speed smoke-tested 2026-11-12; `panel_config.yaml` host now the Pi
-- [ ] Pi: wire the MDD3A (pins 32-36), wheels-off drive test via the panel, check directions (invert flags), then install the systemd service
+- [ ] Pi: **fix the burned GND wire / battery - to MDD3A POWER - and add a 5-7 A fuse before driving again**; re-test the swapped pin map (left=GPIO19/16, right=GPIO12/13, `invert_right: false`) wheels-off; then install the systemd service
+- [x] Panel: Start/Stop Pi server buttons (SSH, key login)
 - [ ] Laptop: Wi-Fi `LRL-Home` and the D-Link both use 192.168.1.0/24 - Ethernet up kills Wi-Fi/internet; use the iPhone hotspot meanwhile (or /32 host routes for .11/.250)
 
 ### Coin-D6 TOF lidar — live plot (2026-10-20)
