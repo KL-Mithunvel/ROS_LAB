@@ -47,6 +47,19 @@ def command_for(directions):
     return _COMMANDS.get((up, down, left, right), STOP)
 
 
+_FLIP_FB = str.maketrans("FBGHIJ", "BFHGJI")   # forward <-> back (F/B, G/H, I/J)
+_FLIP_LR = str.maketrans("LRGIHJ", "RLIGJH")   # left <-> right (L/R, G/I, H/J)
+
+
+def flip_command(cmd, flip_fb=False, flip_lr=False):
+    """Reverse forward/back and/or left/right on a drive command (S, digits, '?' pass through)."""
+    if flip_fb:
+        cmd = cmd.translate(_FLIP_FB)
+    if flip_lr:
+        cmd = cmd.translate(_FLIP_LR)
+    return cmd
+
+
 def direction_for_key(keysym):
     """Map a Tk keysym to a logical direction, or None if the key is not a drive key."""
     return KEY_TO_DIRECTION.get(str(keysym).lower())

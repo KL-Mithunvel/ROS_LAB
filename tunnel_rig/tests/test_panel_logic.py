@@ -173,3 +173,18 @@ def test_ssh_server_command_rejects_unknown_action():
     from panel_logic import ssh_server_command
     with pytest.raises(ValueError):
         ssh_server_command("restart", "klm", "h", "d")
+
+
+def test_flip_command():
+    from panel_logic import flip_command
+    assert flip_command("F") == "F"
+    assert flip_command("F", flip_fb=True) == "B"
+    assert flip_command("G", flip_fb=True) == "H"
+    assert flip_command("I", flip_fb=True) == "J"
+    assert flip_command("L", flip_lr=True) == "R"
+    assert flip_command("G", flip_lr=True) == "I"
+    assert flip_command("J", flip_lr=True) == "H"
+    assert flip_command("G", True, True) == "J"
+    assert flip_command("B", True, True) == "F"
+    for passthrough in ("S", "4", "?"):
+        assert flip_command(passthrough, True, True) == passthrough

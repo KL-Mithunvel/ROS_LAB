@@ -20,7 +20,7 @@ from tkinter import ttk
 import yaml
 
 from panel_logic import (STOP, HealthTracker, build_packet, clamp_speed, command_for,
-                         direction_for_key, parse_reply, ssh_server_command)
+                         direction_for_key, flip_command, parse_reply, ssh_server_command)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(HERE, "panel_config.yaml")
@@ -28,6 +28,7 @@ DEFAULTS = {
     "host": "192.168.1.60", "udp_port": 4210,
     "camera_url": "https://192.168.1.250/#/index/Preview/",
     "repeat_ms": 150, "lost_after_ms": 500, "default_speed": 6,
+    "reverse_fwd_back": False, "reverse_left_right": False,   # startup state of the two checkboxes
     "ssh_user": "klm", "server_dir": "tunnel_rig_pi",   # where rig_server.py lives on the Pi
 }
 KEY_RELEASE_DEBOUNCE_MS = 40     # Windows key auto-repeat sends release+press pairs
@@ -141,6 +142,13 @@ class Panel:
                                   font=("Segoe UI", 12, "bold"), command=self.emergency_stop)
         self.stop_btn.grid(row=1, column=1, padx=3, pady=3)
 
+        rev = ttk.Frame(self.root)
+        rev.pack(fill="x")
+        self.rev_fb_var = tk.BooleanVar(value=bool(self.cfg["reverse_fwd_back"]))
+        self.rev_lr_var = tk.BooleanVar(value=bool(self.cfg["reverse_left_right"]))
+        ttk.Checkbutton(rev, text="Reverse fwd/back", variable=self.rev_fb_var).pack(side="left", padx=(0, 12))
+        ttk.Checkbutton(rev, text="Reverse left/right", variable=self.rev_lr_var).pack(side="left")
+
         speed = ttk.Frame(self.root)
         speed.pack(fill="x")
         ttk.Label(speed, text="Speed").pack(side="left")
@@ -250,6 +258,7 @@ class Panel:
         return True
 
     def send(self, cmd):
+        cmd = flip_command(cmd, self.rev_fb_var.get(), self.rev_lr_var.get())
         if self._send_raw(cmd):
             self.cmd_var.set(f"cmd: {cmd}")
 

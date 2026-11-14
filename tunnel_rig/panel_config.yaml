@@ -5,3 +5,5 @@ camera_url: https://192.168.1.250/#/index/Preview/   # opened by the "Open camer
 repeat_ms: 150          # a packet is sent this often (firmware failsafe is 500 ms)
 lost_after_ms: 500      # no reply for this long -> LINK LOST, drive disabled
 default_speed: 6        # speed level 0-9
+reverse_fwd_back: false   # startup state of the "Reverse fwd/back" checkbox
+reverse_left_right: false # startup state of the "Reverse left/right" checkbox
